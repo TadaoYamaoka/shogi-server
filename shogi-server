@@ -174,7 +174,7 @@ class Player
       elsif (@sente == false)
         return sprintf("%s %s %s %s -", @name, @protocol, @status, @game_name)
       elsif (@sente == nil)
-        return sprintf("%s %s %s %s", @name, @protocol, @status, @game_name)
+        return sprintf("%s %s %s %s *", @name, @protocol, @status, @game_name)
       end
     else
       return sprintf("%s %s %s", @name, @protocol, @status)
@@ -208,7 +208,7 @@ class Player
       write_safe(sprintf("##[LOGIN] +OK %s\n", @protocol))
     else
       log_message(sprintf("user %s run in CSA mode", @name))
-      csa_1st_str = "%%GAME #{Default_Game_Name}"
+      csa_1st_str = "%%GAME #{Default_Game_Name} *"
     end
     
     while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
@@ -275,7 +275,7 @@ class Player
         when /^%%GAME\s*$/
           @status = "connected"
           @game_name = ""
-        when /^%%(GAME|CHALLENGE)\s+(\S+)\s*([\+\-]*)\s*$/
+        when /^%%(GAME|CHALLENGE)\s+(\S+)\s+([\+\-\*])\s*$/
           command_name = $1
           game_name = $2
           my_sente_str = $3
@@ -288,7 +288,7 @@ class Player
             write_safe(sprintf("##[ERROR] you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
             next
           end
-          if ((my_sente_str == "") ||
+          if ((my_sente_str == "*") ||
               (my_sente_str == "+") ||
               (my_sente_str == "-"))
             ## ok
@@ -297,7 +297,7 @@ class Player
             next
           end
 
-          if (my_sente_str == "")
+          if (my_sente_str == "*")
             rival = LEAGUE.get_player("game_waiting", game_name, nil, self) # no preference
           elsif (my_sente_str == "+")
             rival = LEAGUE.get_player("game_waiting", game_name, false, self) # rival must be gote
@@ -308,7 +308,7 @@ class Player
           end
           if (rival)
             @game_name = game_name
-            if ((my_sente_str == "") && (rival.sente == nil))
+            if ((my_sente_str == "*") && (rival.sente == nil))
               if (rand(2) == 0)
                 @sente = true
                 rival.sente = false
