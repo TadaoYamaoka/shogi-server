@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
-## -*-Ruby-*- $RCSfile$ $Revision$ $Name$
+## $Id$
 
-## Copyright (C) 2004 nanami@2ch
+## Copyright (C) 2004 NABEYA Kenichi
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -174,7 +174,7 @@ class Player
       elsif (@sente == false)
         return sprintf("%s %s %s %s -", @name, @protocol, @status, @game_name)
       elsif (@sente == nil)
-        return sprintf("%s %s %s %s +-", @name, @protocol, @status, @game_name)
+        return sprintf("%s %s %s %s", @name, @protocol, @status, @game_name)
       end
     else
       return sprintf("%s %s %s", @name, @protocol, @status)
@@ -208,7 +208,7 @@ class Player
       write_safe(sprintf("##[LOGIN] +OK %s\n", @protocol))
     else
       log_message(sprintf("user %s run in CSA mode", @name))
-      csa_1st_str = "%%GAME #{Default_Game_Name} +-"
+      csa_1st_str = "%%GAME #{Default_Game_Name}"
     end
     
     while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
@@ -275,52 +275,80 @@ class Player
         when /^%%GAME\s*$/
           @status = "connected"
           @game_name = ""
-        when /^%%GAME\s+(\S+)\s+([\+\-]{1,2})/
-          game_name = $1
-          sente_str = $2
+        when /^%%(GAME|CHALLENGE)\s+(\S+)\s*([\+\-]*)\s*$/
+          command_name = $1
+          game_name = $2
+          my_sente_str = $3
           if (! good_game_name?(game_name))
             write_safe(sprintf("##[ERROR] bad game name\n"))
             next
           elsif ((@status == "connected") || (@status == "game_waiting"))
-            @status = "game_waiting"
+            ## continue
           else
             write_safe(sprintf("##[ERROR] you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
             next
           end
-          @status = "game_waiting"
-          @game_name = $1
-          if (sente_str == "+")
-            @sente = true
-            rival_sente = false
-          elsif (sente_str == "-")
-            @sente = false
-            rival_sente = true
+          if ((my_sente_str == "") ||
+              (my_sente_str == "+") ||
+              (my_sente_str == "-"))
+            ## ok
           else
-            @sente = nil
-            rival_sente = nil
+            write_safe(sprintf("##[ERROR] bad game option\n"))
+            next
           end
-          rival = LEAGUE.get_player("game_waiting", @game_name, rival_sente, self)
-          rival = LEAGUE.get_player("game_waiting", @game_name, nil, self) if (! rival)
+
+          if (my_sente_str == "")
+            rival = LEAGUE.get_player("game_waiting", game_name, nil, self) # no preference
+          elsif (my_sente_str == "+")
+            rival = LEAGUE.get_player("game_waiting", game_name, false, self) # rival must be gote
+          elsif (my_sente_str == "-")
+            rival = LEAGUE.get_player("game_waiting", game_name, true, self) # rival must be sente
+          else
+            ## never reached
+          end
           if (rival)
-            if (@sente == nil)
+            @game_name = game_name
+            if ((my_sente_str == "") && (rival.sente == nil))
               if (rand(2) == 0)
                 @sente = true
-                rival_sente = false
+                rival.sente = false
               else
                 @sente = false
-                rival_sente = true
+                rival.sente = true
               end
-            elsif (rival_sente == nil)
-              if (@sente)
-                rival_sente = false
-              else
-                rival_sente = true
-              end
+            elsif (rival.sente == true) # rival has higher priority
+              @sente = false
+            elsif (rival.sente == false)
+              @sente = true
+            elsif (my_sente_str == "+")
+              @sente = true
+              rival.sente = false
+            elsif (my_sente_str == "-")
+              @sente = false
+              rival.sente = true
+            else
+              ## never reached
             end
-            rival.sente = rival_sente
             Game::new(@game_name, self, rival)
             self.status = "agree_waiting"
             rival.status = "agree_waiting"
+          else # rival not found
+            if (command_name == "GAME")
+              @status = "game_waiting"
+              @game_name = game_name
+              if (my_sente_str == "+")
+                @sente = true
+              elsif (my_sente_str == "-")
+                @sente = false
+              else
+                @sente = nil
+              end
+            else                # challenge
+              write_safe(sprintf("##[ERROR] can't find rival for %s\n", game_name))
+              @status = "connected"
+              @game_name = ""
+              @sente = nil
+            end
           end
         when /^%%CHAT\s+(.+)/
           message = $1
@@ -362,15 +390,117 @@ end
 
 class Piece
   PROMOTE = {"FU" => "TO", "KY" => "NY", "KE" => "NK", "GI" => "NG", "KA" => "UM", "HI" => "RY"}
-  def initialize(name, sente)
-    @name = name
+  def initialize(board, x, y, sente, promoted=false)
+    @board = board
+    @x = x
+    @y = y
     @sente = sente
-    @promoted = false
+    @promoted = promoted
+    @board.array[x][y] = self
   end
-  attr_accessor :name, :promoted, :sente
+  attr_accessor :promoted, :sente, :x, :y, :board
+
+  def room_of_head?(x, y, name)
+    true
+  end
+
+  def movable_grids
+    return adjacent_movable_grids + far_movable_grids
+  end
+
+  def far_movable_grids
+    return []
+  end
+
+  def jump_to?(x, y)
+    if ((1 <= x) && (x <= 9) && (1 <= y) && (y <= 9))
+      if ((@board.array[x][y] == nil) || # dst is empty
+          (@board.array[x][y].sente != @sente)) # dst is enemy
+        return true
+      end
+    end
+    return false
+  end
+
+  def put_to?(x, y)
+    if ((1 <= x) && (x <= 9) && (1 <= y) && (y <= 9))
+      if (@board.array[x][y] == nil) # dst is empty?
+        return true
+      end
+    end
+    return false
+  end
+
+  def adjacent_movable_grids
+    grids = Array::new
+    if (@promoted)
+      moves = @promoted_moves
+    else
+      moves = @normal_moves
+    end
+    moves.each do |(dx, dy)|
+      if (@sente)
+        cand_y = @y - dy
+      else
+        cand_y = @y + dy
+      end
+      cand_x = @x + dx
+      if (jump_to?(cand_x, cand_y))
+        grids.push([cand_x, cand_y])
+      end
+    end
+    return grids
+  end
+
+  def move_to?(x, y, name)
+    return false if (! room_of_head?(x, y, name))
+    return false if ((name != @name) && (name != @promoted_name))
+    return false if (@promoted && (name != @promoted_name)) # can't un-promote
+
+    if (! @promoted)
+      return false if (((@x == 0) || (@y == 0)) && (name != @name)) # can't put promoted piece
+      if (@sente)
+        return false if ((4 <= @y) && (4 <= y) && (name != @name)) # can't promote
+      else
+        return false if ((6 >= @y) && (6 <= y) && (name != @name))
+      end
+    end
+    if ((@x == 0) || (@y == 0))
+      return jump_to?(x, y)
+    else
+      return movable_grids.include?([x, y])
+    end
+  end
+
+  def move_to(x, y)
+    if ((@x == 0) || (@y == 0))
+      if (@sente)
+        @board.sente_hands.delete(self)
+      else
+        @board.gote_hands.delete(self)
+      end
+      @board.array[x][y] = self
+    elsif ((x == 0) || (y == 0))
+      if (@sente)
+        @board.sente_hands.push(self)
+      else
+        @board.gote_hands.push(self)
+      end
+      @board.array[@x][@y] = nil
+    else
+      @board.array[@x][@y] = nil
+      @board.array[x][y] = self
+    end
+    @x = x
+    @y = y
+  end
+
+  def name
+    @name
+  end
 
   def promoted_name
-    PROMOTE[name]
+    @promoted_name
   end
 
   def to_s
@@ -380,7 +510,7 @@ class Piece
       sg = "-"
     end
     if (@promoted)
-      n = PROMOTE[@name]
+      n = @promoted_name
     else
       n = @name
     end
@@ -388,7 +518,223 @@ class Piece
   end
 end
 
+class PieceFU < Piece
+  def initialize(*arg)
+    @normal_moves = [[0, +1]]
+    @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
+    @name = "FU"
+    @promoted_name = "TO"
+    super
+  end
+  def room_of_head?(x, y, name)
+    if (name == "FU")
+      if (@sente)
+        return false if (y == 0)
+      else
+        return false if (y == 9)
+      end
+      ## 2fu check
+      c = 0
+      iy = 1
+      while (iy <= 9)
+        if ((iy  != @y) &&      # not source position
+            @board.array[x][iy] &&
+            (@board.array[x][iy].sente == @sente) && # mine
+            (@board.array[x][iy].name == "FU") &&
+            (@board.array[x][iy].promoted == false))
+          return false
+        end
+        iy = iy + 1
+      end
+    end
+    return true
+  end
+end
 
+class PieceKY  < Piece
+  def initialize(*arg)
+    @normal_moves = []
+    @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
+    @name = "KY"
+    @promoted_name = "NY"
+    super
+  end
+  def room_of_head?(x, y, name)
+    if (name == "KY")
+      if (@sente)
+        return false if (y == 0)
+      else
+        return false if (y == 9)
+      end
+    end
+    return true
+  end
+  def far_movable_grids
+    grids = Array::new
+    if (@promoted)
+      return []
+    else
+      if (@sente)                 # up
+        cand_x = @x
+        cand_y = @y - 1
+        while (jump_to?(cand_x, cand_y))
+          grids.push([cand_x, cand_y])
+          break if (! put_to?(cand_x, cand_y))
+          cand_y = cand_y - 1
+        end
+      else                        # down
+        cand_x = @x
+        cand_y = @y + 1
+        while (jump_to?(cand_x, cand_y))
+          grids.push([cand_x, cand_y])
+          break if (! put_to?(cand_x, cand_y))
+          cand_y = cand_y + 1
+        end
+      end
+      return grids
+    end
+  end
+end
+class PieceKE  < Piece
+  def initialize(*arg)
+    @normal_moves = [[+1, +2], [-1, +2]]
+    @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
+    @name = "KE"
+    @promoted_name = "NK"
+    super
+  end
+  def room_of_head?(x, y, name)
+    if (name == "KY")
+      if (@sente)
+        return false if ((y == 0) || (y == 1))
+      else
+        return false if ((y == 9) || (y == 8))
+      end
+    end
+    return true
+  end
+end
+class PieceGI  < Piece
+  def initialize(*arg)
+    @normal_moves = [[0, +1], [+1, +1], [-1, +1], [+1, -1], [-1, -1]]
+    @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
+    @name = "GI"
+    @promoted_name = "NG"
+    super
+  end
+end
+class PieceKI  < Piece
+  def initialize(*arg)
+    @normal_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
+    @promoted_moves = []
+    @name = "KI"
+    @promoted_name = nil
+    super
+  end
+end
+class PieceKA  < Piece
+  def initialize(*arg)
+    @normal_moves = []
+    @promoted_moves = [[0, +1], [+1, 0], [-1, 0], [0, -1]]
+    @name = "KA"
+    @promoted_name = "UM"
+    super
+  end
+  def far_movable_grids
+    grids = Array::new
+    ## up right
+    cand_x = @x - 1
+    cand_y = @y - 1
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_x = cand_x - 1
+      cand_y = cand_y - 1
+    end
+    ## down right
+    cand_x = @x - 1
+    cand_y = @y + 1
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_x = cand_x - 1
+      cand_y = cand_y + 1
+    end
+    ## up left
+    cand_x = @x + 1
+    cand_y = @y - 1
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_x = cand_x + 1
+      cand_y = cand_y - 1
+    end
+    ## down left
+    cand_x = @x + 1
+    cand_y = @y + 1
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_x = cand_x + 1
+      cand_y = cand_y + 1
+    end
+    return grids
+  end
+end
+class PieceHI  < Piece
+  def initialize(*arg)
+    @normal_moves = []
+    @promoted_moves = [[+1, +1], [-1, +1], [+1, -1], [-1, -1]]
+    @name = "HI"
+    @promoted_name = "RY"
+    super
+  end
+  def far_movable_grids
+    grids = Array::new
+    ## up
+    cand_x = @x
+    cand_y = @y - 1
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_y = cand_y - 1
+    end
+    ## down
+    cand_x = @x
+    cand_y = @y + 1
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_y = cand_y + 1
+    end
+    ## right
+    cand_x = @x - 1
+    cand_y = @y
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_x = cand_x - 1
+    end
+    ## down
+    cand_x = @x + 1
+    cand_y = @y
+    while (jump_to?(cand_x, cand_y))
+      grids.push([cand_x, cand_y])
+      break if (! put_to?(cand_x, cand_y))
+      cand_x = cand_x + 1
+    end
+    return grids
+  end
+end
+class PieceOU < Piece
+  def initialize(*arg)
+    @normal_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1], [+1, -1], [-1, -1]]
+    @promoted_moves = []
+    @name = "OU"
+    @promoted_name = nil
+    super
+  end
+end
 
 class Board
   def initialize
@@ -400,69 +746,201 @@ class Board
   attr_accessor :array, :sente_hands, :gote_hands, :history
 
   def initial
-    @array[1][1] = Piece::new("KY", false)
-    @array[2][1] = Piece::new("KE", false)
-    @array[3][1] = Piece::new("GI", false)
-    @array[4][1] = Piece::new("KI", false)
-    @array[5][1] = Piece::new("OU", false)
-    @array[6][1] = Piece::new("KI", false)
-    @array[7][1] = Piece::new("GI", false)
-    @array[8][1] = Piece::new("KE", false)
-    @array[9][1] = Piece::new("KY", false)
-    @array[2][2] = Piece::new("KA", false)
-    @array[8][2] = Piece::new("HI", false)
-    @array[1][3] = Piece::new("FU", false)
-    @array[2][3] = Piece::new("FU", false)
-    @array[3][3] = Piece::new("FU", false)
-    @array[4][3] = Piece::new("FU", false)
-    @array[5][3] = Piece::new("FU", false)
-    @array[6][3] = Piece::new("FU", false)
-    @array[7][3] = Piece::new("FU", false)
-    @array[8][3] = Piece::new("FU", false)
-    @array[9][3] = Piece::new("FU", false)
+    PieceKY::new(self, 1, 1, false)
+    PieceKE::new(self, 2, 1, false)
+    PieceGI::new(self, 3, 1, false)
+    PieceKI::new(self, 4, 1, false)
+    PieceOU::new(self, 5, 1, false)
+    PieceKI::new(self, 6, 1, false)
+    PieceGI::new(self, 7, 1, false)
+    PieceKE::new(self, 8, 1, false)
+    PieceKY::new(self, 9, 1, false)
+    PieceKA::new(self, 2, 2, false)
+    PieceHI::new(self, 8, 2, false)
+    PieceFU::new(self, 1, 3, false)
+    PieceFU::new(self, 2, 3, false)
+    PieceFU::new(self, 3, 3, false)
+    PieceFU::new(self, 4, 3, false)
+    PieceFU::new(self, 5, 3, false)
+    PieceFU::new(self, 6, 3, false)
+    PieceFU::new(self, 7, 3, false)
+    PieceFU::new(self, 8, 3, false)
+    PieceFU::new(self, 9, 3, false)
 
-    @array[1][9] = Piece::new("KY", true)
-    @array[2][9] = Piece::new("KE", true)
-    @array[3][9] = Piece::new("GI", true)
-    @array[4][9] = Piece::new("KI", true)
-    @array[5][9] = Piece::new("OU", true)
-    @array[6][9] = Piece::new("KI", true)
-    @array[7][9] = Piece::new("GI", true)
-    @array[8][9] = Piece::new("KE", true)
-    @array[9][9] = Piece::new("KY", true)
-    @array[2][8] = Piece::new("HI", true)
-    @array[8][8] = Piece::new("KA", true)
-    @array[1][7] = Piece::new("FU", true)
-    @array[2][7] = Piece::new("FU", true)
-    @array[3][7] = Piece::new("FU", true)
-    @array[4][7] = Piece::new("FU", true)
-    @array[5][7] = Piece::new("FU", true)
-    @array[6][7] = Piece::new("FU", true)
-    @array[7][7] = Piece::new("FU", true)
-    @array[8][7] = Piece::new("FU", true)
-    @array[9][7] = Piece::new("FU", true)
+    PieceKY::new(self, 1, 9, true)
+    PieceKE::new(self, 2, 9, true)
+    PieceGI::new(self, 3, 9, true)
+    PieceKI::new(self, 4, 9, true)
+    PieceOU::new(self, 5, 9, true)
+    PieceKI::new(self, 6, 9, true)
+    PieceGI::new(self, 7, 9, true)
+    PieceKE::new(self, 8, 9, true)
+    PieceKY::new(self, 9, 9, true)
+    PieceKA::new(self, 8, 8, true)
+    PieceHI::new(self, 2, 8, true)
+    PieceFU::new(self, 1, 7, true)
+    PieceFU::new(self, 2, 7, true)
+    PieceFU::new(self, 3, 7, true)
+    PieceFU::new(self, 4, 7, true)
+    PieceFU::new(self, 5, 7, true)
+    PieceFU::new(self, 6, 7, true)
+    PieceFU::new(self, 7, 7, true)
+    PieceFU::new(self, 8, 7, true)
+    PieceFU::new(self, 9, 7, true)
   end
 
   def have_piece?(hands, name)
-    p = hands.find { |i|
+    piece = hands.find { |i|
       i.name == name
     }
-    return p
+    return piece
   end
 
-  def get_piece_from_hands(hands, name)
-    p = hands.find { |i|
-      i.name == name
-    }
-    if (p)
-      hands.delete(p)
+  def move_to(x0, y0, x1, y1, name)
+    if ((x0 == 0) && (y0 == 0))
+      piece = have_piece?(hands, name)
+      return :illegal if (! piece.move_to?(x1, y1, name))
+      piece.move_to(x1, y1)
+      piece.sente = sente
+      piece.promoted = false
+    else
+      return :illegal if (! @array[x0][y0].move_to?(x1, y1, name))
+      if (@array[x0][y0].name != name) # promoted ?
+        @array[x0][y0].promoted = true
+      end
+      if (@array[x1][y1])
+        if (@array[x1][y1].name == "OU")
+          return :outori        # return board update
+        end
+        @array[x1][y1].sente = @array[x0][y0].sente
+        @array[x1][y1].move_to(0, 0)
+        if (@array[x0][y0].sente)
+          hands = @sente_hands
+        else
+          hands = @gote_hands
+        end
+        hands.sort! {|a, b|
+          a.name <=> b.name
+        }
+      end
+      @array[x0][y0].move_to(x1, y1)
     end
-    return p
+    return true
+  end
+
+  def look_for_ou(sente)
+    x = 1
+    while (x <= 9)
+      y = 1
+      while (y <= 9)
+        if (@array[x][y] &&
+            (@array[x][y].name == "OU") &&
+            (@array[x][y].sente == sente))
+          return @array[x][y]
+        end
+        y = y + 1
+      end
+      x = x + 1
+    end
+    raise "can't find ou"
+  end
+
+  def checkmated?(sente)        # sente is loosing
+    ou = look_for_ou(sente)
+    x = 1
+    while (x <= 9)
+      y = 1
+      while (y <= 9)
+        if (@array[x][y] &&
+            (@array[x][y].sente != sente))
+          if (@array[x][y].movable_grids.include?([ou.x, ou.y]))
+            return true
+          end
+        end
+        y = y + 1
+      end
+      x = x + 1
+    end
+    return false
+  end
+
+  def uchifuzume?(sente)
+    rival_ou = look_for_ou(! sente)   # rival's ou
+    if (sente)                  # rival is gote
+      if ((rival_ou.y != 9) &&
+          (@array[rival_ou.x][rival_ou.y + 1]) &&
+          (@array[rival_ou.x][rival_ou.y + 1].name == "FU") &&
+          (@array[rival_ou.x][rival_ou.y + 1].sente == sente)) # uchifu true
+        fu_x = rival_ou.x
+        fu_y = rival_ou.y + 1
+      else
+        return false
+      end
+    else                        # gote
+      if ((rival_ou.y != 0) &&
+          (@array[rival_ou.x][rival_ou.y - 1]) &&
+          (@array[rival_ou.x][rival_ou.y - 1].name == "FU") &&
+          (@array[rival_ou.x][rival_ou.y - 1].sente == sente)) # uchifu true
+        fu_x = rival_ou.x
+        fu_y = rival_ou.y - 1
+      else
+        return false
+      end
+    end
+    
+    ## case: rival_ou is moving
+    escaped = false
+    rival_ou.movable_grids.each do |(cand_x, cand_y)|
+      tmp_board = Marshal.load(Marshal.dump(self))
+      s = tmp_board.move_to(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU")
+      raise "internal error" if (s != true)
+      if (! tmp_board.checkmated?(! sente)) # good move
+        return false
+      end
+    end
+
+    ## case: rival is capturing fu
+    x = 1
+    while (x <= 9)
+      y = 1
+      while (y <= 9)
+        if (@array[x][y] &&
+            (@array[x][y].sente != sente) &&
+            @array[x][y].movable_grids.include?([fu_x, fu_y])) # capturable
+          if (@array[x][y].promoted)
+            name = @array[x][y].promoted_name
+          else
+            name = @array[x][y].name
+          end
+          tmp_board = Marshal.load(Marshal.dump(self))
+          s = tmp_board.move_to(x, y, fu_x, fu_y, name)
+          raise "internal error" if (s != true)
+          if (! tmp_board.checkmated?(! sente)) # good move
+            return false
+          end
+        end
+        y = y + 1
+      end
+      x = x + 1
+    end
+    return true
+  end
+
+  def sennichite?(sente)
+    str = to_s
+    if (@history[str] && (@history[str] >= 3)) # already 3 times
+      if (checkmated?(! sente)) # rival is loosing
+        return :outesennichite
+      else
+        return :sennichite
+      end
+    end
+    return false
   end
 
   def handle_one_move(str)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
-      p = $1
+      sg = $1
       x0 = $2.to_i
       y0 = $3.to_i
       x1 = $4.to_i
@@ -483,7 +961,7 @@ class Board
       return :illegal
     end
     
-    if (p == "+")
+    if (sg == "+")
       sente = true
       hands = @sente_hands
     else
@@ -510,36 +988,21 @@ class Board
       return :illegal           # can't put on existing piece
     end
 
-    if ((x0 == 0) && (y0 == 0))
-      p = get_piece_from_hands(hands, name)
-      @array[x1][y1] = p
-      p.sente = sente
-      p.promoted = false
-    else
-      if (@array[x0][y0].name != name) # promoted ?
-        @array[x0][y0].promoted = true
-      end
-      if (@array[x1][y1])
-        if (@array[x1][y1].name == "OU")
-          return :outori        # return board update
-        end
-        hands.push(@array[x1][y1])
-        hands.sort! {|a, b|
-          a.name <=> b.name
-        }
-      end
-      @array[x1][y1] = @array[x0][y0]
-      @array[x0][y0] = nil
+    tmp_board = Marshal.load(Marshal.dump(self))
+    return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name) == :illegal)
+    if (tmp_board.checkmated?(sente))
+      return :illegal
+    end
+    s = tmp_board.sennichite?(sente)
+    return s if (s)           # outesennichite or sennichite
+    if ((x0 == 0) && (y0 == 0) && (name == "FU") && tmp_board.uchifuzume?(sente))
+      return :illegal
     end
 
-    ## sennichite check
+    move_to(x0, y0, x1, y1, name)
     str = to_s
     @history[str] = (@history[str] || 0) + 1
-    if (@history[str] >= 4)
-      return :sennichite
-    end
-
-    return :normal             # legal move
+    return :normal
   end
 
   def to_s
@@ -688,12 +1151,12 @@ class Game
       elsif (str == :timeout)
         return false            # time isn't expired. players aren't swapped. continue game
       else
-        begin
+#        begin
           move_status = @board.handle_one_move(str)
-        rescue
-          log_error("handle_one_move raise exception for #{str}")
-          move_status = :illegal
-        end
+#        rescue
+#          log_error("handle_one_move raise exception for #{str}")
+#          move_status = :illegal
+#        end
         if (move_status == :illegal)
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         else
