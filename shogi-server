@@ -510,6 +510,10 @@ class Piece
     @y = y
   end
 
+  def point
+    @point
+  end
+
   def name
     @name
   end
@@ -535,6 +539,7 @@ end
 
 class PieceFU < Piece
   def initialize(*arg)
+    @point = 1
     @normal_moves = [[0, +1]]
     @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
     @name = "FU"
@@ -568,6 +573,7 @@ end
 
 class PieceKY  < Piece
   def initialize(*arg)
+    @point = 1
     @normal_moves = []
     @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
     @name = "KY"
@@ -612,6 +618,7 @@ class PieceKY  < Piece
 end
 class PieceKE  < Piece
   def initialize(*arg)
+    @point = 1
     @normal_moves = [[+1, +2], [-1, +2]]
     @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
     @name = "KE"
@@ -631,6 +638,7 @@ class PieceKE  < Piece
 end
 class PieceGI  < Piece
   def initialize(*arg)
+    @point = 1
     @normal_moves = [[0, +1], [+1, +1], [-1, +1], [+1, -1], [-1, -1]]
     @promoted_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
     @name = "GI"
@@ -640,6 +648,7 @@ class PieceGI  < Piece
 end
 class PieceKI  < Piece
   def initialize(*arg)
+    @point = 1
     @normal_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1]]
     @promoted_moves = []
     @name = "KI"
@@ -649,6 +658,7 @@ class PieceKI  < Piece
 end
 class PieceKA  < Piece
   def initialize(*arg)
+    @point = 5
     @normal_moves = []
     @promoted_moves = [[0, +1], [+1, 0], [-1, 0], [0, -1]]
     @name = "KA"
@@ -698,6 +708,7 @@ class PieceKA  < Piece
 end
 class PieceHI  < Piece
   def initialize(*arg)
+    @point = 5
     @normal_moves = []
     @promoted_moves = [[+1, +1], [-1, +1], [+1, -1], [-1, -1]]
     @name = "HI"
@@ -743,6 +754,7 @@ class PieceHI  < Piece
 end
 class PieceOU < Piece
   def initialize(*arg)
+    @point = 0
     @normal_moves = [[0, +1], [+1, +1], [-1, +1], [+1, +0], [-1, +0], [0, -1], [+1, -1], [-1, -1]]
     @promoted_moves = []
     @name = "OU"
@@ -966,6 +978,47 @@ class Board
     return false
   end
 
+  def good_kachi?(sente)
+    return false if (checkmated?(sente))
+    ou = look_for_ou(sente)
+    return false if (sente && (ou.y >= 4))
+    return false if (! sente && (ou.y <= 6))
+
+    number = 0
+    point = 0
+
+    if (sente)
+      hands = @sente_hands
+      r = [1, 2, 3]
+    else
+      hands = @gote_hands
+      r = [7, 8, 9]
+    end
+    r.each do |y|
+      x = 1
+      while (x <= 9)
+        if (@array[x][y] &&
+            (@array[x][y].sente == sente) &&
+            (@array[x][y].point > 0))
+          point = point + @array[x][y].point
+          number = number + 1
+        end
+        x = x + 1
+      end
+    end
+    hands.each do |piece|
+      point = point + piece.point
+    end
+
+    return false if (number < 10)
+    if (sente)
+      return false if (point < 28)
+    else
+      return false if (point < 27)
+    end
+    return true
+  end
+
   def handle_one_move(str)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       sg = $1
@@ -975,7 +1028,16 @@ class Board
       y1 = $5.to_i
       name = $6
     elsif (str =~ /^%KACHI/)
-      return :kachi
+      if (@sente == @current_player)
+        sente = true
+      else
+        sente = false
+      end
+      if (good_kachi?(sente))
+        return :kachi_win
+      else
+        return :kachi_lose
+      end
     elsif (str =~ /^%TORYO/)
       return :toryo
     else
@@ -1227,8 +1289,10 @@ class Game
         timeout_lose()
       elsif (move_status == :illegal)
         illegal_lose()
-      elsif (move_status == :kachi)
+      elsif (move_status == :kachi_win)
         kachi_win()
+      elsif (move_status == :kachi_lose)
+        kachi_lose()
       elsif (move_status == :toryo)
         toryo_lose()
       elsif (move_status == :outori)
@@ -1357,6 +1421,19 @@ class Game
     @fh.printf("%%KACHI\n")
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:kachi:%s win:%s lose\n", @current_player.name, @next_player.name)
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
+    end
+  end
+
+  def kachi_lose
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write_safe("%KACHI\n#ILLEGAL_MOVE\n#LOSE\n")
+    @next_player.write_safe("%KACHI\n#ILLEGAL_MOVE\n#WIN\n")
+    @fh.printf("%%KACHI\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
+    @fh.printf("'summary:illegal kachi:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
     end
