@@ -116,7 +116,7 @@ class Player
     @eol = "\m"                 # favorite eol code
     @game = nil
     @game_name = ""
-    @mytime = Total_Time
+    @mytime = Total_Time        # set in start method also
     @sente = nil
     @watchdog_thread = nil
 
@@ -218,7 +218,7 @@ class Player
               @game.gote.status = "game"
             end
           else
-            write_safe("## you are in %s status. AGREE is valid in agree_waiting status\n", @status)
+            write_safe("##[ERROR] you are in %s status. AGREE is valid in agree_waiting status\n", @status)
             next
           end
         when /^%%HELP/
@@ -227,7 +227,7 @@ class Player
           if ((@status == "connected") || (@status == "game_waiting"))
             @status = "game_waiting"
           else
-            write_safe(sprintf("## you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
+            write_safe(sprintf("##[ERROR] you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
             next
           end
           @status = "game_waiting"
@@ -286,7 +286,7 @@ class Player
           finish
           return
         else
-          write_safe(sprintf("## unknown command %s\n", str))
+          write_safe(sprintf("##[ERROR] unknown command %s\n", str))
         end
       ensure
         $mutex.unlock
@@ -390,6 +390,7 @@ class Game
     log_message(sprintf("game started %s %s %s", game_name, sente.name, gote.name))
     @sente.write_safe(sprintf("START:%s\n", @id))
     @gote.write_safe(sprintf("START:%s\n", @id))
+    @mytime = Total_Time    
     @start_time = Time::new
   end
 
