@@ -240,6 +240,16 @@ class Player
           else
             write_safe(sprintf("##[ERROR] you are in %s status. AGREE is valid in agree_waiting status\n", @status))
           end
+        when /^%%MONITORON\s+(\S+)/
+          game_name = $1
+          if (LEAGUE.games[game_name])
+            LEAGUE.games[game_name].monitoron(self)
+          end
+        when /^%%MONITOROFF\s+(\S+)/
+          game_name = $1
+          if (LEAGUE.games[game_name])
+            LEAGUE.games[game_name].monitoroff(self)
+          end
         when /^%%HELP/
           write_help
         when /^%%GAME\s+(\S+)\s+([\+\-]+)$/
@@ -446,7 +456,7 @@ class Board
       if (@array[x1][y1] == sente) # this is mine
         return "illegal"
       elsif (@array[x1][y1].name == "OU")
-        return "ootori"
+        return "outori"
       end
       hands.push(@array[x1][y1])
       @array[x1][y1] = nil
@@ -507,6 +517,7 @@ end
 
 class Game
   def initialize(game_name, player0, player1)
+    @monitors = Array::new
     @game_name = game_name
     if (@game_name =~ /:(\d+):(\d+)/)
       @total_time = $1.to_i
@@ -545,7 +556,18 @@ class Game
 
     propose
   end
-  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :id, :board, :current_player, :next_player, :fh
+  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :id, :board, :current_player, :next_player, :fh, :monitors
+
+  def monitoron(monitor)
+    @monitors.delete(monitor)
+    @monitors.push(monitor)
+    monitor.write_safe(@board.to_s.gsub(/^/, "##[MONITOR][#{@id}] "))
+    monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
+  end
+
+  def monitoroff(monitor)
+    @monitors.delete(monitor)
+  end
 
   def reject(rejector)
     @sente.write_safe(sprintf("REJECT:%s by %s\n", @id, rejector))
@@ -577,6 +599,11 @@ class Game
     if (@next_player.protocol == "CSA")
       @next_player.finish
     end
+    @monitors = Array::new
+    @sente = nil
+    @gote = nil
+    @current_player = nil
+    @next_player = nil
     LEAGUE.games.delete(@id)
   end
 
@@ -598,7 +625,13 @@ class Game
           @sente.write_safe(sprintf("%s,T%d\n", str, t))
           @gote.write_safe(sprintf("%s,T%d\n", str, t))
           @fh.printf("%s\nT%d\n", str, t)
-        else
+
+          @monitors.each do |monitor|
+            monitor.write_safe(sprintf("##[MONITOR][%s] %s\n", @id, str))
+            monitor.write_safe(@board.to_s.gsub(/^/, "##[MONITOR][#{@id}] "))
+            monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
+          end
+        elsif (move_status == "illegal")
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         end
       end
@@ -619,9 +652,12 @@ class Game
         kachi_win()
       elsif (move_status == "toryo")
         toryo_lose()
-      elsif (move_status == "ootori")
-        ootori_win()
+      elsif (move_status == "outori")
+        outori_win()
+      else
+        finish_flag = false
       end
+      finish() if finish_flag
       (@current_player, @next_player) = [@next_player, @current_player]
       @start_time = Time::new
       return finish_flag
@@ -633,6 +669,9 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+    end
   end
 
   def abnormal_lose
@@ -640,6 +679,9 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+    end
   end
 
   def illegal_lose
@@ -647,6 +689,9 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
     @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+    end
   end
 
   def timeout_lose
@@ -654,6 +699,9 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#TIME_UP\n#LOSE\n")
     @next_player.write_safe("#TIME_UP\n#WIN\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @id))
+    end
   end
 
   def kachi_win
@@ -661,6 +709,9 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
     @next_player.write_safe("%KACHI\n#JISHOGI\n#LOSE\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
+    end
   end
 
   def toryo_lose
@@ -668,13 +719,19 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+    end
   end
 
-  def ootori_win
+  def outori_win
     @current_player.status = "connected"
     @next_player.status = "connected"
     @current_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
     @next_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+    end
   end
 
   def start
