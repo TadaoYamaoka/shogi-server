@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 ## $Id$
 
-## Copyright (C) 2004 NABEYA Kenichi
+## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -396,7 +396,20 @@ class Piece
     @y = y
     @sente = sente
     @promoted = promoted
-    @board.array[x][y] = self
+
+    if ((x == 0) || (y == 0))
+      if (sente)
+        hands = board.sente_hands
+      else
+        hands = board.gote_hands
+      end
+      hands.push(self)
+      hands.sort! {|a, b|
+        a.name <=> b.name
+      }
+    else
+      @board.array[x][y] = self
+    end
   end
   attr_accessor :promoted, :sente, :x, :y, :board
 
@@ -465,6 +478,7 @@ class Piece
         return false if ((6 >= @y) && (6 <= y) && (name != @name))
       end
     end
+
     if ((@x == 0) || (@y == 0))
       return jump_to?(x, y)
     else
@@ -529,7 +543,7 @@ class PieceFU < Piece
   def room_of_head?(x, y, name)
     if (name == "FU")
       if (@sente)
-        return false if (y == 0)
+        return false if (y == 1)
       else
         return false if (y == 9)
       end
@@ -562,7 +576,7 @@ class PieceKY  < Piece
   def room_of_head?(x, y, name)
     if (name == "KY")
       if (@sente)
-        return false if (y == 0)
+        return false if (y == 1)
       else
         return false if (y == 9)
       end
@@ -604,9 +618,9 @@ class PieceKE  < Piece
     super
   end
   def room_of_head?(x, y, name)
-    if (name == "KY")
+    if (name == "KE")
       if (@sente)
-        return false if ((y == 0) || (y == 1))
+        return false if ((y == 1) || (y == 2))
       else
         return false if ((y == 9) || (y == 8))
       end
@@ -741,9 +755,11 @@ class Board
     @sente_hands = Array::new
     @gote_hands = Array::new
     @history = Hash::new
+    @sente_history = Hash::new
+    @gote_history = Hash::new
     @array = [[], [], [], [], [], [], [], [], [], []]
   end
-  attr_accessor :array, :sente_hands, :gote_hands, :history
+  attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history
 
   def initial
     PieceKY::new(self, 1, 1, false)
@@ -796,12 +812,17 @@ class Board
     return piece
   end
 
-  def move_to(x0, y0, x1, y1, name)
-    if ((x0 == 0) && (y0 == 0))
+  def move_to(x0, y0, x1, y1, name, sente)
+    if (sente)
+      hands = @sente_hands
+    else
+      hands = @gote_hands
+    end
+
+    if ((x0 == 0) || (y0 == 0))
       piece = have_piece?(hands, name)
       return :illegal if (! piece.move_to?(x1, y1, name))
       piece.move_to(x1, y1)
-      piece.sente = sente
       piece.promoted = false
     else
       return :illegal if (! @array[x0][y0].move_to?(x1, y1, name))
@@ -814,11 +835,6 @@ class Board
         end
         @array[x1][y1].sente = @array[x0][y0].sente
         @array[x1][y1].move_to(0, 0)
-        if (@array[x0][y0].sente)
-          hands = @sente_hands
-        else
-          hands = @gote_hands
-        end
         hands.sort! {|a, b|
           a.name <=> b.name
         }
@@ -892,7 +908,7 @@ class Board
     escaped = false
     rival_ou.movable_grids.each do |(cand_x, cand_y)|
       tmp_board = Marshal.load(Marshal.dump(self))
-      s = tmp_board.move_to(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU")
+      s = tmp_board.move_to(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU", ! sente)
       raise "internal error" if (s != true)
       if (! tmp_board.checkmated?(! sente)) # good move
         return false
@@ -913,7 +929,7 @@ class Board
             name = @array[x][y].name
           end
           tmp_board = Marshal.load(Marshal.dump(self))
-          s = tmp_board.move_to(x, y, fu_x, fu_y, name)
+          s = tmp_board.move_to(x, y, fu_x, fu_y, name, ! sente)
           raise "internal error" if (s != true)
           if (! tmp_board.checkmated?(! sente)) # good move
             return false
@@ -926,14 +942,26 @@ class Board
     return true
   end
 
+  def oute_sennichite?(sente)
+    if (checkmated?(! sente))
+      str = to_s
+      if (sente)
+        if (@sente_history[str] && (@sente_history[str] >= 3)) # already 3 times
+          return true
+        end
+      else
+        if (@gote_history[str] && (@gote_history[str] >= 3)) # already 3 times
+          return true
+        end
+      end
+    end
+    return false
+  end
+
   def sennichite?(sente)
     str = to_s
     if (@history[str] && (@history[str] >= 3)) # already 3 times
-      if (checkmated?(! sente)) # rival is loosing
-        return :outesennichite
-      else
-        return :sennichite
-      end
+      return true
     end
     return false
   end
@@ -979,7 +1007,7 @@ class Board
     elsif (@array[x0][y0].name != name)
       return :illegal if (@array[x0][y0].promoted_name != name) # can't promote
     end
-    
+
     ## destination check
     if (@array[x1][y1] &&
         (@array[x1][y1].sente == sente)) # can't capture mine
@@ -989,18 +1017,33 @@ class Board
     end
 
     tmp_board = Marshal.load(Marshal.dump(self))
-    return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name) == :illegal)
+    return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name, sente) == :illegal)
     if (tmp_board.checkmated?(sente))
       return :illegal
     end
-    s = tmp_board.sennichite?(sente)
-    return s if (s)           # outesennichite or sennichite
+    return :oute_sennichite if tmp_board.oute_sennichite?(sente)
+    return :sennichite if tmp_board.sennichite?(sente)
+
     if ((x0 == 0) && (y0 == 0) && (name == "FU") && tmp_board.uchifuzume?(sente))
       return :illegal
     end
 
-    move_to(x0, y0, x1, y1, name)
+    move_to(x0, y0, x1, y1, name, sente)
     str = to_s
+
+    if (checkmated?(! sente))
+      if (sente)
+        @sente_history[str] = (@sente_history[str] || 0) + 1
+      else
+        @gote_history[str] = (@gote_history[str] || 0) + 1
+      end
+    else
+      if (sente)
+        @sente_history.clear
+      else
+        @gote_history.clear
+      end
+    end
     @history[str] = (@history[str] || 0) + 1
     return :normal
   end
@@ -1160,7 +1203,7 @@ class Game
         if (move_status == :illegal)
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         else
-          if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite))
+          if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite) || (move_status == :oute_sennichite))
             @sente.write_safe(sprintf("%s,T%d\n", str, t))
             @gote.write_safe(sprintf("%s,T%d\n", str, t))
             @fh.printf("%s\nT%d\n", str, t)
@@ -1194,6 +1237,8 @@ class Game
         outori_win()
       elsif (move_status == :sennichite)
         sennichite_draw()
+      elsif (move_status == :oute_sennichite)
+        oute_sennichite_lose()
       else
         finish_flag = false
       end
@@ -1236,6 +1281,17 @@ class Game
     @fh.printf("'summary:sennichite:%s draw:%s draw\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @id))
+    end
+  end
+
+  def oute_sennichite_lose
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write_safe("#OUTE_SENNICHITE\n#LOSE\n")
+    @next_player.write_safe("#OUTE_SENNICHITE\n#WIN\n")
+    @fh.printf("'summary:oute_sennichite:%s lose:%s win\n", @current_player.name, @next_player.name)
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @id))
     end
   end
 
