@@ -159,14 +159,14 @@ class Player
         (status == "agree_waiting") ||
         (status == "game"))
       if (@sente)
-        return sprintf("%s %s %s +", @name, @status, @game_name)
+        return sprintf("%s %s %s %s +", @name, @protocol, @status, @game_name)
       elsif (@sente == false)
-        return sprintf("%s %s %s -", @name, @status, @game_name)
+        return sprintf("%s %s %s %s -", @name, @protocol, @status, @game_name)
       elsif (@sente == nil)
-        return sprintf("%s %s %s +-", @name, @status, @game_name)
+        return sprintf("%s %s %s %s +-", @name, @protocol, @status, @game_name)
       end
     else
-      return sprintf("%s %s", @name, @status)
+      return sprintf("%s %s %s", @name, @protocol, @status)
     end
   end
 
@@ -278,7 +278,7 @@ class Player
             self.status = "agree_waiting"
             rival.status = "agree_waiting"
           end
-        when /^%%CHAT\s+(\S+)/
+        when /^%%CHAT\s+(.+)/
           message = $1
           LEAGUE.hash.each do |name, player|
             if (player.protocol != "CSA")
