@@ -21,7 +21,6 @@ DEFAULT_TIMEOUT = 10            # for single socket operation
 Total_Time = 1500
 Least_Time_Per_Move = 1
 Watchdog_Time = 30              # time for ping
-Agree_Time = 300                # time for AGREE
 Login_Time = 300                # time for LOGIN
 
 Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
@@ -87,6 +86,19 @@ class League
       return false
     end
   end
+  def get_player(status, game_name, sente)
+    @hash.each do |name, player|
+      if ((player.status == status)
+          (player.game_name == game_name)
+          (player.sente == sente))
+        return player
+      end
+    end
+    return nil
+  end
+  def new_game(game_name, player0, player1)
+    game = Game::new(game_name, player0, player1)
+  end
 end
 
 
@@ -97,11 +109,12 @@ class Player
     @name = nil
     @password = nil
     @socket = socket
-    @state = "connected"        # wait_game -> game
+    @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game
 
     @x1 = false                 # extention protocol
     @eol = "\m"                 # favorite eol code
     @game = nil
+    @game_name = ""
     @mytime = Total_Time
     @sente = nil
     @watchdog_thread = nil
@@ -109,12 +122,44 @@ class Player
     login(str)
   end
 
-  attr_accessor :name, :password, :socket, :state
-  attr_accessor :x1, :eol, :game, :mytime, :watchdog_thread
+  attr_accessor :name, :password, :socket, :status
+  attr_accessor :x1, :eol, :game, :mytime, :watchdog_thread, :game_name, :sente
 
+  def finish
+    Thread::kill(@watchdog_thread) if @watchdog_thread
+    @socket.close
+  end
+
+  def watchdog(time)
+    while true
+      begin
+        Ping.pingecho(@socket.addr[3])
+      rescue
+      end
+      sleep(time)
+    end
+  end
+
+  def to_s
+    if ((status == "game_waiting") ||
+        (status == "agree_waiting") ||
+        (status == "game"))
+      if (@sente)
+        return sprintf("%s %s %s +", @name, @status, @game_name, "+")
+      else
+        return sprintf("%s %s %s -", @name, @status, @game_name, "-")
+      end
+    else
+      return sprintf("%s %s", @name, @status)
+    end
+  end
+
+  def write_help(str)
+    @socket.write_safe('## available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"')
+  end
 
   def write_safe(str)
-    @socket.write_safe(str + @eol)
+    @socket.write_safe(str.gsub(/[\r\n]+/, @eol))
   end
 
   def login(str)
@@ -123,12 +168,15 @@ class Player
     str.chomp!
     (login, @name, @password, ext) = str.split
     @x1 = true if (ext)
+    @watchdog_thread = Thread::start do
+      watchdog(Watchdog_Time)
+    end
   end
-
+    
   def run
     if (@x1)
       log_message(sprintf("user %s run in x1 mode", @name))
-      write_safe("## LOGIN in x1 mode")
+      write_safe("## LOGIN in x1 mode\n")
     else
       log_message(sprintf("user %s run in CSA mode", @name))
     end
@@ -136,11 +184,37 @@ class Player
     while (str = @socket.gets_safe)
       str.chomp!
       case str
+      when /^[\+\-%][^%]/
+        if (@status == "game")
+          @game.handle_one_move(str, self)
+        else
+          write_safe("## you are in %s status. %s in game status\n", @status)
+          next
+        end
+      when /^AGREE/
+        if (@status == "agree_waiting")
+          @status = "start_waiting"
+          if ((@game.sente.status == "start_waiting") &&
+              (@game.gote.status == "start_waiting"))
+            @game.start
+            @game.sente.status = "game"
+            @game.gote.status = "game"
+          end
+        else
+          write_safe("## you are in %s status. AGREE is valid in agree_waiting status\n", @status)
+          next
+        end
       when /^%%HELP/
         write_help
       when /^%%GAME\s+(\S+)\s+([\+\-])/
-        game_name = $1
-        @state = "game_waiting"
+        if ((@status == "connected") || (@status == "game_waiting"))
+          @status = "game_waiting"
+        else
+          write_safe("## you are in %s status. GAME is valid in connected or game_waiting status\n", @status)
+          next
+        end
+        @status = "game_waiting"
+        @game_name = $1
         if ($2 == "+")
           @sente = true
           rival_sente = false
@@ -148,25 +222,26 @@ class Player
           @sente = false
           rival_sente = true
         end
-        rival = LEAGUE.get_player(game_name, rival_sente)
+        rival = LEAGUE.get_player("game_waiting", @game_name, rival_sente)
         if (rival)
-          @state = "game"
-          LEAGUE.start_game(game_name, self, rival)
+          LEAGUE.new_game(@game_name, self, rival)
+          self.status = "agree_waiting"
+          rival.status = "agree_waiting"
         end
       when /^%%CHAT\s+(\S+)/
         message = $1
         LEAGUE.hash.each do |name, player|
-          s = player.write_safe(sprintf("## [%s] %s", @name, message))
+          s = player.write_safe(sprintf("## [%s] %s\n", @name, message))
           player.status = "zombie" if (! s)
         end
       when /^%%WHO/
         LEAGUE.hash.each do |name, player|
-          write_safe(sprintf("## %s %s", name, player.state))
+          write_safe(sprintf("## %s\n", player.to_s))
         end
       when /^%%LOGOUT/
         break
       else
-        write_safe(sprintf("## unknown command %s", str))
+        write_safe(sprintf("## unknown command %s\n", str))
       end
     end
   end
@@ -176,24 +251,83 @@ class Board
 end
 
 class Game
-  def initialize(event, sente, gote)
-    @id = sprintf("%s-%s-%s-%s", event, sente.name, gote.name, Time::new.strftime("%Y%m%d%H%M%S"))
-    @logfile = @id + ".csa"
-    @sente = sente
-    @gote = gote
-    @sente.sg_flag = "+"
-    @gote.sg_flag = "-"
-    @board = Board::new
-    @currnet_player = sente
-    @next_player = gote
-    @fh = nil
-    printf("%s: new game %s %s %s\n", Time::new.to_s, @id, @sente.name, @gote.name)
-  end
-  def start
-    begin
-      @sente.watchdog_start(Watchdog_Time)
-      @gote.watchdog_start(Watchdog_Time)
+  def initialize(game_name, player0, player1)
+    @game_name = game_name
+    if (player0.sente)
+      @sente = player0
+      @gote = player1
+    else
+      @sente = player0
+      @gote = player1
+    end
+    @current_player = @sente
+    @next_player = @gote
 
+    @sente.game = self
+    @gote.game = self
+    @sente.status = "agree_waiting"
+    @gote.status = "agree_waiting"
+    @id = sprintf("%s-%s-%s-%s", @game_name, @sente.name, @gote.name, Time::new.strftime("%Y%m%d%H%M%S"))
+    log_message(sprintf("game created %s %s %s", game_name, sente.name, gote.name))
+
+    @logfile = @id + ".csa"
+    @board = Board::new
+    @start_time = nil
+    @fh = nil
+
+    propose
+  end
+  attr_accessor :game_name, :sente, :gote, :id, :board, :current_player, :next_player, :fh
+
+  def handle_one_move(str, player)
+    if (@current_player == player)
+      @end_time = Time::new
+      t = @end_time - @start_time
+      t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
+      @sente.write_safe(sprintf("%s,T%d\n", str, t))
+      @gote.write_safe(sprintf("%s,T%d\n", str, t))
+      @current_player.mytime = @current_player.mytime - t
+      if (@current_player < 0)
+        timeout_end()
+      elsif (str =~ /%KACHI/)
+        kachi_end()
+      elsif (str =~ /%TORYO/)
+        toryo_end
+      end
+      (@current_player, @next_player) = [@next_player, @current_player]
+      @start_time = Time::new
+    end
+  end
+
+  def timeout_end
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write("#TIME_UP\n#LOSE\n")
+    @next_player.write("#TIME_UP\n#WIN\n")
+  end
+
+  def kachi_end
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write("#JISHOGI\n#WIN\n")
+    @next_player.write("#JISHOGI\n#LOSE\n")
+  end
+
+  def toryo_end
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write("#RESIGN\n#LOSE\n")
+    @next_player.write("#RESIGN\n#WIN\n")
+  end
+
+  def start
+    @sente.write_safe(sprintf("START:%s\n", @id))
+    @gote.write_safe(sprintf("START:%s\n", @id))
+    @start_time = Time::new
+  end
+
+  def propose
+    begin
       @fh = open(@logfile, "w")
       @fh.sync = true
 
@@ -201,10 +335,9 @@ class Game
       @fh.printf("N+%s\n", @sente.name)
       @fh.printf("N-%s\n", @gote.name)
       @fh.printf("$EVENT:%s\n", @id)
-      @sente.write(start_message("+"))
-      @gote.write(start_message("-"))
-      @sente.wait_agree(Agree_Time)
-      @gote.wait_agree(Agree_Time)
+
+      @sente.write_safe(propose_message("+"))
+      @gote.write_safe(propose_message("-"))
 
       @fh.printf("$START_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))
       @fh.print <<EOM
@@ -219,83 +352,10 @@ P8 * +KA *  *  *  *  * +HI *
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOM
-
-      @sente.write(sprintf("START:%s\n", @id))
-      @gote.write(sprintf("START:%s\n", @id))
-      while(true)
-        @currnet_player = @sente
-        @next_player = @gote
-        handle_one_move(@currnet_player, @next_player)
-
-        @currnet_player = @gote
-        @next_player = @sente
-        handle_one_move(@currnet_player, @next_player)
-      end
-    rescue ShogiWatchdogTimeout
-      sg_flag_of_timeout = $!.message
-      if (sg_flag_of_timeout == "+")
-        loser = @sente
-        winner = @gote
-      else
-        loser = @sente
-        winner = @gote
-      end
-      printf("watchdog timeout by %s\n", loser.name)
-      loser.write("#TIME_UP\n#LOSE\n")
-      winner.write("#TIME_UP\n#WIN\n")
-    rescue TimeoutError, ShogiTimeout
-      printf("%s: end timeup by %s\n", Time::new.to_s, @currnet_player.name)
-      @currnet_player.write("#TIME_UP\n#LOSE\n")
-      @next_player.write("#TIME_UP\n#WIN\n")
-    rescue ShogiReject
-      sender = $!.message
-      printf("%s: reject by %s\n", Time::new.to_s, sender)
-      str = sprintf("REJECT:%s by %s\n", @id, sender)
-      @sente.write(str)
-      @gote.write(str)
-    rescue ShogiIllegalMove
-      printf("%s: end illegal move by %s\n", Time::new.to_s, @currnet_player.name)
-      move = $!.message
-      @fh.printf("%%ERROR\n")
-      @currnet_player.write(sprintf("%s\n#ILLEGAL_MOVE\n#LOSE\n", move))
-      @next_player.write(sprintf("%s\n#ILLEGAL_MOVE\n#WIN\n", move))
-    rescue ShogiEnd
-      printf("%s: end by %s\n", Time::new.to_s, @currnet_player.name)
-      move = $!.message
-      case move
-      when "%TORYO"
-        @currnet_player.write(sprintf("%s\n#RESIGN\n#LOSE\n", move))
-        @next_player.write(sprintf("%s\n#RESIGN\n#WIN\n", move))
-      when "%KACHI"
-        @currnet_player.write(sprintf("%s\n#JISHOGI\n#WIN\n", move))
-        @next_player.write(sprintf("%s\n#JISHOGI\n#LOSE\n", move))
-      end
     end
-    @fh.printf("'END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))
   end
 
-  def handle_one_move(current_player, next_player)
-    start_time = Time::new
-    str = current_player.get_move
-    @fh.printf("%s\n", str)
-    end_time = Time::new
-    time = (end_time - start_time).truncate
-    time = Least_Time_Per_Move if (time < Least_Time_Per_Move)
-    current_player.sub_time(time)
-    raise ShogiEnd, str if (str =~ /\A%/)
-    @sente.write(sprintf("%s,T%d\n", str, time))
-    @gote.write(sprintf("%s,T%d\n", str, time))
-    @fh.printf("T%s\n", time)
-  end
-
-  def finish
-    @sente.finish
-    @gote.finish
-    @fh.close
-    printf("%s: end game %s %s %s\n", Time::new.to_s, @id, @sente.name, @gote.name)
-  end
-
-  def start_message(sg_flag)
+  def propose_message(sg_flag)
     str = <<EOM
 Protocol_Mode:Server
 Format:Shogi 1.0
@@ -324,6 +384,8 @@ P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 P+
 P-
 +
+END Position
+END Game_Summary
 EOM
     return str
   end
@@ -425,7 +487,7 @@ def main
         if (good_login?(str))
           player = Player::new(str, client)
           if (LEAGUE.duplicated?(player))
-            client.write_safe(sprintf("username %s is already connected", player.name))
+            client.write_safe(sprintf("username %s is already connected%s", player.name, eol))
             next
           end
           LEAGUE.add(player)
