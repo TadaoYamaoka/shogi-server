@@ -117,7 +117,7 @@ class Player
     @name = nil
     @password = nil
     @socket = socket
-    @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game
+    @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game -> finished
 
     @protocol = nil             # CSA or x1
     @eol = "\m"                 # favorite eol code
@@ -134,9 +134,12 @@ class Player
   attr_accessor :protocol, :eol, :game, :mytime, :watchdog_thread, :game_name, :sente
 
   def finish
-    log_message(sprintf("user %s finish", @name))    
-    Thread::kill(@watchdog_thread) if @watchdog_thread
-    @socket.close if (! @socket.closed?)
+    if (@status != "finished")
+      @status = "finished"
+      log_message(sprintf("user %s finish", @name))    
+      Thread::kill(@watchdog_thread) if @watchdog_thread
+      @socket.close if (! @socket.closed?)
+    end
   end
 
   def watchdog(time)
@@ -197,7 +200,6 @@ class Player
       log_message(sprintf("user %s run in CSA mode", @name))
       csa_1st_str = "%%GAME default +-"
     end
-
     
     while (csa_1st_str || (str = @socket.gets_safe(@mytime)))
       begin
@@ -205,6 +207,9 @@ class Player
         if (csa_1st_str)
           str = csa_1st_str
           csa_1st_str = nil
+        end
+        if (@status == "finished")
+          return
         end
         str.chomp! if (str.class == String)
         case str
@@ -303,7 +308,6 @@ class Player
           write_safe(buf.join)
         when /^LOGOUT/
           write_safe("LOGOUT:completed\n")
-          finish
           return
         else
           write_safe(sprintf("##[ERROR] unknown command %s\n", str))
@@ -526,10 +530,16 @@ class Game
     log_message(sprintf("game finished %s %s %s", game_name, sente.name, gote.name))
     @fh.printf("'$END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))    
     @fh.close
+
+    @sente.game = nil
+    @gote.game = nil
     @sente.status = "connected"
     @gote.status = "connected"
     if (@current_player.protocol == "CSA")
       @current_player.finish
+    end
+    if (@next_player.protocol == "CSA")
+      @next_player.finish
     end
     LEAGUE.games.delete(@id)
   end
@@ -568,7 +578,6 @@ class Game
       end
       (@current_player, @next_player) = [@next_player, @current_player]
       @start_time = Time::new
-      finish if (finish_flag)
       return finish_flag
     end
   end
@@ -640,6 +649,8 @@ EOM
 
   def propose_message(sg_flag)
     str = <<EOM
+BEGIN Game_Summary
+Protocol_Version:1.0
 Protocol_Mode:Server
 Format:Shogi 1.0
 Game_ID:#{@id}
@@ -805,8 +816,18 @@ def main
       end                       # login loop
       log_message(sprintf("user %s login", player.name))
       player.run
-      LEAGUE.delete(player)
-      log_message(sprintf("user %s logout", player.name))
+      begin
+        $mutex.lock
+        if (player.game)
+          player.game.finish
+        elsif (player.status != "finished")
+          player.finish
+        end
+        LEAGUE.delete(player)
+        log_message(sprintf("user %s logout", player.name))
+      ensure
+        $mutex.unlock
+      end
     end
   end
 end
