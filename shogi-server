@@ -17,6 +17,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+Max_Write_Queue_Size = 1000
 Max_Identifier_Length = 32
 Default_Timeout = 60            # for single socket operation
 
@@ -124,12 +125,15 @@ class Player
     @mytime = 0                 # set in start method also
     @sente = nil
     @watchdog_thread = nil
+    @writer_thread = nil
     @main_thread = nil
+    @write_queue = Queue::new
     login(str)
   end
 
   attr_accessor :name, :password, :socket, :status
-  attr_accessor :protocol, :eol, :game, :mytime, :main_thread, :watchdog_thread, :game_name, :sente
+  attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
+  attr_accessor :main_thread, :watchdog_thread, :writer_thread, :write_queue
   def kill
     finish
     Thread::kill(@main_thread) if @main_thread
@@ -140,7 +144,18 @@ class Player
       @status = "finished"
       log_message(sprintf("user %s finish", @name))    
       Thread::kill(@watchdog_thread) if @watchdog_thread
+      Thread::kill(@writer_thread) if @writer_thread
       @socket.close if (! @socket.closed?)
+    end
+  end
+
+  def write_safe(str)
+    @write_queue.push(str.gsub(/[\r\n]+/, @eol))
+  end
+
+  def writer
+    while (str = @write_queue.pop)
+      @socket.write_safe(str)
     end
   end
 
@@ -174,10 +189,6 @@ class Player
     @socket.write_safe('##[HELP] available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"')
   end
 
-  def write_safe(str)
-    @socket.write_safe(str.gsub(/[\r\n]+/, @eol))
-  end
-
   def login(str)
     str =~ /([\r\n]*)$/
     @eol = $1
@@ -191,6 +202,9 @@ class Player
     @main_thread = Thread::current
     @watchdog_thread = Thread::start do
       watchdog(Watchdog_Time)
+    end
+    @writer_thread = Thread::start do
+      writer()
     end
   end
     
@@ -211,6 +225,10 @@ class Player
           str = csa_1st_str
           csa_1st_str = nil
         end
+        if (@write_queue.size > Max_Write_Queue_Size)
+          log_warning(sprintf("write_queue of %s is %d", @name, @write_queue.size))
+        end
+
         if (@status == "finished")
           return
         end
@@ -844,7 +862,7 @@ def log_message(str)
 end
 
 def log_warning(str)
-  printf("%s message: %s\n", Time::new.to_s, str)
+  printf("%s warning: %s\n", Time::new.to_s, str)
 end
 
 def log_error(str)
@@ -935,7 +953,6 @@ def main
       while (str = client.gets_timeout(Login_Time))
         begin
           $mutex.lock
-          Thread::kill(Thread::current) if (! str) # disconnected
           str =~ /([\r\n]*)$/
           eol = $1
           if (good_login?(str))
@@ -949,7 +966,7 @@ def main
                 client.write_safe("LOGIN:incorrect" + eol)
                 client.write_safe(sprintf("username %s is already connected%s", player.name, eol)) if (str.split.length >= 4)
                 client.close
-                Thread::kill(Thread::current)
+                Thread::exit
               end
             end
             LEAGUE.add(player)
@@ -964,7 +981,7 @@ def main
       end                       # login loop
       if (! player)
         client.close
-        Thread::kill(Thread::current)
+        Thread::exit
       end
       log_message(sprintf("user %s login", player.name))
       player.run
