@@ -208,7 +208,11 @@ class Player
       write_safe(sprintf("##[LOGIN] +OK %s\n", @protocol))
     else
       log_message(sprintf("user %s run in CSA mode", @name))
-      csa_1st_str = "%%GAME #{Default_Game_Name} *"
+      if (good_game_name?(@password))
+        csa_1st_str = "%%GAME #{@password} *"
+      else
+        csa_1st_str = "%%GAME #{Default_Game_Name} *"
+      end
     end
     
     while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
@@ -273,8 +277,12 @@ class Player
         when /^%%HELP/
           write_help
         when /^%%GAME\s*$/
-          @status = "connected"
-          @game_name = ""
+          if ((@status == "connected") || (@status == "game_waiting"))
+            @status = "connected"
+            @game_name = ""
+          else
+            write_safe(sprintf("##[ERROR] you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
+          end
         when /^%%(GAME|CHALLENGE)\s+(\S+)\s+([\+\-\*])\s*$/
           command_name = $1
           game_name = $2
@@ -354,8 +362,7 @@ class Player
           message = $1
           LEAGUE.players.each do |name, player|
             if (player.protocol != "CSA")
-              s = player.write_safe(sprintf("##[CHAT][%s] %s\n", @name, message)) 
-              player.status = "zombie" if (! s)
+              player.write_safe(sprintf("##[CHAT][%s] %s\n", @name, message)) 
             end
           end
         when /^%%LIST/
@@ -1254,12 +1261,19 @@ class Game
       elsif (str == :timeout)
         return false            # time isn't expired. players aren't swapped. continue game
       else
+        if (@current_player.mytime - t < @byoyomi)
+          @current_player.mytime = @byoyomi
+        else
+          @current_player.mytime = @current_player.mytime - t
+        end
+
 #        begin
           move_status = @board.handle_one_move(str)
 #        rescue
 #          log_error("handle_one_move raise exception for #{str}")
 #          move_status = :illegal
 #        end
+
         if ((move_status == :illegal) || (move_status == :uchifuzme) || (move_status == :oute_kaihimore))
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         else
@@ -1270,17 +1284,12 @@ class Game
             @last_move = sprintf("%s,T%d", str, t)
             @current_turn = @current_turn + 1
           end
+
           @monitors.each do |monitor|
             monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@id}] "))
             monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
           end
         end
-      end
-
-      if (@current_player.mytime - t < @byoyomi)
-        @current_player.mytime = @byoyomi
-      else
-        @current_player.mytime = @current_player.mytime - t
       end
 
       if (@next_player.status != "game") # rival is logout or disconnected
