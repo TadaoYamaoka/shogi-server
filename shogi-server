@@ -1,0 +1,447 @@
+#! /usr/bin/env ruby
+## -*-Ruby-*- $RCSfile$ $Revision$ $Name$
+
+## Copyright (C) 2004 773@2ch
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+DEFAULT_TIMEOUT = 10            # for single socket operation
+Total_Time = 1500
+Least_Time_Per_Move = 1
+Watchdog_Time = 30              # time for ping
+Agree_Time = 300                # time for AGREE
+Login_Time = 300                # time for LOGIN
+
+Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
+Release.concat("-") if (Release == "")
+Revision = "$Revision$".gsub(/[^\.\d]/, '')
+
+STDOUT.sync = true
+STDERR.sync = true
+
+require 'getoptlong'
+require 'thread'
+require 'timeout'
+require 'socket'
+require 'ping'
+
+TCPSocket.do_not_reverse_lookup = true
+
+class TCPSocket
+  def gets_timeout(t = DEFAULT_TIMEOUT)
+    begin
+      timeout(t) do
+        return self.gets
+      end
+    rescue TimeoutError
+      return nil
+    rescue
+      return nil
+    end
+  end
+  def gets_safe
+    begin
+      return self.gets
+    rescue
+      return nil
+    end
+  end
+  def write_safe(str)
+    begin
+      return self.write(str)
+    rescue
+      return nil
+    end
+  end
+end
+
+
+class League
+  def initialize
+    @hash = Hash::new
+  end
+  attr_accessor :hash
+
+  def add(player)
+    @hash[player.name] = player
+  end
+  def delete(player)
+    @hash.delete(player.name)
+  end
+  def duplicated?(player)
+    if (@hash[player.name])
+      return true
+    else
+      return false
+    end
+  end
+end
+
+
+
+
+class Player
+  def initialize(str, socket)
+    @name = nil
+    @password = nil
+    @socket = socket
+    @state = "connected"        # wait_game -> game
+
+    @x1 = false                 # extention protocol
+    @eol = "\m"                 # favorite eol code
+    @game = nil
+    @mytime = Total_Time
+    @sente = nil
+    @watchdog_thread = nil
+
+    login(str)
+  end
+
+  attr_accessor :name, :password, :socket, :state
+  attr_accessor :x1, :eol, :game, :mytime, :watchdog_thread
+
+
+  def write_safe(str)
+    @socket.write_safe(str + @eol)
+  end
+
+  def login(str)
+    str =~ /([\r\n]*)$/
+    @eol = $1
+    str.chomp!
+    (login, @name, @password, ext) = str.split
+    @x1 = true if (ext)
+  end
+
+  def run
+    if (@x1)
+      log_message(sprintf("user %s run in x1 mode", @name))
+      write_safe("## LOGIN in x1 mode")
+    else
+      log_message(sprintf("user %s run in CSA mode", @name))
+    end
+
+    while (str = @socket.gets_safe)
+      str.chomp!
+      case str
+      when /^%%HELP/
+        write_help
+      when /^%%GAME\s+(\S+)\s+([\+\-])/
+        game_name = $1
+        @state = "game_waiting"
+        if ($2 == "+")
+          @sente = true
+          rival_sente = false
+        else
+          @sente = false
+          rival_sente = true
+        end
+        rival = LEAGUE.get_player(game_name, rival_sente)
+        if (rival)
+          @state = "game"
+          LEAGUE.start_game(game_name, self, rival)
+        end
+      when /^%%CHAT\s+(\S+)/
+        message = $1
+        LEAGUE.hash.each do |name, player|
+          s = player.write_safe(sprintf("## [%s] %s", @name, message))
+          player.status = "zombie" if (! s)
+        end
+      when /^%%WHO/
+        LEAGUE.hash.each do |name, player|
+          write_safe(sprintf("## %s %s", name, player.state))
+        end
+      when /^%%LOGOUT/
+        break
+      else
+        write_safe(sprintf("## unknown command %s", str))
+      end
+    end
+  end
+end
+
+class Board
+end
+
+class Game
+  def initialize(event, sente, gote)
+    @id = sprintf("%s-%s-%s-%s", event, sente.name, gote.name, Time::new.strftime("%Y%m%d%H%M%S"))
+    @logfile = @id + ".csa"
+    @sente = sente
+    @gote = gote
+    @sente.sg_flag = "+"
+    @gote.sg_flag = "-"
+    @board = Board::new
+    @currnet_player = sente
+    @next_player = gote
+    @fh = nil
+    printf("%s: new game %s %s %s\n", Time::new.to_s, @id, @sente.name, @gote.name)
+  end
+  def start
+    begin
+      @sente.watchdog_start(Watchdog_Time)
+      @gote.watchdog_start(Watchdog_Time)
+
+      @fh = open(@logfile, "w")
+      @fh.sync = true
+
+      @fh.printf("V2\n")
+      @fh.printf("N+%s\n", @sente.name)
+      @fh.printf("N-%s\n", @gote.name)
+      @fh.printf("$EVENT:%s\n", @id)
+      @sente.write(start_message("+"))
+      @gote.write(start_message("-"))
+      @sente.wait_agree(Agree_Time)
+      @gote.wait_agree(Agree_Time)
+
+      @fh.printf("$START_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))
+      @fh.print <<EOM
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA *
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  *
+P5 *  *  *  *  *  *  *  *  *
+P6 *  *  *  *  *  *  *  *  *
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI *
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOM
+
+      @sente.write(sprintf("START:%s\n", @id))
+      @gote.write(sprintf("START:%s\n", @id))
+      while(true)
+        @currnet_player = @sente
+        @next_player = @gote
+        handle_one_move(@currnet_player, @next_player)
+
+        @currnet_player = @gote
+        @next_player = @sente
+        handle_one_move(@currnet_player, @next_player)
+      end
+    rescue ShogiWatchdogTimeout
+      sg_flag_of_timeout = $!.message
+      if (sg_flag_of_timeout == "+")
+        loser = @sente
+        winner = @gote
+      else
+        loser = @sente
+        winner = @gote
+      end
+      printf("watchdog timeout by %s\n", loser.name)
+      loser.write("#TIME_UP\n#LOSE\n")
+      winner.write("#TIME_UP\n#WIN\n")
+    rescue TimeoutError, ShogiTimeout
+      printf("%s: end timeup by %s\n", Time::new.to_s, @currnet_player.name)
+      @currnet_player.write("#TIME_UP\n#LOSE\n")
+      @next_player.write("#TIME_UP\n#WIN\n")
+    rescue ShogiReject
+      sender = $!.message
+      printf("%s: reject by %s\n", Time::new.to_s, sender)
+      str = sprintf("REJECT:%s by %s\n", @id, sender)
+      @sente.write(str)
+      @gote.write(str)
+    rescue ShogiIllegalMove
+      printf("%s: end illegal move by %s\n", Time::new.to_s, @currnet_player.name)
+      move = $!.message
+      @fh.printf("%%ERROR\n")
+      @currnet_player.write(sprintf("%s\n#ILLEGAL_MOVE\n#LOSE\n", move))
+      @next_player.write(sprintf("%s\n#ILLEGAL_MOVE\n#WIN\n", move))
+    rescue ShogiEnd
+      printf("%s: end by %s\n", Time::new.to_s, @currnet_player.name)
+      move = $!.message
+      case move
+      when "%TORYO"
+        @currnet_player.write(sprintf("%s\n#RESIGN\n#LOSE\n", move))
+        @next_player.write(sprintf("%s\n#RESIGN\n#WIN\n", move))
+      when "%KACHI"
+        @currnet_player.write(sprintf("%s\n#JISHOGI\n#WIN\n", move))
+        @next_player.write(sprintf("%s\n#JISHOGI\n#LOSE\n", move))
+      end
+    end
+    @fh.printf("'END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))
+  end
+
+  def handle_one_move(current_player, next_player)
+    start_time = Time::new
+    str = current_player.get_move
+    @fh.printf("%s\n", str)
+    end_time = Time::new
+    time = (end_time - start_time).truncate
+    time = Least_Time_Per_Move if (time < Least_Time_Per_Move)
+    current_player.sub_time(time)
+    raise ShogiEnd, str if (str =~ /\A%/)
+    @sente.write(sprintf("%s,T%d\n", str, time))
+    @gote.write(sprintf("%s,T%d\n", str, time))
+    @fh.printf("T%s\n", time)
+  end
+
+  def finish
+    @sente.finish
+    @gote.finish
+    @fh.close
+    printf("%s: end game %s %s %s\n", Time::new.to_s, @id, @sente.name, @gote.name)
+  end
+
+  def start_message(sg_flag)
+    str = <<EOM
+Protocol_Mode:Server
+Format:Shogi 1.0
+Game_ID:#{@id}
+Name+:#{@sente.name}
+Name-:#{@gote.name}
+Your_Turn:#{sg_flag}
+Rematch_On_Draw:NO
+To_Move:+
+BEGIN Time
+Time_Unit:1sec
+Total_Time:#{Total_Time}
+Least_Time_Per_Move:#{Least_Time_Per_Move}
+END Time
+BEGIN Position
+Jishogi_Declaration:1.1
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA *
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  *
+P5 *  *  *  *  *  *  *  *  *
+P6 *  *  *  *  *  *  *  *  *
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI *
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+P+
+P-
++
+EOM
+    return str
+  end
+end
+
+def usage
+    print <<EOM
+NAME
+	shogi-server - server for CSA server protocol
+
+SYNOPSIS
+	shogi-server event_name port_number
+
+DESCRIPTION
+	server for CSA server protocol
+
+OPTIONS
+	--pid-file file
+		specify filename for logging process ID
+
+LICENSE
+	this file is distributed under GPL version2 and might be compiled by Exerb
+
+SEE ALSO
+
+RELEASE
+	#{Release}
+
+REVISION
+	#{Revision}
+EOM
+end
+
+def log_message(str)
+  printf("%s message: %s\n", Time::new.to_s, str)
+end
+
+def log_warning(str)
+  printf("%s message: %s\n", Time::new.to_s, str)
+end
+
+def log_error(str)
+  printf("%s error: %s\n", Time::new.to_s, str)
+end
+
+
+def parse_command_line
+  options = Hash::new
+  parser = GetoptLong.new
+  parser.ordering = GetoptLong::REQUIRE_ORDER
+  parser.set_options(
+                     ["--pid-file", GetoptLong::REQUIRED_ARGUMENT])
+
+  begin
+    parser.each_option do |name, arg|
+      options[name] = arg.dup
+    end
+  rescue
+    usage
+    raise parser.error_message
+  end
+  return options
+end
+
+LEAGUE = League::new
+
+def good_login?(str)
+  return false if (str !~ /^LOGIN /)
+  tokens = str.split
+  if ((tokens.length == 3) || (tokens.length == 4))
+    ## ok
+  else
+    return false
+  end
+  return true
+end
+
+def main
+  $options = parse_command_line
+  if (ARGV.length != 2)
+    usage
+    exit 2
+  end
+  event = ARGV.shift
+  port = ARGV.shift
+
+  Thread.abort_on_exception = true
+
+  server = TCPserver.open(port)
+  log_message("server started")
+
+  while true
+    Thread::start(server.accept) do |client|
+      client.sync = true
+      while (str = client.gets_timeout(Login_Time))
+        Thread::kill(Thread::current) if (! str) # disconnected
+        str =~ /([\r\n]*)$/
+        eol = $1
+        if (good_login?(str))
+          player = Player::new(str, client)
+          if (LEAGUE.duplicated?(player))
+            client.write_safe(sprintf("username %s is already connected", player.name))
+            next
+          end
+          LEAGUE.add(player)
+          break
+        else
+          client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol)
+        end
+      end                       # login loop
+      log_message(sprintf("user %s login", player.name))
+      player.run
+      LEAGUE.delete(player)
+      log_message(sprintf("user %s logout", player.name))
+    end
+  end
+end
+
+if ($0 == __FILE__)
+  main
+end
