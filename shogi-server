@@ -927,8 +927,26 @@ def  write_pid_file(file)
   end
 end
 
+def mutex_watchdog(mutex, sec)
+  while true
+    begin
+      timeout(sec) do
+        mutex.lock
+        mutex.unlock
+      end
+    rescue TimeoutError
+      log_error("mutex watchdog timeout")
+      exit(1)
+    end
+  end
+end
+
 def main
   $mutex = Mutex::new
+  Thread::start do
+    mutex_watchdog($mutex, 10)
+  end
+
   $options = parse_command_line
   if (ARGV.length != 2)
     usage
