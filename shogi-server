@@ -38,7 +38,6 @@ require 'getoptlong'
 require 'thread'
 require 'timeout'
 require 'socket'
-require 'ping'
 
 TCPSocket.do_not_reverse_lookup = true
 
@@ -385,9 +384,10 @@ class Board
   def initialize
     @sente_hands = Array::new
     @gote_hands = Array::new
+    @history = Hash::new
     @array = [[], [], [], [], [], [], [], [], [], []]
   end
-  attr_accessor :array, :sente_hands, :gote_hands
+  attr_accessor :array, :sente_hands, :gote_hands, :history
 
   def initial
     @array[1][1] = Piece::new("KY", false)
@@ -433,6 +433,13 @@ class Board
     @array[9][7] = Piece::new("FU", true)
   end
 
+  def have_piece?(hands, name)
+    p = hands.find { |i|
+      i.name == name
+    }
+    return p
+  end
+
   def get_piece_from_hands(hands, name)
     p = hands.find { |i|
       i.name == name
@@ -444,7 +451,6 @@ class Board
   end
 
   def handle_one_move(str)
-  begin
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       p = $1
       x0 = $2.to_i
@@ -452,18 +458,21 @@ class Board
       x1 = $4.to_i
       y1 = $5.to_i
       name = $6
-
-      if ((x1 == 0) || (y1 == 0))
-	return "illegal"
-      end
     elsif (str =~ /^%KACHI/)
-      return "kachi"
+      return :kachi
     elsif (str =~ /^%TORYO/)
-      return "toryo"
+      return :toryo
     else
-      return "illegal"
+      return :illegal
     end
-
+    
+    if (((x0 == 0) || (y0 == 0)) && # source is not from hand
+        ((x0 != 0) || (y0 != 0)))
+      return :illegal
+    elsif ((x1 == 0) || (y1 == 0)) # destination is out of board
+      return :illegal
+    end
+    
     if (p == "+")
       sente = true
       hands = @sente_hands
@@ -471,36 +480,56 @@ class Board
       sente = false
       hands = @gote_hands
     end
-    if (@array[x1][y1])
-      if (@array[x1][y1] == sente) # this is mine
-        return "illegal"
-      elsif (@array[x1][y1].name == "OU")
-        return "outori"
-      end
-      hands.push(@array[x1][y1])
-      @array[x1][y1] = nil
+    
+    ## source check
+    if ((x0 == 0) && (y0 == 0))
+      return :illegal if (! have_piece?(hands, name))
+    elsif (! @array[x0][y0])
+      return :illegal           # no piece
+    elsif (@array[x0][y0].sente != sente)
+      return :illegal           # this is not mine
+    elsif (@array[x0][y0].name != name)
+      return :illegal if (@array[x0][y0].promoted_name != name) # can't promote
     end
+    
+    ## destination check
+    if (@array[x1][y1] &&
+        (@array[x1][y1].sente == sente)) # can't capture mine
+      return :illegal
+    elsif ((x0 == 0) && (y0 == 0) && @array[x1][y1])
+      return :illegal           # can't put on existing piece
+    end
+
     if ((x0 == 0) && (y0 == 0))
       p = get_piece_from_hands(hands, name)
-      return "illegal" if (! p)     # i don't have this one
       @array[x1][y1] = p
       p.sente = sente
       p.promoted = false
     else
-      if (@array[x0][y0] == nil)
-        return "illegal";
-      end
       if (@array[x0][y0].name != name) # promoted ?
-        return "illegal" if (@array[x0][y0].promoted_name != name) # can't promote
         @array[x0][y0].promoted = true
+      end
+      if (@array[x1][y1])
+        if (@array[x1][y1].name == "OU")
+          return :outori        # return board update
+        end
+        hands.push(@array[x1][y1])
+        hands.sort! {|a, b|
+          a.name <=> b.name
+        }
       end
       @array[x1][y1] = @array[x0][y0]
       @array[x0][y0] = nil
     end
-    return "normal"             # legal move
-  rescue
-    return "illegal"
-  end
+
+    ## sennichite check
+    str = to_s
+    @history[str] = (@history[str] || 0) + 1
+    if (@history[str] >= 4)
+      return :sennichite
+    end
+
+    return :normal             # legal move
   end
 
   def to_s
@@ -649,11 +678,16 @@ class Game
       elsif (str == :timeout)
         return false            # time isn't expired. players aren't swapped. continue game
       else
-        move_status = @board.handle_one_move(str)
-        if (move_status == "illegal")
+        begin
+          move_status = @board.handle_one_move(str)
+        rescue
+          log_error("handle_one_move raise exception for #{str}")
+          move_status = :illegal
+        end
+        if (move_status == :illegal)
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         else
-          if ((move_status == "normal") || (move_status == "outori"))
+          if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite))
             @sente.write_safe(sprintf("%s,T%d\n", str, t))
             @gote.write_safe(sprintf("%s,T%d\n", str, t))
             @fh.printf("%s\nT%d\n", str, t)
@@ -677,14 +711,16 @@ class Game
         abnormal_win()
       elsif (status == :timeout)
         timeout_lose()
-      elsif (move_status == "illegal")
+      elsif (move_status == :illegal)
         illegal_lose()
-      elsif (move_status == "kachi")
+      elsif (move_status == :kachi)
         kachi_win()
-      elsif (move_status == "toryo")
+      elsif (move_status == :toryo)
         toryo_lose()
-      elsif (move_status == "outori")
+      elsif (move_status == :outori)
         outori_win()
+      elsif (move_status == :sennichite)
+        sennichite_draw()
       else
         finish_flag = false
       end
@@ -716,6 +752,17 @@ class Game
     @fh.printf("'summary:abnormal:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+    end
+  end
+
+  def sennichite_draw
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write_safe("#SENNICHITE\n#DRAW\n")
+    @next_player.write_safe("#SENNICHITE\n#DRAW\n")
+    @fh.printf("'summary:sennichite:%s draw:%s draw\n", @current_player.name, @next_player.name)
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @id))
     end
   end
 
@@ -801,13 +848,13 @@ class Game
       @fh.printf("$START_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))
       @fh.print <<EOM
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
-P2 * -HI *  *  *  *  * -KA *
+P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
-P4 *  *  *  *  *  *  *  *  *
-P5 *  *  *  *  *  *  *  *  *
-P6 *  *  *  *  *  *  *  *  *
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
 P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
-P8 * +KA *  *  *  *  * +HI *
+P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOM
@@ -829,11 +876,11 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
+Least_Time_Per_Move:#{Least_Time_Per_Move}
 Remaining_Time+:#{@sente.mytime}
 Remaining_Time-:#{@gote.mytime}
 Last_Move:#{@last_move}
 Current_Turn:#{@current_turn}
-Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
 Jishogi_Declaration:1.1
@@ -868,13 +915,13 @@ END Time
 BEGIN Position
 Jishogi_Declaration:1.1
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
-P2 * -HI *  *  *  *  * -KA *
+P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
-P4 *  *  *  *  *  *  *  *  *
-P5 *  *  *  *  *  *  *  *  *
-P6 *  *  *  *  *  *  *  *  *
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
 P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
-P8 * +KA *  *  *  *  * +HI *
+P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 P+
 P-
