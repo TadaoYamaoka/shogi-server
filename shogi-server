@@ -550,6 +550,7 @@ class Game
       @end_time = Time::new
       t = @end_time - @start_time
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
+      legal_move = true
       if (str != :timeout)
         legal_move = @board.handle_one_move(str)
         if (legal_move)
@@ -820,7 +821,8 @@ def main
         $mutex.lock
         if (player.game)
           player.game.finish
-        elsif (player.status != "finished")
+        end
+        if (player.status != "finished")
           player.finish
         end
         LEAGUE.delete(player)
