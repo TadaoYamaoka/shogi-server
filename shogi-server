@@ -133,6 +133,10 @@ class Player
   attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
   attr_accessor :main_thread, :writer_thread, :write_queue
   def kill
+    log_message(sprintf("user %s killed", @name))
+    if (@game)
+      @game.kill(self)
+    end
     finish
     Thread::kill(@main_thread) if @main_thread
   end
@@ -268,15 +272,20 @@ class Player
           end
         when /^%%HELP/
           write_help
-        when /^%%GAME\s+(\S+)\s+([\+\-])/
+        when /^%%GAME\s*$/
+          @status = "connected"
+          @game_name = ""
+        when /^%%GAME\s+(\S+)\s+([\+\-]{1,2})/
           game_name = $1
           sente_str = $2
           if (! good_game_name?(game_name))
             write_safe(sprintf("##[ERROR] bad game name\n"))
+            next
           elsif ((@status == "connected") || (@status == "game_waiting"))
             @status = "game_waiting"
           else
             write_safe(sprintf("##[ERROR] you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
+            next
           end
           @status = "game_waiting"
           @game_name = $1
@@ -605,7 +614,7 @@ class Game
     LEAGUE.games[@id] = self
 
 
-    log_message(sprintf("game created %s %s %s", game_name, sente.name, gote.name))
+    log_message(sprintf("game created %s", @id))
 
     @logfile = @id + ".csa"
     @board = Board::new
@@ -643,7 +652,7 @@ class Game
   end
 
   def finish
-    log_message(sprintf("game finished %s %s %s", game_name, sente.name, gote.name))
+    log_message(sprintf("game finished %s", @id))
     @fh.printf("'$END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))    
     @fh.close
 
@@ -825,7 +834,7 @@ class Game
   end
 
   def start
-    log_message(sprintf("game started %s %s %s", game_name, sente.name, gote.name))
+    log_message(sprintf("game started %s", @id))
     @sente.write_safe(sprintf("START:%s\n", @id))
     @gote.write_safe(sprintf("START:%s\n", @id))
     @sente.mytime = @total_time
