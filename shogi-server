@@ -226,7 +226,7 @@ class Player
           if ((@status == "connected") || (@status == "game_waiting"))
             @status = "game_waiting"
           else
-            write_safe("## you are in %s status. GAME is valid in connected or game_waiting status\n", @status)
+            write_safe(sprintf("## you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
             next
           end
           @status = "game_waiting"
