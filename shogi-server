@@ -86,11 +86,12 @@ class League
       return false
     end
   end
-  def get_player(status, game_name, sente)
+  def get_player(status, game_name, sente, searcher=nil)
     @hash.each do |name, player|
-      if ((player.status == status)
-          (player.game_name == game_name)
-          (player.sente == sente))
+      if ((player.status == status) &&
+          (player.game_name == game_name) &&
+          ((player.sente == nil) || (player.sente == sente)) &&
+          ((searcher == nil) || (player != searcher)))
         return player
       end
     end
@@ -111,7 +112,7 @@ class Player
     @socket = socket
     @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game
 
-    @x1 = false                 # extention protocol
+    @protocol = nil             # CSA or x1
     @eol = "\m"                 # favorite eol code
     @game = nil
     @game_name = ""
@@ -123,11 +124,12 @@ class Player
   end
 
   attr_accessor :name, :password, :socket, :status
-  attr_accessor :x1, :eol, :game, :mytime, :watchdog_thread, :game_name, :sente
+  attr_accessor :protocol, :eol, :game, :mytime, :watchdog_thread, :game_name, :sente
 
   def finish
+    log_message(sprintf("user %s finish", @name))    
     Thread::kill(@watchdog_thread) if @watchdog_thread
-    @socket.close
+    @socket.close if (! @socket.closed?)
   end
 
   def watchdog(time)
@@ -145,17 +147,19 @@ class Player
         (status == "agree_waiting") ||
         (status == "game"))
       if (@sente)
-        return sprintf("%s %s %s +", @name, @status, @game_name, "+")
-      else
-        return sprintf("%s %s %s -", @name, @status, @game_name, "-")
+        return sprintf("%s %s %s +", @name, @status, @game_name)
+      elsif (@sente == false)
+        return sprintf("%s %s %s -", @name, @status, @game_name)
+      elsif (@sente == nil)
+        return sprintf("%s %s %s +-", @name, @status, @game_name)
       end
     else
       return sprintf("%s %s", @name, @status)
     end
   end
 
-  def write_help(str)
-    @socket.write_safe('## available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"')
+  def write_help
+    @socket.write_safe('##[HELP] available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"')
   end
 
   def write_safe(str)
@@ -167,83 +171,125 @@ class Player
     @eol = $1
     str.chomp!
     (login, @name, @password, ext) = str.split
-    @x1 = true if (ext)
+    if (ext)
+      @protocol = "x1"
+    else
+      @protocol = "CSA"
+    end
     @watchdog_thread = Thread::start do
       watchdog(Watchdog_Time)
     end
   end
     
   def run
-    if (@x1)
-      log_message(sprintf("user %s run in x1 mode", @name))
-      write_safe("## LOGIN in x1 mode\n")
+    if (@protocol != "CSA")
+      log_message(sprintf("user %s run in %s mode", @name, @protocol))
+      write_safe(sprintf("##[LOGIN] +OK %s\n", @protocol))
     else
       log_message(sprintf("user %s run in CSA mode", @name))
+      csa_1st_str = "%%GAME default +-"
     end
 
-    while (str = @socket.gets_safe)
-      str.chomp!
-      case str
-      when /^[\+\-%][^%]/
-        if (@status == "game")
-          @game.handle_one_move(str, self)
-        else
-          write_safe("## you are in %s status. %s in game status\n", @status)
-          next
+    
+    while (csa_1st_str || (str = @socket.gets_safe))
+      begin
+        $mutex.lock
+        if (csa_1st_str)
+          str = csa_1st_str
+          csa_1st_str = nil
         end
-      when /^AGREE/
-        if (@status == "agree_waiting")
-          @status = "start_waiting"
-          if ((@game.sente.status == "start_waiting") &&
-              (@game.gote.status == "start_waiting"))
-            @game.start
-            @game.sente.status = "game"
-            @game.gote.status = "game"
+        str.chomp!
+        case str
+        when /^[\+\-%][^%]/
+          if (@status == "game")
+            s = @game.handle_one_move(str, self)
+            return if (s && @protocol == "CSA")
+          else
+            next
           end
-        else
-          write_safe("## you are in %s status. AGREE is valid in agree_waiting status\n", @status)
-          next
-        end
-      when /^%%HELP/
-        write_help
-      when /^%%GAME\s+(\S+)\s+([\+\-])/
-        if ((@status == "connected") || (@status == "game_waiting"))
+        when /^AGREE/
+          if (@status == "agree_waiting")
+            @status = "start_waiting"
+            if ((@game.sente.status == "start_waiting") &&
+                (@game.gote.status == "start_waiting"))
+              @game.start
+              @game.sente.status = "game"
+              @game.gote.status = "game"
+            end
+          else
+            write_safe("## you are in %s status. AGREE is valid in agree_waiting status\n", @status)
+            next
+          end
+        when /^%%HELP/
+          write_help
+        when /^%%GAME\s+(\S+)\s+([\+\-]+)/
+          if ((@status == "connected") || (@status == "game_waiting"))
+            @status = "game_waiting"
+          else
+            write_safe("## you are in %s status. GAME is valid in connected or game_waiting status\n", @status)
+            next
+          end
           @status = "game_waiting"
+          @game_name = $1
+          sente_str = $2
+          if (sente_str == "+")
+            @sente = true
+            rival_sente = false
+          elsif (sente_str == "-")
+            @sente = false
+            rival_sente = true
+          else
+            @sente = nil
+            rival_sente = nil
+          end
+          rival = LEAGUE.get_player("game_waiting", @game_name, rival_sente, self)
+          rival = LEAGUE.get_player("game_waiting", @game_name, nil, self) if (! rival)
+          if (rival)
+            if (@sente == nil)
+              if (rand(2) == 0)
+                @sente = true
+                rival_sente = false
+              else
+                @sente = false
+                rival_sente = true
+              end
+            elsif (rival_sente == nil)
+              if (@sente)
+                rival_sente = false
+              else
+                rival_sente = true
+              end
+            end
+            rival.sente = rival_sente
+            LEAGUE.new_game(@game_name, self, rival)
+            self.status = "agree_waiting"
+            rival.status = "agree_waiting"
+          end
+        when /^%%CHAT\s+(\S+)/
+          message = $1
+          LEAGUE.hash.each do |name, player|
+            if (player.protocol != "CSA")
+              s = player.write_safe(sprintf("##[CHAT][%s] %s\n", @name, message)) 
+              player.status = "zombie" if (! s)
+            end
+          end
+        when /^%%WHO/
+          buf = Array::new
+          LEAGUE.hash.each do |name, player|
+            buf.push(sprintf("##[WHO] %s\n", player.to_s))
+          end
+          buf.push("##[WHO] +OK\n")
+          write_safe(buf.join)
+        when /^%%LOGOUT/
+          finish
+          return
         else
-          write_safe("## you are in %s status. GAME is valid in connected or game_waiting status\n", @status)
-          next
+          write_safe(sprintf("## unknown command %s\n", str))
         end
-        @status = "game_waiting"
-        @game_name = $1
-        if ($2 == "+")
-          @sente = true
-          rival_sente = false
-        else
-          @sente = false
-          rival_sente = true
-        end
-        rival = LEAGUE.get_player("game_waiting", @game_name, rival_sente)
-        if (rival)
-          LEAGUE.new_game(@game_name, self, rival)
-          self.status = "agree_waiting"
-          rival.status = "agree_waiting"
-        end
-      when /^%%CHAT\s+(\S+)/
-        message = $1
-        LEAGUE.hash.each do |name, player|
-          s = player.write_safe(sprintf("## [%s] %s\n", @name, message))
-          player.status = "zombie" if (! s)
-        end
-      when /^%%WHO/
-        LEAGUE.hash.each do |name, player|
-          write_safe(sprintf("## %s\n", player.to_s))
-        end
-      when /^%%LOGOUT/
-        break
-      else
-        write_safe(sprintf("## unknown command %s\n", str))
+      ensure
+        $mutex.unlock
       end
-    end
+    end                         # enf of while
   end
 end
 
@@ -257,8 +303,8 @@ class Game
       @sente = player0
       @gote = player1
     else
-      @sente = player0
-      @gote = player1
+      @sente = player1
+      @gote = player0
     end
     @current_player = @sente
     @next_player = @gote
@@ -279,48 +325,67 @@ class Game
   end
   attr_accessor :game_name, :sente, :gote, :id, :board, :current_player, :next_player, :fh
 
+  def finish
+    log_message(sprintf("game finished %s %s %s", game_name, sente.name, gote.name))
+    @fh.printf("'$END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))    
+    @fh.close
+    @sente.status = "connected"
+    @gote.status = "connected"
+    if (@current_player.protocol == "CSA")
+      @current_player.finish
+    end
+  end
+
   def handle_one_move(str, player)
+    finish_flag = false
     if (@current_player == player)
       @end_time = Time::new
       t = @end_time - @start_time
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
       @sente.write_safe(sprintf("%s,T%d\n", str, t))
       @gote.write_safe(sprintf("%s,T%d\n", str, t))
+      @fh.printf("%s\nT%d\n", str, t)
       @current_player.mytime = @current_player.mytime - t
-      if (@current_player < 0)
+      if (@current_player.mytime < 0)
         timeout_end()
+        finish_flag = true
       elsif (str =~ /%KACHI/)
         kachi_end()
+        finish_flag = true
       elsif (str =~ /%TORYO/)
         toryo_end
+        finish_flag = true
       end
       (@current_player, @next_player) = [@next_player, @current_player]
       @start_time = Time::new
+      finish if (finish_flag)
+      return finish_flag
     end
   end
 
   def timeout_end
     @current_player.status = "connected"
     @next_player.status = "connected"
-    @current_player.write("#TIME_UP\n#LOSE\n")
-    @next_player.write("#TIME_UP\n#WIN\n")
+    @current_player.write_safe("#TIME_UP\n#LOSE\n")
+    @next_player.write_safe("#TIME_UP\n#WIN\n")
   end
 
   def kachi_end
     @current_player.status = "connected"
     @next_player.status = "connected"
-    @current_player.write("#JISHOGI\n#WIN\n")
-    @next_player.write("#JISHOGI\n#LOSE\n")
+    @current_player.write_safe("#JISHOGI\n#WIN\n")
+    @next_player.write_safe("#JISHOGI\n#LOSE\n")
   end
 
   def toryo_end
     @current_player.status = "connected"
     @next_player.status = "connected"
-    @current_player.write("#RESIGN\n#LOSE\n")
-    @next_player.write("#RESIGN\n#WIN\n")
+    @current_player.write_safe("#RESIGN\n#LOSE\n")
+    @next_player.write_safe("#RESIGN\n#WIN\n")
   end
 
   def start
+    log_message(sprintf("game started %s %s %s", game_name, sente.name, gote.name))
     @sente.write_safe(sprintf("START:%s\n", @id))
     @gote.write_safe(sprintf("START:%s\n", @id))
     @start_time = Time::new
@@ -439,8 +504,10 @@ def parse_command_line
   parser.set_options(
                      ["--pid-file", GetoptLong::REQUIRED_ARGUMENT])
 
+  parser.quiet = true
   begin
     parser.each_option do |name, arg|
+      name.sub!(/^--/, '')
       options[name] = arg.dup
     end
   rescue
@@ -455,7 +522,8 @@ LEAGUE = League::new
 def good_login?(str)
   return false if (str !~ /^LOGIN /)
   tokens = str.split
-  if ((tokens.length == 3) || (tokens.length == 4))
+  if ((tokens.length == 3) || 
+      ((tokens.length == 4) && tokens[3] == "x1"))
     ## ok
   else
     return false
@@ -463,7 +531,14 @@ def good_login?(str)
   return true
 end
 
+def  write_pid_file(file)
+  open(file, "w") do |fh|
+    fh.print Process::pid, "\n"
+  end
+end
+
 def main
+  $mutex = Mutex::new
   $options = parse_command_line
   if (ARGV.length != 2)
     usage
@@ -471,6 +546,9 @@ def main
   end
   event = ARGV.shift
   port = ARGV.shift
+
+  write_pid_file($options["pid-file"]) if ($options["pid-file"])
+
 
   Thread.abort_on_exception = true
 
@@ -480,20 +558,29 @@ def main
   while true
     Thread::start(server.accept) do |client|
       client.sync = true
+      player = nil
       while (str = client.gets_timeout(Login_Time))
-        Thread::kill(Thread::current) if (! str) # disconnected
-        str =~ /([\r\n]*)$/
-        eol = $1
-        if (good_login?(str))
-          player = Player::new(str, client)
-          if (LEAGUE.duplicated?(player))
-            client.write_safe(sprintf("username %s is already connected%s", player.name, eol))
-            next
+        begin
+          $mutex.lock
+          Thread::kill(Thread::current) if (! str) # disconnected
+          str =~ /([\r\n]*)$/
+          eol = $1
+          if (good_login?(str))
+            player = Player::new(str, client)
+            if (LEAGUE.duplicated?(player))
+              client.write_safe(sprintf("username %s is already connected%s", player.name, eol))
+              client.close
+              Thread::kill(Thread::current)
+            end
+            LEAGUE.add(player)
+            break
+          else
+            client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol)
+            client.close
+            Thread::kill(Thread::current)
           end
-          LEAGUE.add(player)
-          break
-        else
-          client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol)
+        ensure
+          $mutex.unlock
         end
       end                       # login loop
       log_message(sprintf("user %s login", player.name))
