@@ -588,7 +588,7 @@ class Game
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
       
       move_status = nil
-      if (@current_player.mytime - t <= 0)
+      if ((@current_player.mytime - t <= 0) && (@total_time > 0))
         status = :timeout
       elsif (str == :timeout)
         return false            # time isn't expired. players aren't swapped. continue game
