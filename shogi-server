@@ -81,25 +81,26 @@ end
 
 class League
   def initialize
-    @hash = Hash::new
+    @games = Hash::new
+    @players = Hash::new
   end
-  attr_accessor :hash
+  attr_accessor :players, :games
 
   def add(player)
-    @hash[player.name] = player
+    @players[player.name] = player
   end
   def delete(player)
-    @hash.delete(player.name)
+    @players.delete(player.name)
   end
   def duplicated?(player)
-    if (@hash[player.name])
+    if (@players[player.name])
       return true
     else
       return false
     end
   end
   def get_player(status, game_name, sente, searcher=nil)
-    @hash.each do |name, player|
+    @players.each do |name, player|
       if ((player.status == status) &&
           (player.game_name == game_name) &&
           ((player.sente == nil) || (player.sente == sente)) &&
@@ -109,13 +110,7 @@ class League
     end
     return nil
   end
-  def new_game(game_name, player0, player1)
-    game = Game::new(game_name, player0, player1)
-  end
 end
-
-
-
 
 class Player
   def initialize(str, socket)
@@ -274,21 +269,34 @@ class Player
               end
             end
             rival.sente = rival_sente
-            LEAGUE.new_game(@game_name, self, rival)
+            Game::new(@game_name, self, rival)
             self.status = "agree_waiting"
             rival.status = "agree_waiting"
           end
         when /^%%CHAT\s+(.+)/
           message = $1
-          LEAGUE.hash.each do |name, player|
+          LEAGUE.players.each do |name, player|
             if (player.protocol != "CSA")
               s = player.write_safe(sprintf("##[CHAT][%s] %s\n", @name, message)) 
               player.status = "zombie" if (! s)
             end
           end
+        when /^%%LIST/
+          buf = Array::new
+          LEAGUE.games.each do |id, game|
+            buf.push(sprintf("##[LIST] %s\n", id))
+          end
+          buf.push("##[LIST] +OK\n")
+          write_safe(buf.join)
+        when /^%%SHOW\s+(\S+)/
+          id = $1
+          if (LEAGUE.games[id])
+            write_safe(LEAGUE.games[id].board.to_s.gsub(/^/, '##[SHOW] '))
+          end
+          write_safe("##[SHOW] +OK\n")
         when /^%%WHO/
           buf = Array::new
-          LEAGUE.hash.each do |name, player|
+          LEAGUE.players.each do |name, player|
             buf.push(sprintf("##[WHO] %s\n", player.to_s))
           end
           buf.push("##[WHO] +OK\n")
@@ -307,7 +315,177 @@ class Player
   end
 end
 
+class Piece
+  PROMOTE = {"FU" => "TO", "KY" => "NY", "KE" => "NK", "GI" => "NG", "KA" => "UM", "HI" => "RY"}
+  def initialize(name, sente)
+    @name = name
+    @sente = sente
+    @promoted = false
+  end
+  attr_accessor :name, :promoted, :sente
+
+  def promoted_name
+    PROMOTE[name]
+  end
+
+  def to_s
+    if (@sente)
+      sg = "+"
+    else
+      sg = "-"
+    end
+    if (@promoted)
+      n = PROMOTE[@name]
+    else
+      n = @name
+    end
+    return sg + n
+  end
+end
+
+
+
 class Board
+  def initialize
+    @sente_hands = Array::new
+    @gote_hands = Array::new
+    @array = [[], [], [], [], [], [], [], [], [], []]
+  end
+  attr_accessor :array, :sente_hands, :gote_hands
+
+  def initial
+    @array[1][1] = Piece::new("KY", false)
+    @array[2][1] = Piece::new("KE", false)
+    @array[3][1] = Piece::new("GI", false)
+    @array[4][1] = Piece::new("KI", false)
+    @array[5][1] = Piece::new("OU", false)
+    @array[6][1] = Piece::new("KI", false)
+    @array[7][1] = Piece::new("GI", false)
+    @array[8][1] = Piece::new("KE", false)
+    @array[9][1] = Piece::new("KY", false)
+    @array[2][2] = Piece::new("KA", false)
+    @array[8][2] = Piece::new("HI", false)
+    @array[1][3] = Piece::new("FU", false)
+    @array[2][3] = Piece::new("FU", false)
+    @array[3][3] = Piece::new("FU", false)
+    @array[4][3] = Piece::new("FU", false)
+    @array[5][3] = Piece::new("FU", false)
+    @array[6][3] = Piece::new("FU", false)
+    @array[7][3] = Piece::new("FU", false)
+    @array[8][3] = Piece::new("FU", false)
+    @array[9][3] = Piece::new("FU", false)
+
+    @array[1][9] = Piece::new("KY", true)
+    @array[2][9] = Piece::new("KE", true)
+    @array[3][9] = Piece::new("GI", true)
+    @array[4][9] = Piece::new("KI", true)
+    @array[5][9] = Piece::new("OU", true)
+    @array[6][9] = Piece::new("KI", true)
+    @array[7][9] = Piece::new("GI", true)
+    @array[8][9] = Piece::new("KE", true)
+    @array[9][9] = Piece::new("KY", true)
+    @array[2][8] = Piece::new("HI", true)
+    @array[8][8] = Piece::new("KA", true)
+    @array[1][7] = Piece::new("FU", true)
+    @array[2][7] = Piece::new("FU", true)
+    @array[3][7] = Piece::new("FU", true)
+    @array[4][7] = Piece::new("FU", true)
+    @array[5][7] = Piece::new("FU", true)
+    @array[6][7] = Piece::new("FU", true)
+    @array[7][7] = Piece::new("FU", true)
+    @array[8][7] = Piece::new("FU", true)
+    @array[9][7] = Piece::new("FU", true)
+  end
+
+  def get_piece_from_hands(hands, name)
+    p = hands.find { |i|
+      i.name == name
+    }
+    if (p)
+      hands.delete(p)
+    end
+    return p
+  end
+
+  def handle_one_move(str)
+    if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
+      p = $1
+      x0 = $2.to_i
+      y0 = $3.to_i
+      x1 = $4.to_i
+      y1 = $5.to_i
+      name = $6
+    elsif (str =~ /^%/)
+      return true
+    else
+      return false              # illegal move
+    end
+    if (p == "+")
+      sente = true
+      hands = @sente_hands
+    else
+      sente = false
+      hands = @gote_hands
+    end
+    if (@array[x1][y1])
+      if (@array[x1][y1] == sente) # this is mine
+        return false            
+      end
+      hands.push(@array[x1][y1])
+      @array[x1][y1] = nil
+    end
+    if ((x0 == 0) && (y0 == 0))
+      p = get_piece_from_hands(hands, name)
+      return false if (! p)     # i don't have this one
+      @array[x1][y1] = p
+      p.sente = sente
+      p.promoted = false
+    else
+      @array[x1][y1] = @array[x0][y0]
+      @array[x0][y0] = nil
+      if (@array[x1][y1].name != name) # promoted ?
+        return false if (@array[x1][y1].promoted_name != name) # can't promote
+        @array[x1][y1].promoted = true
+      end
+    end
+    return true                 # legal move
+  end
+
+  def to_s
+    a = Array::new
+    y = 1
+    while (y <= 9)
+      a.push(sprintf("P%d", y))
+      x = 9
+      while (x >= 1)
+        piece = @array[x][y]
+        if (piece)
+          s = piece.to_s
+        else
+          s = " * "
+        end
+        a.push(s)
+        x = x - 1
+      end
+      a.push(sprintf("\n"))
+      y = y + 1
+    end
+    if (! sente_hands.empty?)
+      a.push("P+")
+      sente_hands.each do |p|
+        a.push("00" + p.name)
+      end
+      a.push("\n")
+    end
+    if (! gote_hands.empty?)
+      a.push("P-")
+      gote_hands.each do |p|
+        a.push("00" + p.name)
+      end
+      a.push("\n")
+    end
+    return a.join
+  end
 end
 
 class Game
@@ -325,13 +503,18 @@ class Game
 
     @sente.game = self
     @gote.game = self
+
     @sente.status = "agree_waiting"
     @gote.status = "agree_waiting"
     @id = sprintf("%s-%s-%s-%s", @game_name, @sente.name, @gote.name, Time::new.strftime("%Y%m%d%H%M%S"))
+    LEAGUE.games[@id] = self
+
+
     log_message(sprintf("game created %s %s %s", game_name, sente.name, gote.name))
 
     @logfile = @id + ".csa"
     @board = Board::new
+    @board.initial
     @start_time = nil
     @fh = nil
 
@@ -348,6 +531,7 @@ class Game
     if (@current_player.protocol == "CSA")
       @current_player.finish
     end
+    LEAGUE.games.delete(@id)
   end
 
   def handle_one_move(str, player)
@@ -357,21 +541,29 @@ class Game
       t = @end_time - @start_time
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
       if (str != :timeout)
-        @sente.write_safe(sprintf("%s,T%d\n", str, t))
-        @gote.write_safe(sprintf("%s,T%d\n", str, t))
-        @fh.printf("%s\nT%d\n", str, t)
+        legal_move = @board.handle_one_move(str)
+        if (legal_move)
+          @sente.write_safe(sprintf("%s,T%d\n", str, t))
+          @gote.write_safe(sprintf("%s,T%d\n", str, t))
+          @fh.printf("%s\nT%d\n", str, t)
+        else
+          @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
+        end
         @current_player.mytime = @current_player.mytime - t
       else
         @current_player.mytime = 0
       end
-      if (@current_player.mytime <= 0)
+      if (!legal_move)
+        illegal_end()
+        finish_flag = true
+      elsif (@current_player.mytime <= 0)
         timeout_end()
         finish_flag = true
       elsif (str =~ /%KACHI/)
         kachi_end()
         finish_flag = true
       elsif (str =~ /%TORYO/)
-        toryo_end
+        toryo_end()
         finish_flag = true
       end
       (@current_player, @next_player) = [@next_player, @current_player]
@@ -379,6 +571,13 @@ class Game
       finish if (finish_flag)
       return finish_flag
     end
+  end
+
+  def illegal_end
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
+    @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
   end
 
   def timeout_end
