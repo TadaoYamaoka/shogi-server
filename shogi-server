@@ -1018,14 +1018,12 @@ class Board
 
     tmp_board = Marshal.load(Marshal.dump(self))
     return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name, sente) == :illegal)
-    if (tmp_board.checkmated?(sente))
-      return :illegal
-    end
+    return :oute_kaihimore if (tmp_board.checkmated?(sente))
     return :oute_sennichite if tmp_board.oute_sennichite?(sente)
     return :sennichite if tmp_board.sennichite?(sente)
 
     if ((x0 == 0) && (y0 == 0) && (name == "FU") && tmp_board.uchifuzume?(sente))
-      return :illegal
+      return :uchifuzume
     end
 
     move_to(x0, y0, x1, y1, name, sente)
@@ -1200,7 +1198,7 @@ class Game
 #          log_error("handle_one_move raise exception for #{str}")
 #          move_status = :illegal
 #        end
-        if (move_status == :illegal)
+        if ((move_status == :illegal) || (move_status == :uchifuzme) || (move_status == :oute_kaihimore))
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         else
           if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite) || (move_status == :oute_sennichite))
@@ -1239,6 +1237,10 @@ class Game
         sennichite_draw()
       elsif (move_status == :oute_sennichite)
         oute_sennichite_lose()
+      elsif (move_status == :uchifuzume)
+        uchifuzume_lose()
+      elsif (move_status == :oute_kaihimore)
+        oute_kaihimore_lose()
       else
         finish_flag = false
       end
@@ -1255,6 +1257,7 @@ class Game
     @current_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @fh.printf("%%TORYO\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:abnormal:%s win:%s lose\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
@@ -1267,6 +1270,7 @@ class Game
     @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @fh.printf("%%TORYO\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:abnormal:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
@@ -1278,6 +1282,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#SENNICHITE\n#DRAW\n")
     @next_player.write_safe("#SENNICHITE\n#DRAW\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:sennichite:%s draw:%s draw\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @id))
@@ -1289,6 +1294,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#OUTE_SENNICHITE\n#LOSE\n")
     @next_player.write_safe("#OUTE_SENNICHITE\n#WIN\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:oute_sennichite:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @id))
@@ -1300,7 +1306,32 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
     @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:illegal move:%s lose:%s win\n", @current_player.name, @next_player.name)
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+    end
+  end
+
+  def uchifuzume_lose
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
+    @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
+    @fh.printf("'summary:uchifuzume:%s lose:%s win\n", @current_player.name, @next_player.name)
+    @monitors.each do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+    end
+  end
+
+  def oute_kaihimore_lose
+    @current_player.status = "connected"
+    @next_player.status = "connected"
+    @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
+    @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
+    @fh.printf("'summary:oute_kaihimore:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
@@ -1311,6 +1342,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#TIME_UP\n#LOSE\n")
     @next_player.write_safe("#TIME_UP\n#WIN\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:time up:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @id))
@@ -1323,6 +1355,7 @@ class Game
     @current_player.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
     @next_player.write_safe("%KACHI\n#JISHOGI\n#LOSE\n")
     @fh.printf("%%KACHI\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:kachi:%s win:%s lose\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
@@ -1335,6 +1368,7 @@ class Game
     @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @fh.printf("%%TORYO\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:toryo:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
@@ -1346,6 +1380,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
     @next_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
+    @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:outori:%s win:%s lose\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
