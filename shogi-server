@@ -145,7 +145,11 @@ class Player
       log_message(sprintf("user %s finish", @name))    
       Thread::kill(@watchdog_thread) if @watchdog_thread
       Thread::kill(@writer_thread) if @writer_thread
-      @socket.close if (! @socket.closed?)
+      begin
+        @socket.close if (! @socket.closed?)
+      rescue
+        log_message(sprintf("user %s finish failed", @name))    
+      end
     end
   end
 
@@ -227,6 +231,7 @@ class Player
         end
         if (@write_queue.size > Max_Write_Queue_Size)
           log_warning(sprintf("write_queue of %s is %d", @name, @write_queue.size))
+	  return
         end
 
         if (@status == "finished")
@@ -450,6 +455,7 @@ class Board
   end
 
   def handle_one_move(str)
+  begin
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       p = $1
       x0 = $2.to_i
@@ -457,10 +463,16 @@ class Board
       x1 = $4.to_i
       y1 = $5.to_i
       name = $6
+
+      if ((x1 == 0) || (y1 == 0))
+	return "illegal"
+      end
     elsif (str =~ /^%KACHI/)
       return "kachi"
     elsif (str =~ /^%TORYO/)
       return "toryo"
+    else
+      return "illegal"
     end
 
     if (p == "+")
@@ -486,14 +498,20 @@ class Board
       p.sente = sente
       p.promoted = false
     else
+      if (@array[x0][y0] == nil)
+        return "illegal";
+      end
+      if (@array[x0][y0].name != name) # promoted ?
+        return "illegal" if (@array[x0][y0].promoted_name != name) # can't promote
+        @array[x0][y0].promoted = true
+      end
       @array[x1][y1] = @array[x0][y0]
       @array[x0][y0] = nil
-      if (@array[x1][y1].name != name) # promoted ?
-        return "illegal" if (@array[x1][y1].promoted_name != name) # can't promote
-        @array[x1][y1].promoted = true
-      end
     end
     return "normal"             # legal move
+  rescue
+    return "illegal"
+  end
   end
 
   def to_s
@@ -934,6 +952,7 @@ def mutex_watchdog(mutex, sec)
         mutex.lock
         mutex.unlock
       end
+      sleep sec
     rescue TimeoutError
       log_error("mutex watchdog timeout")
       exit(1)
