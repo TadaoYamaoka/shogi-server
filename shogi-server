@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 ## -*-Ruby-*- $RCSfile$ $Revision$ $Name$
 
-## Copyright (C) 2004 773@2ch
+## Copyright (C) 2004 nanami@2ch
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -50,11 +50,23 @@ class TCPSocket
       return nil
     end
   end
-  def gets_safe
-    begin
-      return self.gets
-    rescue
-      return nil
+  def gets_safe(t = nil)
+    if (t && t > 0)
+      begin
+        timeout(t) do
+          return self.gets
+        end
+      rescue TimeoutError
+        return :timeout
+      rescue
+        return nil
+      end
+    else
+      begin
+        return self.gets
+      rescue
+        return nil
+      end
     end
   end
   def write_safe(str)
@@ -192,16 +204,16 @@ class Player
     end
 
     
-    while (csa_1st_str || (str = @socket.gets_safe))
+    while (csa_1st_str || (str = @socket.gets_safe(@mytime)))
       begin
         $mutex.lock
         if (csa_1st_str)
           str = csa_1st_str
           csa_1st_str = nil
         end
-        str.chomp!
+        str.chomp! if (str.class == String)
         case str
-        when /^[\+\-%][^%]/
+        when /^[\+\-%][^%]/, :timeout
           if (@status == "game")
             s = @game.handle_one_move(str, self)
             return if (s && @protocol == "CSA")
@@ -344,11 +356,15 @@ class Game
       @end_time = Time::new
       t = @end_time - @start_time
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
-      @sente.write_safe(sprintf("%s,T%d\n", str, t))
-      @gote.write_safe(sprintf("%s,T%d\n", str, t))
-      @fh.printf("%s\nT%d\n", str, t)
-      @current_player.mytime = @current_player.mytime - t
-      if (@current_player.mytime < 0)
+      if (str != :timeout)
+        @sente.write_safe(sprintf("%s,T%d\n", str, t))
+        @gote.write_safe(sprintf("%s,T%d\n", str, t))
+        @fh.printf("%s\nT%d\n", str, t)
+        @current_player.mytime = @current_player.mytime - t
+      else
+        @current_player.mytime = 0
+      end
+      if (@current_player.mytime <= 0)
         timeout_end()
         finish_flag = true
       elsif (str =~ /%KACHI/)
@@ -572,7 +588,7 @@ def main
             player = Player::new(str, client)
             if (LEAGUE.duplicated?(player))
               client.write_safe("LOGIN:incorrect" + eol)
-              client.write_safe(sprintf("username %s is already connected%s", player.name, eol))
+              client.write_safe(sprintf("username %s is already connected%s", player.name, eol)) if (str.split.length >= 4)
               client.close
               Thread::kill(Thread::current)
             end
@@ -580,7 +596,7 @@ def main
             break
           else
             client.write_safe("LOGIN:incorrect" + eol)
-            client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol)
+            client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol) if (str.split.length >= 4)
             client.close
             Thread::kill(Thread::current)
           end
