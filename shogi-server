@@ -475,7 +475,7 @@ class Piece
       if (@sente)
         return false if ((4 <= @y) && (4 <= y) && (name != @name)) # can't promote
       else
-        return false if ((6 >= @y) && (6 <= y) && (name != @name))
+        return false if ((6 >= @y) && (6 >= y) && (name != @name))
       end
     end
 
@@ -495,6 +495,7 @@ class Piece
       end
       @board.array[x][y] = self
     elsif ((x == 0) || (y == 0))
+      @promoted = false         # clear promoted flag before moving to hands
       if (@sente)
         @board.sente_hands.push(self)
       else
@@ -823,7 +824,6 @@ class Board
       piece = have_piece?(hands, name)
       return :illegal if (! piece.move_to?(x1, y1, name))
       piece.move_to(x1, y1)
-      piece.promoted = false
     else
       return :illegal if (! @array[x0][y0].move_to?(x1, y1, name))
       if (@array[x0][y0].name != name) # promoted ?
