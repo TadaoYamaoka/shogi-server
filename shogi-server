@@ -101,7 +101,7 @@ class League
     @players.each do |name, player|
       if ((player.status == status) &&
           (player.game_name == game_name) &&
-          ((player.sente == nil) || (player.sente == sente)) &&
+          ((sente == nil) || (player.sente == nil) || (player.sente == sente)) &&
           ((searcher == nil) || (player != searcher)))
         return player
       end
