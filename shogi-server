@@ -25,7 +25,6 @@ Default_Game_Name = "default:1500:0"
 
 One_Time = 10
 Least_Time_Per_Move = 1
-Watchdog_Time = 30              # time for ping
 Login_Time = 300                # time for LOGIN
 
 Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
@@ -42,6 +41,7 @@ require 'socket'
 require 'ping'
 
 TCPSocket.do_not_reverse_lookup = true
+
 
 class TCPSocket
   def gets_timeout(t = Default_Timeout)
@@ -124,7 +124,6 @@ class Player
     @game_name = ""
     @mytime = 0                 # set in start method also
     @sente = nil
-    @watchdog_thread = nil
     @writer_thread = nil
     @main_thread = nil
     @write_queue = Queue::new
@@ -133,7 +132,7 @@ class Player
 
   attr_accessor :name, :password, :socket, :status
   attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
-  attr_accessor :main_thread, :watchdog_thread, :writer_thread, :write_queue
+  attr_accessor :main_thread, :writer_thread, :write_queue
   def kill
     finish
     Thread::kill(@main_thread) if @main_thread
@@ -143,7 +142,6 @@ class Player
     if (@status != "finished")
       @status = "finished"
       log_message(sprintf("user %s finish", @name))    
-      Thread::kill(@watchdog_thread) if @watchdog_thread
       Thread::kill(@writer_thread) if @writer_thread
       begin
         @socket.close if (! @socket.closed?)
@@ -160,16 +158,6 @@ class Player
   def writer
     while (str = @write_queue.pop)
       @socket.write_safe(str)
-    end
-  end
-
-  def watchdog(time)
-    while true
-      begin
-        Ping.pingecho(@socket.addr[3])
-      rescue
-      end
-      sleep(time)
     end
   end
 
@@ -204,9 +192,6 @@ class Player
       @protocol = "CSA"
     end
     @main_thread = Thread::current
-    @watchdog_thread = Thread::start do
-      watchdog(Watchdog_Time)
-    end
     @writer_thread = Thread::start do
       writer()
     end
@@ -263,15 +248,23 @@ class Player
           else
             write_safe(sprintf("##[ERROR] you are in %s status. AGREE is valid in agree_waiting status\n", @status))
           end
+        when /^%%SHOW\s+(\S+)/
+          game_id = $1
+          if (LEAGUE.games[game_id])
+            write_safe(LEAGUE.games[game_id].show.gsub(/^/, '##[SHOW] '))
+          end
+          write_safe("##[SHOW] +OK\n")
         when /^%%MONITORON\s+(\S+)/
-          game_name = $1
-          if (LEAGUE.games[game_name])
-            LEAGUE.games[game_name].monitoron(self)
+          game_id = $1
+          if (LEAGUE.games[game_id])
+            LEAGUE.games[game_id].monitoron(self)
+            write_safe(LEAGUE.games[game_id].show.gsub(/^/, "##[MONITOR][#{game_id}] "))
+            write_safe("##[MONITOR][#{game_id}] +OK\n")
           end
         when /^%%MONITOROFF\s+(\S+)/
-          game_name = $1
-          if (LEAGUE.games[game_name])
-            LEAGUE.games[game_name].monitoroff(self)
+          game_id = $1
+          if (LEAGUE.games[game_id])
+            LEAGUE.games[game_id].monitoroff(self)
           end
         when /^%%HELP/
           write_help
@@ -335,12 +328,6 @@ class Player
           end
           buf.push("##[LIST] +OK\n")
           write_safe(buf.join)
-        when /^%%SHOW\s+(\S+)/
-          id = $1
-          if (LEAGUE.games[id])
-            write_safe(LEAGUE.games[id].board.to_s.gsub(/^/, '##[SHOW] '))
-          end
-          write_safe("##[SHOW] +OK\n")
         when /^%%WHO/
           buf = Array::new
           LEAGUE.players.each do |name, player|
@@ -352,6 +339,8 @@ class Player
           @status = "connected"
           write_safe("LOGOUT:completed\n")
           return
+        when /^\s*$/
+          ## ignore null string
         else
           write_safe(sprintf("##[ERROR] unknown command %s\n", str))
         end
@@ -547,6 +536,7 @@ class Board
       end
       a.push("\n")
     end
+    a.push("+\n")
     return a.join
   end
 end
@@ -573,6 +563,9 @@ class Game
     @sente.game = self
     @gote.game = self
 
+    @last_move = ""
+    @current_turn = 0
+
     @sente.status = "agree_waiting"
     @gote.status = "agree_waiting"
     @id = sprintf("%s+%s+%s+%s+%s", 
@@ -593,12 +586,11 @@ class Game
     propose
   end
   attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :id, :board, :current_player, :next_player, :fh, :monitors
+  attr_accessor :last_move, :current_turn
 
   def monitoron(monitor)
     @monitors.delete(monitor)
     @monitors.push(monitor)
-    monitor.write_safe(@board.to_s.gsub(/^/, "##[MONITOR][#{@id}] "))
-    monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
   end
 
   def monitoroff(monitor)
@@ -616,6 +608,7 @@ class Game
       reject(killer.name)
     elsif (@current_player == killer)
       abnormal_lose()
+      finish
     end
   end
 
@@ -647,7 +640,7 @@ class Game
     finish_flag = true
     if (@current_player == player)
       @end_time = Time::new
-      t = @end_time - @start_time
+      t = (@end_time - @start_time).ceil
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
       
       move_status = nil
@@ -657,18 +650,20 @@ class Game
         return false            # time isn't expired. players aren't swapped. continue game
       else
         move_status = @board.handle_one_move(str)
-        if (move_status == "normal")
-          @sente.write_safe(sprintf("%s,T%d\n", str, t))
-          @gote.write_safe(sprintf("%s,T%d\n", str, t))
-          @fh.printf("%s\nT%d\n", str, t)
-
+        if (move_status == "illegal")
+          @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
+        else
+          if ((move_status == "normal") || (move_status == "outori"))
+            @sente.write_safe(sprintf("%s,T%d\n", str, t))
+            @gote.write_safe(sprintf("%s,T%d\n", str, t))
+            @fh.printf("%s\nT%d\n", str, t)
+            @last_move = sprintf("%s,T%d", str, t)
+            @current_turn = @current_turn + 1
+          end
           @monitors.each do |monitor|
-            monitor.write_safe(sprintf("##[MONITOR][%s] %s\n", @id, str))
-            monitor.write_safe(@board.to_s.gsub(/^/, "##[MONITOR][#{@id}] "))
+            monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@id}] "))
             monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
           end
-        elsif (move_status == "illegal")
-          @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         end
       end
 
@@ -705,6 +700,8 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
+    @fh.printf("%%TORYO\n")
+    @fh.printf("'summary:abnormal:%s win:%s lose\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
     end
@@ -715,6 +712,8 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
+    @fh.printf("%%TORYO\n")
+    @fh.printf("'summary:abnormal:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
     end
@@ -725,6 +724,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
     @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
+    @fh.printf("'summary:illegal move:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
@@ -735,6 +735,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#TIME_UP\n#LOSE\n")
     @next_player.write_safe("#TIME_UP\n#WIN\n")
+    @fh.printf("'summary:time up:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @id))
     end
@@ -745,6 +746,8 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
     @next_player.write_safe("%KACHI\n#JISHOGI\n#LOSE\n")
+    @fh.printf("%%KACHI\n")
+    @fh.printf("'summary:kachi:%s win:%s lose\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
     end
@@ -755,6 +758,8 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
     @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
+    @fh.printf("%%TORYO\n")
+    @fh.printf("'summary:toryo:%s lose:%s win\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
     end
@@ -765,6 +770,7 @@ class Game
     @next_player.status = "connected"
     @current_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
     @next_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
+    @fh.printf("'summary:outori:%s win:%s lose\n", @current_player.name, @next_player.name)
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
@@ -806,6 +812,39 @@ P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOM
     end
+  end
+
+  def show()
+    str0 = <<EOM
+BEGIN Game_Summary
+Protocol_Version:1.0
+Protocol_Mode:Server
+Format:Shogi 1.0
+Game_ID:#{@id}
+Name+:#{@sente.name}
+Name-:#{@gote.name}
+Rematch_On_Draw:NO
+To_Move:+
+BEGIN Time
+Time_Unit:1sec
+Total_Time:#{@total_time}
+Byoyomi:#{@byoyomi}
+Remaining_Time+:#{@sente.mytime}
+Remaining_Time-:#{@gote.mytime}
+Last_Move:#{@last_move}
+Current_Turn:#{@current_turn}
+Least_Time_Per_Move:#{Least_Time_Per_Move}
+END Time
+BEGIN Position
+Jishogi_Declaration:1.1
+EOM
+
+    str1 = <<EOM
+END Position
+END Game_Summary
+EOM
+
+    return str0 + @board.to_s + str1
   end
 
   def propose_message(sg_flag)
@@ -908,8 +947,6 @@ def parse_command_line
   return options
 end
 
-LEAGUE = League::new
-
 def good_game_name?(str)
   if ((str =~ /^(.+):\d+:\d+$/) &&
       (good_identifier?($1)))
@@ -952,7 +989,7 @@ def mutex_watchdog(mutex, sec)
         mutex.lock
         mutex.unlock
       end
-      sleep sec
+      sleep(sec)
     rescue TimeoutError
       log_error("mutex watchdog timeout")
       exit(1)
@@ -1038,5 +1075,6 @@ def main
 end
 
 if ($0 == __FILE__)
+  LEAGUE = League::new
   main
 end
