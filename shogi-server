@@ -182,6 +182,7 @@ class Player
   end
     
   def run
+    write_safe(sprintf("LOGIN:%s OK\n", @name))
     if (@protocol != "CSA")
       log_message(sprintf("user %s run in %s mode", @name, @protocol))
       write_safe(sprintf("##[LOGIN] +OK %s\n", @protocol))
@@ -280,7 +281,8 @@ class Player
           end
           buf.push("##[WHO] +OK\n")
           write_safe(buf.join)
-        when /^%%LOGOUT/
+        when /^LOGOUT/
+          write_safe("LOGOUT:completed\n")
           finish
           return
         else
@@ -568,6 +570,7 @@ def main
           if (good_login?(str))
             player = Player::new(str, client)
             if (LEAGUE.duplicated?(player))
+              client.write_safe("LOGIN:incorrect" + eol)
               client.write_safe(sprintf("username %s is already connected%s", player.name, eol))
               client.close
               Thread::kill(Thread::current)
@@ -575,6 +578,7 @@ def main
             LEAGUE.add(player)
             break
           else
+            client.write_safe("LOGIN:incorrect" + eol)
             client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol)
             client.close
             Thread::kill(Thread::current)
