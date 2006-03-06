@@ -238,7 +238,7 @@ class Player
             move = array_str.shift
             additional = array_str.shift
             if /^'(.*)/ =~ additional
-              comment = array_str.unshift("'* #{$1}")
+              comment = array_str.unshift("'*#{$1}")
             end
             s = @game.handle_one_move(move, self)
             @game.fh.print("#{comment}\n") if comment
