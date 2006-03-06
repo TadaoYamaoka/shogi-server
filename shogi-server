@@ -241,7 +241,7 @@ class Player
               comment = array_str.unshift("'*#{$1}")
             end
             s = @game.handle_one_move(move, self)
-            @game.fh.print("#{comment}\n") if comment
+            @game.fh.print("#{comment}\n") if (comment && !s)
             return if (s && @protocol == "CSA")
           end
         when /^%[^%]/, :timeout
