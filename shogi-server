@@ -232,7 +232,19 @@ class Player
         end
         str.chomp! if (str.class == String)
         case str
-        when /^[\+\-%][^%]/, :timeout
+        when /^[\+\-][^%]/
+          if (@status == "game")
+            array_str = str.split(",")
+            move = array_str.shift
+            additional = array_str.shift
+            if /^'(.*)/ =~ additional
+              comment = array_str.unshift("'* #{$1}")
+            end
+            s = @game.handle_one_move(move, self)
+            @game.fh.print("#{comment}\n") if comment
+            return if (s && @protocol == "CSA")
+          end
+        when /^%[^%]/, :timeout
           if (@status == "game")
             s = @game.handle_one_move(str, self)
             return if (s && @protocol == "CSA")
