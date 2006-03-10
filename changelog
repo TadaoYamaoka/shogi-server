@@ -1,0 +1,6 @@
+Fri Mar 10 23:09:43 JST 2006  Daigo Moriwaki <daigo@debian.org>
+
+	* Kifu logs are always written in separate files.
+	* Add a test case, test/TC_functional.rb
+	* Some refactorings.
+	

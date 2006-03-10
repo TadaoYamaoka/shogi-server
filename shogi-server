@@ -40,6 +40,7 @@ require 'timeout'
 require 'socket'
 
 TCPSocket.do_not_reverse_lookup = true
+Thread.abort_on_exception = true
 
 
 class TCPSocket
@@ -224,7 +225,7 @@ class Player
         end
         if (@write_queue.size > Max_Write_Queue_Size)
           log_warning(sprintf("write_queue of %s is %d", @name, @write_queue.size))
-	  return
+	        return
         end
 
         if (@status == "finished")
@@ -1166,6 +1167,9 @@ class Board
 end
 
 class Game
+  @@mutex = Mutex.new
+  @@time  = 0
+
   def initialize(game_name, player0, player1)
     @monitors = Array::new
     @game_name = game_name
@@ -1192,16 +1196,15 @@ class Game
 
     @sente.status = "agree_waiting"
     @gote.status = "agree_waiting"
+    
     @id = sprintf("%s+%s+%s+%s+%s", 
-                  LEAGUE.event, @game_name, @sente.name, @gote.name,
-                  Time::new.strftime("%Y%m%d%H%M%S"))
+                  LEAGUE.event, @game_name, @sente.name, @gote.name, issue_current_time)
+    @logfile = @id + ".csa"
 
     LEAGUE.games[@id] = self
 
-
     log_message(sprintf("game created %s", @id))
 
-    @logfile = @id + ".csa"
     @board = Board::new
     @board.initial
     @start_time = nil
@@ -1592,6 +1595,18 @@ END Game_Summary
 EOM
     return str
   end
+  
+  private
+  
+  def issue_current_time
+    time = Time::new.strftime("%Y%m%d%H%M%S").to_i
+    @@mutex.synchronize do
+      while time <= @@time do
+        time += 1
+      end
+      @@time = time
+    end
+  end
 end
 
 def usage
@@ -1694,8 +1709,11 @@ def mutex_watchdog(mutex, sec)
   while true
     begin
       timeout(sec) do
-        mutex.lock
-        mutex.unlock
+        begin
+          mutex.lock
+        ensure
+          mutex.unlock
+        end
       end
       sleep(sec)
     rescue TimeoutError
@@ -1708,6 +1726,7 @@ end
 def main
   $mutex = Mutex::new
   Thread::start do
+    Thread.pass
     mutex_watchdog($mutex, 10)
   end
 
@@ -1723,13 +1742,13 @@ def main
   write_pid_file($options["pid-file"]) if ($options["pid-file"])
 
 
-  Thread.abort_on_exception = true
 
   server = TCPserver.open(port)
   log_message("server started")
 
   while true
     Thread::start(server.accept) do |client|
+      Thread.pass
       client.sync = true
       player = nil
       while (str = client.gets_timeout(Login_Time))
@@ -1749,6 +1768,7 @@ def main
                 client.write_safe(sprintf("username %s is already connected%s", player.name, eol)) if (str.split.length >= 4)
                 client.close
                 Thread::exit
+                return
               end
             end
             LEAGUE.add(player)
@@ -1764,6 +1784,7 @@ def main
       if (! player)
         client.close
         Thread::exit
+        return
       end
       log_message(sprintf("user %s login", player.name))
       player.run
@@ -1772,7 +1793,7 @@ def main
         if (player.game)
           player.game.kill(player)
         end
-        player.finish
+        player.finish # socket has been closed
         LEAGUE.delete(player)
         log_message(sprintf("user %s logout", player.name))
       ensure
