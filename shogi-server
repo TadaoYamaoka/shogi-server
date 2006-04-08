@@ -1528,9 +1528,10 @@ EOM
   def show()
     str0 = <<EOM
 BEGIN Game_Summary
-Protocol_Version:1.0
+Protocol_Version:1.1
 Protocol_Mode:Server
 Format:Shogi 1.0
+Declaration:Jishogi 1.1
 Game_ID:#{@id}
 Name+:#{@sente.name}
 Name-:#{@gote.name}
@@ -1547,7 +1548,6 @@ Last_Move:#{@last_move}
 Current_Turn:#{@current_turn}
 END Time
 BEGIN Position
-Jishogi_Declaration:1.1
 EOM
 
     str1 = <<EOM
@@ -1561,9 +1561,10 @@ EOM
   def propose_message(sg_flag)
     str = <<EOM
 BEGIN Game_Summary
-Protocol_Version:1.0
+Protocol_Version:1.1
 Protocol_Mode:Server
 Format:Shogi 1.0
+Declaration:Jishogi 1.1
 Game_ID:#{@id}
 Name+:#{@sente.name}
 Name-:#{@gote.name}
@@ -1577,7 +1578,6 @@ Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
-Jishogi_Declaration:1.1
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
