@@ -1267,7 +1267,7 @@ class Game
     finish_flag = true
     if (@current_player == player)
       @end_time = Time::new
-      t = (@end_time - @start_time).ceil
+      t = (@end_time - @start_time).floor
       t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
       
       move_status = nil
