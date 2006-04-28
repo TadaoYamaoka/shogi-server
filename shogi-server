@@ -999,11 +999,21 @@ class Board
   end
 
   def good_kachi?(sente)
-    return false if (checkmated?(sente))
+    if (checkmated?(sente))
+      puts "'NG: Checkmating." if $DEBUG
+      return false 
+    end
+    
     ou = look_for_ou(sente)
-    return false if (sente && (ou.y >= 4))
-    return false if (! sente && (ou.y <= 6))
-
+    if (sente && (ou.y >= 4))
+      puts "'NG: Black's OU does not enter yet." if $DEBUG
+      return false     
+    end  
+    if (! sente && (ou.y <= 6))
+      puts "'NG: White's OU does not enter yet." if $DEBUG
+      return false 
+    end
+      
     number = 0
     point = 0
 
@@ -1030,16 +1040,27 @@ class Board
       point = point + piece.point
     end
 
-    return false if (number < 10)
+    if (number < 10)
+      puts "'NG: Piece#[%d] is too small." % [number] if $DEBUG
+      return false     
+    end  
     if (sente)
-      return false if (point < 28)
+      if (point < 28)
+        puts "'NG: Black's point#[%d] is too small." % [point] if $DEBUG
+        return false 
+      end  
     else
-      return false if (point < 27)
+      if (point < 27)
+        puts "'NG: White's point#[%d] is too small." % [point] if $DEBUG
+        return false 
+      end
     end
+
+    puts "'Good: Piece#[%d], Point[%d]." % [number, point] if $DEBUG
     return true
   end
 
-  def handle_one_move(str)
+  def handle_one_move(str, sente)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       sg = $1
       x0 = $2.to_i
@@ -1048,11 +1069,6 @@ class Board
       y1 = $5.to_i
       name = $6
     elsif (str =~ /^%KACHI/)
-      if (@sente == @current_player)
-        sente = true
-      else
-        sente = false
-      end
       if (good_kachi?(sente))
         return :kachi_win
       else
@@ -1282,7 +1298,7 @@ class Game
         end
 
 #        begin
-          move_status = @board.handle_one_move(str)
+          move_status = @board.handle_one_move(str, @sente == @current_player)
 #        rescue
 #          log_error("handle_one_move raise exception for #{str}")
 #          move_status = :illegal

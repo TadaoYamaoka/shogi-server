@@ -1,9 +1,14 @@
-Sat Apr  8 15:42:33 JST 2006  Daigo Moriwaki <daigo@debian.org>
+2006-04-28  Daigo Moriwaki <daigo at debian dot org>
 
-	* Support CSA Protocal Version 1.1.
+	* Jishogi kachi declaration did not work. This bug has been fixed.
+	  Add debug lines to show a jishogi state.
+
+2006-04-08  Daigo Moriwaki <daigo at debian dot org>
+
+	* Support CSA Protocol Version 1.1.
 	* Change the declaration of Jishogi 1.1.
 
-Fri Mar 10 23:09:43 JST 2006  Daigo Moriwaki <daigo@debian.org>
+2006-03-10  Daigo Moriwaki <daigo at debian dot org>
 
 	* Kifu logs are always written in separate files.
 	* Add a test case, test/TC_functional.rb
