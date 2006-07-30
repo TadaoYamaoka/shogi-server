@@ -791,8 +791,10 @@ class Board
     @sente_history = Hash::new
     @gote_history = Hash::new
     @array = [[], [], [], [], [], [], [], [], [], []]
+    @move_count = 0
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history
+  attr_reader :move_count
 
   def initial
     PieceKY::new(self, 1, 1, false)
@@ -873,6 +875,7 @@ class Board
       end
       @array[x0][y0].move_to(x1, y1)
     end
+    @move_count += 1
     return true
   end
 
