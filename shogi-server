@@ -141,7 +141,23 @@ class League
     end
     hash
   end
+
+  def rated_players
+    players = []
+    @db.transaction(true) do
+      @db.roots.each do |id|
+        players << id
+      end
+    end
+    return players.collect do |id|
+      p = RatedPlayer.new(id, nil, nil)
+      self.load(p)
+      p
+    end
+  end
 end
+
+class RatedPlayer < Struct.new(:id, :name, :rate); end
 
 class Player
   def initialize(str, socket)
@@ -326,6 +342,11 @@ class Player
           end
         when /^%%HELP/
           write_help
+        when /^%%RATING/
+          players = LEAGUE.rated_players
+          players.sort {|a,b| b.rate <=> a.rate}.each do |p|
+            write_safe("%s (%s) \t %4d\n" % [p.name, p.id, p.rate])
+          end
         when /^%%GAME\s*$/
           if ((@status == "connected") || (@status == "game_waiting"))
             @status = "connected"

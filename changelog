@@ -1,3 +1,7 @@
+2006-08-01  Daigo Moriwaki <daigo at debian dot org>
+
+	* Add a command, %%RATING, to show a ranking sorted by rates.
+
 2006-07-31  Daigo Moriwaki <daigo at debian dot org>
 
 	* Add a simple rating system.
