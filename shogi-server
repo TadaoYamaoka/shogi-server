@@ -1269,7 +1269,7 @@ class GameResultWin < GameResult
   def initialize(winner, loser)
     super
     @winner, @loser = winner, loser
-    rate
+    rate if @winner.id && @loser.id
   end
 
   def win?(player)
