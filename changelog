@@ -1,3 +1,7 @@
+2006-07-31  Daigo Moriwaki <daigo at debian dot org>
+
+	* Add a simple rating system.
+
 2006-07-30  Daigo Moriwaki <daigo at debian dot org>
 
 	* Add a @move_counter in Board class, which is used by Shogi Viewer
