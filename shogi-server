@@ -121,7 +121,9 @@ class League
     @db.transaction do
       @players.each_value do |p|
         next unless p.id
-        @db[p.id] = {'name' => p.name, 'rate' => p.rate}
+        @db[p.id] = {'name' => p.name, 
+                     'rate' => p.rate,
+                     'modified_at' => p.modified_at}
       end
     end
   end
@@ -130,7 +132,9 @@ class League
     hash = search(player.id)
     if hash
       # a current user
+      player.name = hash['name']
       player.rate = hash['rate']
+      player.modified_at = hash['modified_at']
     end
   end
 
@@ -150,20 +154,42 @@ class League
       end
     end
     return players.collect do |id|
-      p = RatedPlayer.new(id, nil, nil)
+      p = RatedPlayer.new
+      p.id = id
       self.load(p)
       p
     end
   end
 end
 
-class RatedPlayer < Struct.new(:id, :name, :rate); end
+#class RatedPlayer < Struct.new(:id, :name, :rate); end
 
-class Player
+class RatedPlayer
+  # Idetifier of the player in the rating system
+  attr_accessor :id
+  # Name of the player
+  attr_accessor :name
+  # Score in the rating sysem
+  attr_accessor :rate
+  # Last timestamp when the rate was modified
+  attr_accessor :modified_at
+
+  def modified_at
+    @modified_at || Time.now
+  end
+
+  def rate=(new_rate)
+    if @rate != new_rate
+      @rate = new_rate
+      @modified_at = Time.now
+    end
+  end
+end
+
+class Player < RatedPlayer
   def initialize(str, socket)
     @name = nil
     @password = nil
-    @id = nil, @rate = nil      # used by rating
     @socket = socket
     @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game -> finished
 
@@ -179,10 +205,9 @@ class Player
     login(str)
   end
 
-  attr_accessor :name, :password, :socket, :status, :rate
+  attr_accessor :password, :socket, :status
   attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
   attr_accessor :main_thread, :writer_thread, :write_queue
-  attr_reader   :id
   
   def kill
     log_message(sprintf("user %s killed", @name))
@@ -345,7 +370,8 @@ class Player
         when /^%%RATING/
           players = LEAGUE.rated_players
           players.sort {|a,b| b.rate <=> a.rate}.each do |p|
-            write_safe("%s (%s) \t %4d\n" % [p.name, p.id, p.rate])
+            write_safe("%s (%s) \t %4d @%s\n" % 
+                       [p.name, p.id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
           end
         when /^%%GAME\s*$/
           if ((@status == "connected") || (@status == "game_waiting"))
