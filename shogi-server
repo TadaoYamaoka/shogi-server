@@ -1279,28 +1279,17 @@ class GameResult
 end
 
 class GameResultWin < GameResult
-  WIN_MARK  = "o"
-  LOSS_MARK = "x"
   attr_reader :winner, :loser
-    
+
   def initialize(winner, loser)
     super
     @winner, @loser = winner, loser
   end
 
   def to_s
-    if @black == @winner
-      black_mark, white_mark = WIN_MARK, LOSS_MARK
-    elsif @white == @winner
-      black_mark, white_mark = LOSS_MARK, WIN_MARK
-    else
-      raise "Never reached! Nobody is the winner."
-    end
     black_name = @black.id || @black.name
     white_name = @white.id || @white.name
-    "%s : %s %d : %s %d : %s" % 
-      [black_mark, black_name, @black.rate, 
-       white_name, @white.rate, white_mark]
+    "%s:%s" % [black_name, white_name]
   end
 end
 
@@ -1495,7 +1484,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:abnormal:%s win:%s lose\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@current_player, @next_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
     end
@@ -1510,7 +1499,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:abnormal:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
     end
@@ -1524,7 +1513,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:sennichite:%s draw:%s draw\n", @current_player.name, @next_player.name)
     @result = GameResultDraw.new(@current_player, @next_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @id))
     end
@@ -1538,7 +1527,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:oute_sennichite:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @id))
     end
@@ -1552,7 +1541,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:illegal move:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
@@ -1566,7 +1555,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:uchifuzume:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
@@ -1580,7 +1569,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:oute_kaihimore:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
@@ -1594,7 +1583,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:time up:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @id))
     end
@@ -1609,7 +1598,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:kachi:%s win:%s lose\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@current_player, @next_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
     end
@@ -1624,7 +1613,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:illegal kachi:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
     end
@@ -1639,7 +1628,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:toryo:%s lose:%s win\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
     end
@@ -1653,7 +1642,7 @@ class Game
     @fh.print(@board.to_s.gsub(/^/, "\'"))
     @fh.printf("'summary:outori:%s win:%s lose\n", @current_player.name, @next_player.name)
     @result = GameResultWin.new(@current_player, @next_player)
-    @fh.printf("'rating: #{@result.to_s}\n") if rated?
+    @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
     end
