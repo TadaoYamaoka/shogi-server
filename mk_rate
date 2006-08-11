@@ -1,0 +1,232 @@
+#!/usr/bin/ruby
+## $Id$
+
+## Copyright (C) 2006 Daigo Moriwaki <daigo at debian dot org>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#
+# This calculates rating scores of every players from CSA files, and outputs a
+# yaml file (players.yaml) that Shogi Server can read.
+#
+# Sample:
+#   $ ./mk_rate . > players.yaml
+#
+# The conditions that games and players are rated as following:
+#   * Rated games, which were played by both rated players.
+#   * Rated players, who logged in the server with a name followed by a trip:
+#     "name,trip".
+#   * (Rated) players, who played more than $GAMES_LIMIT [ten] (rated) games. 
+#
+
+require 'yaml'
+require 'matrix'
+require 'time'
+
+#################################################
+# Constants
+#
+$GAMES_LIMIT = $DEBUG ? 0 : 10
+WIN_MARK  = "win"
+LOSS_MARK = "lose"
+AVERAGE_RATE = 1100
+
+$players = Hash.new
+$players_time = Hash.new { Time.at(0) }
+
+
+#################################################
+# Calculates rates of every player from a Win Loss Matrix
+#
+class Rating
+	include Math
+
+  K = Math.log(10.0) / 400.0
+  ERROR_LIMIT = 1.0e-5
+
+	def Rating.average(vector, mean=0.0)
+		sum = Array(vector).inject(0.0) {|sum, n| sum + n}
+		vector -= Vector[*Array.new(vector.size, sum/vector.size - mean)]
+	  vector
+	end
+
+	def initialize(win_loss_matrix)
+    @win_loss_matrix = win_loss_matrix
+		@size = @win_loss_matrix.row_size
+	end
+	attr_reader :rate
+
+	def rating
+		# 0 is the initial value
+		@rate = Vector[*Array.new(@size,0)]
+
+		begin
+			# the probability that x wins y
+			@win_rate_matrix = Matrix[*
+				(@rate.collect do |x|
+				(@rate.collect do |y|
+					#     exp(x)
+					# ---------------
+					# exp(x) + exp(y)
+					1.0/(1.0+exp(K*(y-x)))
+				end)
+				end)
+			]
+
+			# delta in Newton method
+			errorVector = Vector[*
+				((0...@size).collect do |k|
+
+				  numerator   = 0.0
+				  #---------------------
+				  denominator = 0.0
+
+				(0...@size).each do |i|
+					next if i == k
+					numerator   += @win_loss_matrix[k,i] * @win_rate_matrix[i,k] - 
+						             @win_rate_matrix[k,i] * @win_loss_matrix[i,k]
+					#------------------------------------------------------
+					denominator += @win_rate_matrix[i,k] * @win_rate_matrix[k,i] * 
+						            (@win_loss_matrix[k,i] + @win_loss_matrix[i,k])
+				end
+
+				# Remained issue: what to do if zero? 
+				(numerator == 0) ? 0 : numerator / denominator
+				end)
+			]
+
+			# gets the next value
+			@rate += errorVector * (1.0/K)
+			$stderr.printf "|error| : %5.2e\n", errorVector.r if $DEBUG
+
+		end while (errorVector.r > ERROR_LIMIT * @rate.r)
+		
+		self
+	end
+
+  def average!(mean=0.0)
+    @rate = self.class.average(@rate, mean)
+	end
+
+	def integer!
+    @rate = @rate.map {|a| a.to_i}
+	end
+end
+
+
+
+#################################################
+# Main methods
+#
+
+def mk_win_loss_matrix(players)
+	keys = players.keys.sort.reject do |k|
+		players[k].values.inject(0) {|sum, v| sum + v[0] + v[1]} < $GAMES_LIMIT
+	end
+
+	size = keys.size
+
+	matrix =
+	  Matrix[*
+		((0...size).collect do |k|
+		((0...size).collect do |j|
+			if k == j
+				0
+			else
+				v = players[keys[k]][keys[j]]
+				v[0]
+			end
+		end)
+		end)]
+	
+	return matrix, keys
+end
+
+def _add_win_loss(winner, loser)
+	$players[winner] ||= Hash.new { Vector[0,0] }
+	$players[loser]  ||= Hash.new { Vector[0,0] }
+  $players[winner][loser] += Vector[1,0]
+	$players[loser][winner] += Vector[0,1]
+end
+
+def _add_time(player, time)
+	$players_time[player] = time if $players_time[player] < time
+end
+
+def add(black_mark, black_name, white_name, white_mark, time)
+	if black_mark == WIN_MARK && white_mark == LOSS_MARK
+		_add_win_loss(black_name, white_name)
+	elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
+		_add_win_loss(white_name, black_name)
+	else
+		raise "Never reached!"
+	end
+	_add_time(black_name, time)
+	_add_time(white_name, time)
+end
+
+def grep(file)
+	str = File.open(file).read
+
+	black_mark = ""; white_mark = ""
+	time = nil
+
+	str.gsub(/^'summary:(.*)$/) do |line|
+		dummy, sente, gote = $1.split(":").map {|a| a.strip}
+		black_mark, white_mark = [sente,gote].map {|p| p.split(" ")[1]}
+	end
+	str.gsub(/^'\$END_TIME:(.*)$/) do |line|
+    time = Time.parse($1.strip)
+	end
+	if /^'rating:(.*)$/ =~ str
+	  black_name, white_name = $1.split(":").map {|a| a.strip}
+	  add(black_mark, black_name, white_name, white_mark, time)
+	end
+end
+
+def usage
+	$stderr.puts <<-EOF
+USAGE: #{$0} dir [...]
+	EOF
+	exit 1
+end
+
+def main
+	usage if ARGV.empty?
+	while dir = ARGV.shift do
+		Dir.glob( File.join("**", "*.csa") ) {|f| grep(f)}
+	end
+
+	win_loss_matrix, keys = mk_win_loss_matrix($players)
+	rating = Rating.new(win_loss_matrix)
+	rating.rating
+	rating.average!(AVERAGE_RATE)
+	rating.integer!
+
+	yaml = {}
+	keys.each_with_index do |p, i|
+		yaml[p] = 
+			{ 'name' => p.split("+")[0],
+		    'rate' => rating.rate[i],
+		    'last_modified' => $players_time[p]}
+	end
+	puts yaml.to_yaml
+end
+
+if __FILE__ == $0
+	main
+end
+
+# vim: ts=2 sw=2 sts=0

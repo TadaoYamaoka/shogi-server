@@ -1,9 +1,17 @@
+2006-08-11  Daigo Moriwaki <daigo at debian dot org>
+	
+	* Add mk_rate, which calculate rating scores.
+
+2006-08-10  Daigo Moriwaki <daigo at debian dot org>
+
+	* Change the style of a comment line on the rated game.
+
 2006-08-07  Daigo Moriwaki <daigo at debian dot org>
 
 	* Change the player id, which is now <name>+<hash_of_the_trip>.
 	* Fix the max length of the login name with a trip.
 	* Add a comment line about the rated game status in the CSA file.
-	* Remove the rating system, which will be calcurated by another
+	* Remove the rating system, which will be calculated by another
 	  program.
 
 2006-08-01  Daigo Moriwaki <daigo at debian dot org>
