@@ -216,11 +216,15 @@ def main
 	rating.integer!
 
 	yaml = {}
-	keys.each_with_index do |p, i|
+	keys.each_with_index do |p, i| # player_id, index#
+		win_loss = $players[p].values.inject(Vector[0,0]) {|sum, v| sum + v}
+    win = win_loss_matrix
 		yaml[p] = 
 			{ 'name' => p.split("+")[0],
 		    'rate' => rating.rate[i],
-		    'last_modified' => $players_time[p]}
+		    'last_modified' => $players_time[p],
+		    'win'  => win_loss[0],
+		    'loss' => win_loss[1]}
 	end
 	puts yaml.to_yaml
 end

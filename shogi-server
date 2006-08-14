@@ -1139,7 +1139,7 @@ class Board
     return true
   end
 
-  def handle_one_move(str, sente)
+  def handle_one_move(str, sente=nil)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       sg = $1
       x0 = $2.to_i
@@ -1148,6 +1148,7 @@ class Board
       y1 = $5.to_i
       name = $6
     elsif (str =~ /^%KACHI/)
+      raise ArgumentError, "sente is null", callser unless sente
       if (good_kachi?(sente))
         return :kachi_win
       else
@@ -1844,6 +1845,7 @@ def good_game_name?(str)
   end
 end
 
+# TODO This is also checked by good_game_name?().
 def good_identifier?(str)
   if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
     return true
