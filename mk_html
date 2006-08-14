@@ -1,0 +1,96 @@
+#!/usr/bin/ruby
+## $Id$
+
+## Copyright (C) 2006 Daigo Moriwaki <daigo at debian dot org>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#
+# This generates html pages from players.yaml.
+#
+# Sample:
+#   $ ./mk_html < players.yaml > rating.html
+#   
+
+require 'yaml'
+require 'erb'
+
+include ERB::Util
+
+def show_date(time)
+  time.strftime("%Y-%m-%d")
+end
+
+def usage
+  $stderr.puts <<-EOF
+USAGE: #{$0} 
+  EOF
+  exit 1
+end
+
+def main
+  lines = ""
+  while l = gets do
+    lines << l
+  end
+  yaml = YAML::load(lines)
+
+  sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']}
+
+  erb = ERB.new( DATA.read, nil, "%<>" )
+  body = erb.result(binding)
+  puts body
+end
+
+if __FILE__ == $0
+  main
+end
+
+# vim: ts=2 sw=2 sts=0
+
+__END__
+<html>
+<head>
+  <title>Shogi Server Rating</title>
+</head>
+<body>
+
+<h1>Shogi Server Rating</h1>
+
+<table>
+<tr>
+  <th>name</th> <th>rate</th> <th>win</th> <th>loss</th> <th>win_rate</th> <th>last_modified</th>
+</tr>
+<% sorted_keys.each do |key| %>
+  <%
+    win  = yaml[key]['win']
+    loss = yaml[key]['loss']
+    win_rate = win.to_f / (win + loss)
+    last_modified = yaml[key]['last_modified']
+  %>
+  <tr>
+    <td><%=h yaml[key]['name']%></td>
+    <td><%=yaml[key]['rate']%></td>
+    <td><%=win%></td>
+    <td><%=loss%></td>
+    <td><%="%.3f" % [win_rate]%></td>
+    <td><%=show_date(last_modified)%></td>
+  </tr>
+<% end %>
+</table>
+
+</body>
+</html>
+
