@@ -4,6 +4,8 @@
 	* Add mk_html, which genrates html from players.haml
 	* Fix test/test_board.rb. Now it works. 
 	* Add test/TC_ALL.rb to run all test cases.
+	* [shogi-server] Fix a bug. Now it can show %%RATING even if it has no
+	  rated player.
 
 2006-08-11  Daigo Moriwaki <daigo at debian dot org>
 	
