@@ -1148,7 +1148,7 @@ class Board
       y1 = $5.to_i
       name = $6
     elsif (str =~ /^%KACHI/)
-      raise ArgumentError, "sente is null", callser unless sente
+      raise ArgumentError, "sente is null", caller unless sente
       if (good_kachi?(sente))
         return :kachi_win
       else
