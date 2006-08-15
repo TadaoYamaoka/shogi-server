@@ -206,7 +206,7 @@ end
 def main
 	usage if ARGV.empty?
 	while dir = ARGV.shift do
-		Dir.glob( File.join("**", "*.csa") ) {|f| grep(f)}
+		Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
 	end
 
 	win_loss_matrix, keys = mk_win_loss_matrix($players)
