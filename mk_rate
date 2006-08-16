@@ -235,7 +235,7 @@ def main
 		yaml[p] = 
 			{ 'name' => p.split("+")[0],
 		    'rate' => rating.rate[i],
-		    'last_modified' => $players_time[p],
+		    'last_modified' => $players_time[p].dup,
 		    'win'  => win_loss[0],
 		    'loss' => win_loss[1]}
 	end
