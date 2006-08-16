@@ -76,12 +76,12 @@ class Rating
 			# the probability that x wins y
 			@win_rate_matrix = Matrix[*
 				(@rate.collect do |x|
-				(@rate.collect do |y|
-					#     exp(x)
-					# ---------------
-					# exp(x) + exp(y)
-					1.0/(1.0+exp(K*(y-x)))
-				end)
+				  (@rate.collect do |y|
+					  #      1
+					  # --------------
+					  #  1 + exp(y-x)
+					  1.0/(1.0+exp(y-x))
+				  end)
 				end)
 			]
 
@@ -108,11 +108,12 @@ class Rating
 			]
 
 			# gets the next value
-			@rate += errorVector * (1.0/K)
+			@rate += errorVector
 			$stderr.printf "|error| : %5.2e\n", errorVector.r if $DEBUG
 
 		end while (errorVector.r > ERROR_LIMIT * @rate.r)
 		
+    @rate *= 1.0/K
 		self
 	end
 
@@ -180,19 +181,29 @@ end
 def grep(file)
 	str = File.open(file).read
 
-	black_mark = ""; white_mark = ""
-	time = nil
+  if /^N\+(.*)$/ =~ str then black_name = $1.strip end
+  if /^N\-(.*)$/ =~ str then white_name = $1.strip end
 
-	str.gsub(/^'summary:(.*)$/) do |line|
-		dummy, sente, gote = $1.split(":").map {|a| a.strip}
-		black_mark, white_mark = [sente,gote].map {|p| p.split(" ")[1]}
+	if /^'summary:(.*)$/ =~ str
+		dummy, p1, p2 = $1.split(":").map {|a| a.strip}    
+    p1_name, p1_mark = p1.split(" ")
+    p2_name, p2_mark = p2.split(" ")
+    if p1_name == black_name
+      black_name, black_mark = p1_name, p1_mark
+      white_name, white_mark = p2_name, p2_mark
+    elsif p2_name == black_name
+      black_name, black_mark = p2_name, p2_mark
+      white_name, white_mark = p1_name, p1_mark
+    else
+      raise "Never reach!: #{black} #{white} #{p1} #{p2}"
+    end
 	end
-	str.gsub(/^'\$END_TIME:(.*)$/) do |line|
+	if /^'\$END_TIME:(.*)$/ =~ str
     time = Time.parse($1.strip)
 	end
 	if /^'rating:(.*)$/ =~ str
-	  black_name, white_name = $1.split(":").map {|a| a.strip}
-	  add(black_mark, black_name, white_name, white_mark, time)
+	  black_id, white_id = $1.split(":").map {|a| a.strip}
+	  add(black_mark, black_id, white_id, white_mark, time)
 	end
 end
 
@@ -210,6 +221,8 @@ def main
 	end
 
 	win_loss_matrix, keys = mk_win_loss_matrix($players)
+  $stderr.puts keys.inspect if $DEBUG
+  $stderr.puts win_loss_matrix.inspect if $DEBUG
 	rating = Rating.new(win_loss_matrix)
 	rating.rating
 	rating.average!(AVERAGE_RATE)
