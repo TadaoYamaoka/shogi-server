@@ -362,7 +362,7 @@ class Player < RatedPlayer
         when /^%%RATING/
           players = LEAGUE.rated_players
           players.sort {|a,b| b.rate <=> a.rate}.each do |p|
-            write_safe("##[RATING]%s (%s) \t %4d @%s\n" % 
+            write_safe("##[RATING] %s (%s) \t %4d @%s\n" % 
                        [p.name, p.id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
           end
           write_safe("##[RATING] +OK\n")

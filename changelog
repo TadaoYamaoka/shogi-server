@@ -1,3 +1,10 @@
+2006-08-13  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Fix a bug. Now it can see black/white players in a csa file.
+	* [shogi-server]
+	  - Add a space in the output of %%RATING.
+
 2006-08-14  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] Record numbers of win/loss games.
