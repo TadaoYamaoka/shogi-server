@@ -203,8 +203,8 @@ class Rating
       
       # Deaccelerated Newton method
       if mu == 1
-        old_rate = Vector.alloc(@rate)
-        old_f    = Vector.alloc(f)
+        old_rate = GSL::Vector.alloc(@rate)
+        old_f    = GSL::Vector.alloc(f)
         @rate = old_rate - a * mu
       end
       if func_vector.nrm2 < (1.0 - mu / 4.0) * old_f.nrm2
