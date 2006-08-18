@@ -32,8 +32,8 @@
 #
 
 require 'yaml'
-require 'matrix'
 require 'time'
+require 'gsl'
 
 #################################################
 # Constants
@@ -41,89 +41,225 @@ require 'time'
 $GAMES_LIMIT = $DEBUG ? 0 : 10
 WIN_MARK  = "win"
 LOSS_MARK = "lose"
-AVERAGE_RATE = 1100
 
 $players = Hash.new
 $players_time = Hash.new { Time.at(0) }
 
 
 #################################################
-# Calculates rates of every player from a Win Loss Matrix
+# Calculates rates of every player from a Win Loss GSL::Matrix
 #
 class Rating
-	include Math
+  include Math
 
+  # The model of the win possibility is 1/(1 + 10^(-d/400))
+  # The equation in this class is 1/(1 + e^(-Kd))
+  # So, K should be like this.
   K = Math.log(10.0) / 400.0
-  ERROR_LIMIT = 1.0e-5
+  
+  # Convergence limit to stop Newton method.
+  ERROR_LIMIT = 1.0e-3
 
-	def Rating.average(vector, mean=0.0)
-		sum = Array(vector).inject(0.0) {|sum, n| sum + n}
-		vector -= Vector[*Array.new(vector.size, sum/vector.size - mean)]
-	  vector
-	end
+  # Average rate among the players
+  AVERAGE_RATE = 1000
+  
+  ###############
+  # Class methods
+  #
+  def Rating.average(vector, mean=0.0)
+    sum = Array(vector).inject(0.0) {|sum, n| sum + n}
+    vector -= GSL::Vector[*Array.new(vector.size, sum/vector.size - mean)]
+    vector
+  end
 
-	def initialize(win_loss_matrix)
-    @win_loss_matrix = win_loss_matrix
-		@size = @win_loss_matrix.row_size
-	end
-	attr_reader :rate
+  ##################
+  # Instance methods
+  #
+  def initialize(win_loss_matrix)
+    @n = win_loss_matrix
+    case @n
+    when GSL::Matrix
+      @size = @n.size1
+    when ::Matrix
+      @size = @n.row_size
+    else
+      raise ArgumentError
+    end
+    # 0 is the initial value
+    @rate = initial_rate
+  end
+  attr_reader :rate, :n
 
-	def rating
-		# 0 is the initial value
-		@rate = Vector[*Array.new(@size,0)]
+  def player_vector
+    GSL::Vector[*
+      (0...@size).collect {|k| yield k}
+    ]
+  end
 
-		begin
-			# the probability that x wins y
-			@win_rate_matrix = Matrix[*
-				(@rate.collect do |x|
-				  (@rate.collect do |y|
-					  #      1
-					  # --------------
-					  #  1 + exp(y-x)
-					  1.0/(1.0+exp(y-x))
-				  end)
-				end)
-			]
+  def each_player
+    (0...@size).each {|k| yield k}
+  end
 
-			# delta in Newton method
-			errorVector = Vector[*
-				((0...@size).collect do |k|
+  ##
+  # The possibility that the player k will beet the player i.
+  #
+  def win_rate(k,i)
+    1.0/(1.0 + exp(@rate[i]-@rate[k]))
+  end
 
-				  numerator   = 0.0
-				  #---------------------
-				  denominator = 0.0
+  ##
+  # Most possible equation
+  #
+  def func_vector
+    player_vector do|k| 
+      sum = 0.0
+      each_player do |i|
+        next if i == k
+        sum += @n[k,i] * win_rate(i,k) - @n[i,k] * win_rate(k,i) 
+      end
+      sum * 2.0
+    end
+  end
 
-				(0...@size).each do |i|
-					next if i == k
-					numerator   += @win_loss_matrix[k,i] * @win_rate_matrix[i,k] - 
-						             @win_rate_matrix[k,i] * @win_loss_matrix[i,k]
-					#------------------------------------------------------
-					denominator += @win_rate_matrix[i,k] * @win_rate_matrix[k,i] * 
-						            (@win_loss_matrix[k,i] + @win_loss_matrix[i,k])
-				end
+  ##
+  #         / f0/R0 f0/R1 f0/R2 ... \
+  # fk/Rj = | f1/R0 f1/R1 f1/R2 ... |
+  #         \ f2/R0 f2/R1 f2/R2 ... /
+  def d_funk(k,j)
+    sum = 0.0
+    if k == j
+      each_player do |i|
+        next if i == k
+        sum += win_rate(i,k) * win_rate(k,i) * (@n[k,i] + @n[i,k])
+        sum *= -2.0
+      end
+    else # k != j
+      sum = win_rate(j,k) * win_rate(k,j) * (@n[k,j] + @n[j,k])
+      sum *= 2.0
+    end
+    sum
+  end
 
-				# Remained issue: what to do if zero? 
-				(numerator == 0) ? 0 : numerator / denominator
-				end)
-			]
+  ##
+  # Jacobi matrix of the func().
+  #   m00 m01
+  #   m10 m11
+  #
+  def j_matrix
+    GSL::Matrix[*
+      (0...@size).collect do |k|
+        (0...@size).collect do |j|
+          d_funk(k,j)
+        end
+      end
+    ]
+  end
 
-			# gets the next value
-			@rate += errorVector
-			$stderr.printf "|error| : %5.2e\n", errorVector.r if $DEBUG
+  ##
+  # The initial value of the rate, which is of very importance for Newton method.
+  # This is based on my huristics. 
+  #
+  def initial_rate
+    possibility = 
+      player_vector do |k|
+        v = GSL::Vector[0.0, 0.0]
+        each_player do |i|
+          next if k == i
+          v += GSL::Vector[@n[k,i], @n[i,k]]
+        end
+        v[0] + v[1] == 0 ? 0.001 : v[0] / (v[0] + v[1])
+      end
+    rank = possibility.sort_index
+    player_vector do |k|
+      K*500 * (rank[k]+1) / (@size)
+    end
+  end
 
-		end while (errorVector.r > ERROR_LIMIT * @rate.r)
-		
+  ##
+  # Main method to calculate ratings.
+  #
+  def rating
+    # Counter to stop the process. 
+    # Calulation in Newton method may fall in an infinite loop
+    count = 0
+    # Mu parameter in Deaccelerated Newton method
+    mu = 1
+
+    # Main loop
+    begin
+      # Solve the equation: 
+      #   J*a=f
+      #   @rate_(n+1) = @rate_(n) - a
+      f = func_vector
+      j = j_matrix
+
+      # f.nrm2 should approach to zero.
+      $stderr.puts "f: %s -> %f" % [f.to_a.inspect, f.nrm2] if $DEBUG
+
+      # LU is not available because J may not be a normal matrix.
+      # a = GSL::Linalg::LU.solve(j, f)
+      a = GSL::Linalg::SV.solve(j, f)
+      a = self.class.average(a)
+      
+      # Deaccelerated Newton method
+      if mu == 1
+        old_rate = Vector.alloc(@rate)
+        old_f    = Vector.alloc(f)
+        @rate = old_rate - a * mu
+      end
+      if func_vector.nrm2 < (1.0 - mu / 4.0) * old_f.nrm2
+        mu = 1
+        break
+      else
+        mu *= 0.5
+        @rate = old_rate - a * mu
+      end
+
+      $stderr.printf "|error| : %5.2e\n", a.nrm2 if $DEBUG
+
+      count += 1
+      if count > 300
+        $stderr.puts "Values seem to oscillate. Stopped the process."
+        $stderr.puts "f: %s -> %f" % [f.to_a.inspect, f.nrm2]
+        break
+      end
+
+    end while (a.nrm2 > ERROR_LIMIT * @rate.nrm2)
+    #end while ( !(0..0.01).include?(func_vector.nrm2) )
+    
+    $stderr.puts "resolved f: %s -> %f" %
+      [func_vector.to_a.inspect, func_vector.nrm2] if $DEBUG
+
     @rate *= 1.0/K
-		self
-	end
+    finite!
+    self
+  end
+
+  def finite!
+    @rate = @rate.collect do |a|
+      if a.infinite?
+        a.infinite? * AVERAGE_RATE * 100
+      else
+        a
+      end
+    end
+  end
 
   def average!(mean=0.0)
     @rate = self.class.average(@rate, mean)
-	end
+  end
 
-	def integer!
-    @rate = @rate.map {|a| a.to_i}
-	end
+  def integer!
+    @rate = @rate.collect do |a|
+      if a.finite?
+        a.to_i
+      elsif a.nan?
+        0
+      elsif a.infinite?
+        a.infinite? * AVERAGE_RATE * 100
+      end
+    end
+  end
 end
 
 
@@ -133,59 +269,59 @@ end
 #
 
 def mk_win_loss_matrix(players)
-	keys = players.keys.sort.reject do |k|
-		players[k].values.inject(0) {|sum, v| sum + v[0] + v[1]} < $GAMES_LIMIT
-	end
+  keys = players.keys.sort.reject do |k|
+    players[k].values.inject(0) {|sum, v| sum + v[0] + v[1]} < $GAMES_LIMIT
+  end
 
-	size = keys.size
+  size = keys.size
 
-	matrix =
-	  Matrix[*
-		((0...size).collect do |k|
-		((0...size).collect do |j|
-			if k == j
-				0
-			else
-				v = players[keys[k]][keys[j]]
-				v[0]
-			end
-		end)
-		end)]
-	
-	return matrix, keys
+  matrix =
+    GSL::Matrix[*
+    ((0...size).collect do |k|
+    ((0...size).collect do |j|
+      if k == j
+        0
+      else
+        v = players[keys[k]][keys[j]]
+        v[0]
+      end
+    end)
+    end)]
+  
+  return matrix, keys
 end
 
 def _add_win_loss(winner, loser)
-	$players[winner] ||= Hash.new { Vector[0,0] }
-	$players[loser]  ||= Hash.new { Vector[0,0] }
-  $players[winner][loser] += Vector[1,0]
-	$players[loser][winner] += Vector[0,1]
+  $players[winner] ||= Hash.new { GSL::Vector[0,0] }
+  $players[loser]  ||= Hash.new { GSL::Vector[0,0] }
+  $players[winner][loser] += GSL::Vector[1,0]
+  $players[loser][winner] += GSL::Vector[0,1]
 end
 
 def _add_time(player, time)
-	$players_time[player] = time if $players_time[player] < time
+  $players_time[player] = time if $players_time[player] < time
 end
 
 def add(black_mark, black_name, white_name, white_mark, time)
-	if black_mark == WIN_MARK && white_mark == LOSS_MARK
-		_add_win_loss(black_name, white_name)
-	elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
-		_add_win_loss(white_name, black_name)
-	else
-		raise "Never reached!"
-	end
-	_add_time(black_name, time)
-	_add_time(white_name, time)
+  if black_mark == WIN_MARK && white_mark == LOSS_MARK
+    _add_win_loss(black_name, white_name)
+  elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
+    _add_win_loss(white_name, black_name)
+  else
+    raise "Never reached!"
+  end
+  _add_time(black_name, time)
+  _add_time(white_name, time)
 end
 
 def grep(file)
-	str = File.open(file).read
+  str = File.open(file).read
 
   if /^N\+(.*)$/ =~ str then black_name = $1.strip end
   if /^N\-(.*)$/ =~ str then white_name = $1.strip end
 
-	if /^'summary:(.*)$/ =~ str
-		dummy, p1, p2 = $1.split(":").map {|a| a.strip}    
+  if /^'summary:(.*)$/ =~ str
+    dummy, p1, p2 = $1.split(":").map {|a| a.strip}    
     p1_name, p1_mark = p1.split(" ")
     p2_name, p2_mark = p2.split(" ")
     if p1_name == black_name
@@ -197,53 +333,53 @@ def grep(file)
     else
       raise "Never reach!: #{black} #{white} #{p1} #{p2}"
     end
-	end
-	if /^'\$END_TIME:(.*)$/ =~ str
+  end
+  if /^'\$END_TIME:(.*)$/ =~ str
     time = Time.parse($1.strip)
-	end
-	if /^'rating:(.*)$/ =~ str
-	  black_id, white_id = $1.split(":").map {|a| a.strip}
-	  add(black_mark, black_id, white_id, white_mark, time)
-	end
+  end
+  if /^'rating:(.*)$/ =~ str
+    black_id, white_id = $1.split(":").map {|a| a.strip}
+    add(black_mark, black_id, white_id, white_mark, time)
+  end
 end
 
 def usage
-	$stderr.puts <<-EOF
+  $stderr.puts <<-EOF
 USAGE: #{$0} dir [...]
-	EOF
-	exit 1
+  EOF
+  exit 1
 end
 
 def main
-	usage if ARGV.empty?
-	while dir = ARGV.shift do
-		Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
-	end
+  usage if ARGV.empty?
+  while dir = ARGV.shift do
+    Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
+  end
 
-	win_loss_matrix, keys = mk_win_loss_matrix($players)
+  win_loss_matrix, keys = mk_win_loss_matrix($players)
   $stderr.puts keys.inspect if $DEBUG
   $stderr.puts win_loss_matrix.inspect if $DEBUG
-	rating = Rating.new(win_loss_matrix)
-	rating.rating
-	rating.average!(AVERAGE_RATE)
-	rating.integer!
+  rating = Rating.new(win_loss_matrix)
+  rating.rating
+  rating.average!(Rating::AVERAGE_RATE)
+  rating.integer!
 
-	yaml = {}
-	keys.each_with_index do |p, i| # player_id, index#
-		win_loss = $players[p].values.inject(Vector[0,0]) {|sum, v| sum + v}
+  yaml = {}
+  keys.each_with_index do |p, i| # player_id, index#
+    win_loss = $players[p].values.inject(GSL::Vector[0,0]) {|sum, v| sum + v}
     win = win_loss_matrix
-		yaml[p] = 
-			{ 'name' => p.split("+")[0],
-		    'rate' => rating.rate[i],
-		    'last_modified' => $players_time[p].dup,
-		    'win'  => win_loss[0],
-		    'loss' => win_loss[1]}
-	end
-	puts yaml.to_yaml
+    yaml[p] = 
+      { 'name' => p.split("+")[0],
+        'rate' => rating.rate[i],
+        'last_modified' => $players_time[p].dup,
+        'win'  => win_loss[0],
+        'loss' => win_loss[1]}
+  end
+  puts yaml.to_yaml
 end
 
 if __FILE__ == $0
-	main
+  main
 end
 
 # vim: ts=2 sw=2 sts=0

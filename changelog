@@ -1,3 +1,9 @@
+2006-08-18  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate] Re-design. 
+	  - Correct the equations.
+	  - Apply deaccelerated Newton method.
+
 2006-08-16  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
@@ -8,7 +14,7 @@
 2006-08-14  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] Record numbers of win/loss games.
-	* Add mk_html, which genrates html from players.haml
+	* Add mk_html, which generates html from players.yaml
 	* Fix test/test_board.rb. Now it works. 
 	* Add test/TC_ALL.rb to run all test cases.
 	* [shogi-server] Fix a bug. Now it can show %%RATING even if it has no
