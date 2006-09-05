@@ -1,3 +1,7 @@
+2006-09-05  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate] Fix a bug. It solves the correct rate.
+
 2006-08-18  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] Re-design. 

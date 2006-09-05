@@ -30,6 +30,15 @@
 #     "name,trip".
 #   * (Rated) players, who played more than $GAMES_LIMIT [ten] (rated) games. 
 #
+#
+# PREREQUIRE
+# ==========
+#
+#   Ruby bindings for the GNU Scientific Library (GSL) is required.
+#   You can download it from  http://rb-gsl.rubyforge.org/
+#   Or, if you use Debian, 
+#     $ sudo aptitude install libgsl-ruby1.8
+#
 
 require 'yaml'
 require 'time'
@@ -38,13 +47,40 @@ require 'gsl'
 #################################################
 # Constants
 #
+
+# Count out players who play less games than $GAMES_LIMIT
 $GAMES_LIMIT = $DEBUG ? 0 : 10
 WIN_MARK  = "win"
 LOSS_MARK = "lose"
 
+# Holds players
 $players = Hash.new
+# Holds the last time when a player gamed
 $players_time = Hash.new { Time.at(0) }
 
+
+#################################################
+# Keeps the value of the lowest key
+#
+class Record
+  def initialize
+    @lowest = []
+  end
+
+  def set(key, value)
+    if @lowest.empty? || key < @lowest[0]
+      @lowest = [key, value]
+    end
+  end
+
+  def get
+    if @lowest.empty?
+      nil
+    else
+      @lowest[1]
+    end
+  end
+end
 
 #################################################
 # Calculates rates of every player from a Win Loss GSL::Matrix
@@ -52,19 +88,26 @@ $players_time = Hash.new { Time.at(0) }
 class Rating
   include Math
 
-  # The model of the win possibility is 1/(1 + 10^(-d/400))
-  # The equation in this class is 1/(1 + e^(-Kd))
-  # So, K should be like this.
+  # The model of the win possibility is 1/(1 + 10^(-d/400)).
+  # The equation in this class is 1/(1 + e^(-Kd)).
+  # So, K should be calculated like this.
   K = Math.log(10.0) / 400.0
   
   # Convergence limit to stop Newton method.
   ERROR_LIMIT = 1.0e-3
+  # Stop Newton method after this iterations.
+  COUNT_MAX = 500
 
   # Average rate among the players
   AVERAGE_RATE = 1000
+
   
   ###############
   # Class methods
+  #  
+  
+  ##
+  # Calcurates the average of the vector.
   #
   def Rating.average(vector, mean=0.0)
     sum = Array(vector).inject(0.0) {|sum, n| sum + n}
@@ -76,6 +119,7 @@ class Rating
   # Instance methods
   #
   def initialize(win_loss_matrix)
+    @record = Record.new
     @n = win_loss_matrix
     case @n
     when GSL::Matrix
@@ -85,8 +129,7 @@ class Rating
     else
       raise ArgumentError
     end
-    # 0 is the initial value
-    @rate = initial_rate
+    initial_rate
   end
   attr_reader :rate, :n
 
@@ -122,20 +165,19 @@ class Rating
   end
 
   ##
-  #         / f0/R0 f0/R1 f0/R2 ... \
-  # fk/Rj = | f1/R0 f1/R1 f1/R2 ... |
-  #         \ f2/R0 f2/R1 f2/R2 ... /
-  def d_funk(k,j)
+  #           / f0/R0 f0/R1 f0/R2 ... \
+  # dfk/dRj = | f1/R0 f1/R1 f1/R2 ... |
+  #           \ f2/R0 f2/R1 f2/R2 ... /
+  def d_func(k,j)
     sum = 0.0
     if k == j
       each_player do |i|
         next if i == k
         sum += win_rate(i,k) * win_rate(k,i) * (@n[k,i] + @n[i,k])
-        sum *= -2.0
       end
+      sum *= -2.0
     else # k != j
-      sum = win_rate(j,k) * win_rate(k,j) * (@n[k,j] + @n[j,k])
-      sum *= 2.0
+      sum = 2.0 * win_rate(j,k) * win_rate(k,j) * (@n[k,j] + @n[j,k])
     end
     sum
   end
@@ -149,7 +191,7 @@ class Rating
     GSL::Matrix[*
       (0...@size).collect do |k|
         (0...@size).collect do |j|
-          d_funk(k,j)
+          d_func(k,j)
         end
       end
     ]
@@ -157,76 +199,100 @@ class Rating
 
   ##
   # The initial value of the rate, which is of very importance for Newton method.
-  # This is based on my huristics. 
+  # This is based on my huristics; the higher the win probablity of a player is, 
+  # the greater points he takes.
   #
   def initial_rate
     possibility = 
       player_vector do |k|
-        v = GSL::Vector[0.0, 0.0]
+        v = GSL::Vector[0, 0]
         each_player do |i|
           next if k == i
           v += GSL::Vector[@n[k,i], @n[i,k]]
         end
-        v[0] + v[1] == 0 ? 0.001 : v[0] / (v[0] + v[1])
+        v.nrm2 < 1 ? 0 : v[0] / (v[0] + v[1])
       end
     rank = possibility.sort_index
-    player_vector do |k|
-      K*500 * (rank[k]+1) / (@size)
+    @rate = player_vector do |k|
+      K*500 * (rank[k]+1) / @size
     end
+    average!
   end
 
   ##
-  # Main method to calculate ratings.
+  # Resets @rate as the higher the current win probablity of a player is, 
+  # the greater points he takes. 
+  #
+  def initial_rate2
+    @rate = @record.get || @rate
+    rank = @rate.sort_index
+    @rate = player_vector do |k|
+      K*@count*1.5 * (rank[k]+1) / @size
+    end
+    average!
+  end
+
+  # mu is the deaccelrating parameter in Deaccelerated Newton method
+  def deaccelrate(mu, old_rate, a, old_f_nrm2)
+    @rate = old_rate - a * mu
+    if func_vector.nrm2 < (1 - mu / 4.0 ) * old_f_nrm2 then
+      return
+    end
+    if mu < 1e-4
+      @record.set(func_vector.nrm2, @rate)
+      initial_rate2
+      return
+    end
+    $stderr.puts "mu: %f " % [mu] if $DEBUG
+    deaccelrate(mu*0.5, old_rate, a, old_f_nrm2)
+  end
+
+  ##
+  # Main process to calculate ratings.
   #
   def rating
     # Counter to stop the process. 
     # Calulation in Newton method may fall in an infinite loop
-    count = 0
-    # Mu parameter in Deaccelerated Newton method
-    mu = 1
+    @count = 0
 
     # Main loop
     begin
       # Solve the equation: 
       #   J*a=f
       #   @rate_(n+1) = @rate_(n) - a
+      #
+      # f.nrm2 should approach to zero.
       f = func_vector
       j = j_matrix
 
-      # f.nrm2 should approach to zero.
+      # $stderr.puts "j: %s" % [j.inspect] if $DEBUG
       $stderr.puts "f: %s -> %f" % [f.to_a.inspect, f.nrm2] if $DEBUG
 
-      # LU is not available because J may not be a normal matrix.
-      # a = GSL::Linalg::LU.solve(j, f)
+      # GSL::Linalg::LU.solve or GSL::Linalg::HH.solve would be available instead.
       a = GSL::Linalg::SV.solve(j, f)
       a = self.class.average(a)
+      # $stderr.puts "a: %s -> %f" % [a.to_a.inspect, a.nrm2] if $DEBUG
       
       # Deaccelerated Newton method
-      if mu == 1
-        old_rate = GSL::Vector.alloc(@rate)
-        old_f    = GSL::Vector.alloc(f)
-        @rate = old_rate - a * mu
-      end
-      if func_vector.nrm2 < (1.0 - mu / 4.0) * old_f.nrm2
-        mu = 1
-        break
-      else
-        mu *= 0.5
-        @rate = old_rate - a * mu
-      end
+      # GSL::Vector object should be immutable.
+      old_rate   = @rate
+      old_f      = f
+      old_f_nrm2 = old_f.nrm2
+      deaccelrate(1.0, old_rate, a, old_f_nrm2)
+      @record.set(func_vector.nrm2, @rate)
 
       $stderr.printf "|error| : %5.2e\n", a.nrm2 if $DEBUG
 
-      count += 1
-      if count > 300
+      @count += 1
+      if @count > COUNT_MAX
         $stderr.puts "Values seem to oscillate. Stopped the process."
-        $stderr.puts "f: %s -> %f" % [f.to_a.inspect, f.nrm2]
+        $stderr.puts "f: %s -> %f" % [func_vector.to_a.inspect, func_vector.nrm2]
         break
       end
 
     end while (a.nrm2 > ERROR_LIMIT * @rate.nrm2)
-    #end while ( !(0..0.01).include?(func_vector.nrm2) )
     
+    @rate = @record.get
     $stderr.puts "resolved f: %s -> %f" %
       [func_vector.to_a.inspect, func_vector.nrm2] if $DEBUG
 
@@ -235,6 +301,9 @@ class Rating
     self
   end
 
+  ##
+  # Make the values of @rate finite.
+  #
   def finite!
     @rate = @rate.collect do |a|
       if a.infinite?
@@ -245,10 +314,16 @@ class Rating
     end
   end
 
+  ##
+  # Flatten the values of @rate.
+  #
   def average!(mean=0.0)
     @rate = self.class.average(@rate, mean)
   end
 
+  ##
+  # Make the values of @rate integer.
+  #
   def integer!
     @rate = @rate.collect do |a|
       if a.finite?
