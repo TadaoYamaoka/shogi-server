@@ -389,6 +389,10 @@ def add(black_mark, black_name, white_name, white_mark, time)
   _add_time(white_name, time)
 end
 
+def identify_id(id)
+  id.gsub(/@.*?\+/,"+")
+end
+
 def grep(file)
   str = File.open(file).read
 
@@ -414,7 +418,8 @@ def grep(file)
   end
   if /^'rating:(.*)$/ =~ str
     black_id, white_id = $1.split(":").map {|a| a.strip}
-    add(black_mark, black_id, white_id, white_mark, time)
+    add(black_mark, identify_id(black_id),
+        identify_id(white_id), white_mark, time)
   end
 end
 

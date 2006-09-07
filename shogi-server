@@ -123,7 +123,7 @@ class League
       # a current user
       player.name = hash['name']
       player.rate = hash['rate']
-      player.modified_at = hash['modified_at']
+      player.modified_at = hash['last_modified']
     end
   end
 
@@ -175,6 +175,16 @@ class RatedPlayer
 
   def rated?
     @id != nil
+  end
+
+  def simple_id
+    name, trip = @id.split("+")
+    if trip
+      name.gsub!(/@.*?$/, '')
+      "%s+%s" % [name, trip[0..8]]
+    else
+      name
+    end
   end
 end
 
@@ -259,8 +269,9 @@ class Player < RatedPlayer
     @eol = $1
     str.chomp!
     (login, @name, @password, ext) = str.split
-    @name, trip = @name.split(",") # used by rating
-    @id = trip ? "%s+%s" % [@name, Digest::MD5.hexdigest(trip)] : nil
+    @password, *trip = @password.split(",") # used by rating
+    trip = trip.join(",") # if no trip, *trip -> []; [].join(",") -> "";
+    @id = trip.empty? ? nil : "%s+%s" % [@name, Digest::MD5.hexdigest(trip)]
     if (ext)
       @protocol = "x1"
     else
@@ -362,8 +373,8 @@ class Player < RatedPlayer
         when /^%%RATING/
           players = LEAGUE.rated_players
           players.sort {|a,b| b.rate <=> a.rate}.each do |p|
-            write_safe("##[RATING] %s (%s) \t %4d @%s\n" % 
-                       [p.name, p.id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
+            write_safe("##[RATING] %s \t %4d @%s\n" % 
+                       [p.simple_id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
           end
           write_safe("##[RATING] +OK\n")
         when /^%%GAME\s*$/
@@ -1846,11 +1857,8 @@ def good_game_name?(str)
   end
 end
 
-# TODO This is also checked by good_game_name?().
 def good_identifier?(str)
   if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
-    return true
-  elsif str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}},[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
     return true
   else
     return false
