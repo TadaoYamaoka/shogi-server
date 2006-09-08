@@ -143,7 +143,7 @@ class League
       end
     end
     return players.collect do |id|
-      p = RatedPlayer.new
+      p = BasicPlayer.new
       p.id = id
       self.load(p)
       p
@@ -152,15 +152,31 @@ class League
 end
 
 
-class RatedPlayer
+class BasicPlayer
   # Idetifier of the player in the rating system
   attr_accessor :id
+
+  # Trip (password) for the rating player id
+  attr_reader :trip
+  
   # Name of the player
   attr_accessor :name
+  
+  # Password of the player, which does not include a trip
+  attr_accessor :password
+
   # Score in the rating sysem
   attr_accessor :rate
+  
   # Last timestamp when the rate was modified
   attr_accessor :modified_at
+
+
+
+  def initialize
+    @name = nil
+    @password = nil
+  end
 
   def modified_at
     @modified_at || Time.now
@@ -178,20 +194,32 @@ class RatedPlayer
   end
 
   def simple_id
-    name, trip = @id.split("+")
-    if trip
-      name.gsub!(/@.*?$/, '')
-      "%s+%s" % [name, trip[0..8]]
+    if @trip
+      simple_name = @name.gsub(/@.*?$/, '')
+      "%s+%s" % [simple_name, @trip[0..8]]
     else
-      name
+      @name
+    end
+  end
+
+  ##
+  # Parses str in the LOGIN command, sets up @id and @trip
+  #
+  def parse_password(str)
+    @password, *trip = str.split(",") # used by rating
+    trip = trip.join(",") # if no trip, *trip -> []; [].join(",") -> "";
+    if trip.empty?
+      @id = @trip = nil
+    else
+      @trip = trip
+      @id   = "%s+%s" % [@name, Digest::MD5.hexdigest(@trip)]
     end
   end
 end
 
-class Player < RatedPlayer
+class Player < BasicPlayer
   def initialize(str, socket)
-    @name = nil
-    @password = nil
+    super()
     @socket = socket
     @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game -> finished
 
@@ -207,7 +235,7 @@ class Player < RatedPlayer
     login(str)
   end
 
-  attr_accessor :password, :socket, :status
+  attr_accessor :socket, :status
   attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
   attr_accessor :main_thread, :writer_thread, :write_queue
   
@@ -268,10 +296,8 @@ class Player < RatedPlayer
     str =~ /([\r\n]*)$/
     @eol = $1
     str.chomp!
-    (login, @name, @password, ext) = str.split
-    @password, *trip = @password.split(",") # used by rating
-    trip = trip.join(",") # if no trip, *trip -> []; [].join(",") -> "";
-    @id = trip.empty? ? nil : "%s+%s" % [@name, Digest::MD5.hexdigest(trip)]
+    (login, @name, password, ext) = str.split
+    parse_password(password)
     if (ext)
       @protocol = "x1"
     else
@@ -1160,7 +1186,7 @@ class Board
       y1 = $5.to_i
       name = $6
     elsif (str =~ /^%KACHI/)
-      raise ArgumentError, "sente is null", caller unless sente
+      raise ArgumentError, "sente is null", caller if sente == nil
       if (good_kachi?(sente))
         return :kachi_win
       else
