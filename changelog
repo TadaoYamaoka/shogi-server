@@ -1,3 +1,8 @@
+2006-09-09  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Support a new command, %%VERSION. It shows the server's revision#.
+
 2006-09-07  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

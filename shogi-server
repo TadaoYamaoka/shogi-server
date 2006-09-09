@@ -403,6 +403,9 @@ class Player < BasicPlayer
                        [p.simple_id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
           end
           write_safe("##[RATING] +OK\n")
+        when /^%%VERSION/
+          write_safe "##[VERSION] Shogi Server revision #{Revision}\n"
+          write_safe("##[VERSION] +OK\n")
         when /^%%GAME\s*$/
           if ((@status == "connected") || (@status == "game_waiting"))
             @status = "connected"
