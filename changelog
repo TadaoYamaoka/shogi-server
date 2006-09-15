@@ -2,6 +2,9 @@
 
 	* [shogi-server]
 	  - Remove the trip in a password. Now the password is hashed.
+	* [mk_rate]
+	  - Support @NORATE syntax in a name, which avoids the player is
+	    rated.
 
 2006-09-09  Daigo Moriwaki <daigo at debian dot org>
 
