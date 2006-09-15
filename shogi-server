@@ -156,9 +156,6 @@ class BasicPlayer
   # Idetifier of the player in the rating system
   attr_accessor :id
 
-  # Trip (password) for the rating player id
-  attr_reader :trip
-  
   # Name of the player
   attr_accessor :name
   
@@ -205,14 +202,12 @@ class BasicPlayer
   ##
   # Parses str in the LOGIN command, sets up @id and @trip
   #
-  def parse_password(str)
-    @password, *trip = str.split(",") # used by rating
-    trip = trip.join(",") # if no trip, *trip -> []; [].join(",") -> "";
-    if trip.empty?
-      @id = @trip = nil
+  def set_password(str)
+    if str && !str.empty?
+      @password = str.strip
+      @id   = "%s+%s" % [@name, Digest::MD5.hexdigest(@password)]
     else
-      @trip = trip
-      @id   = "%s+%s" % [@name, Digest::MD5.hexdigest(@trip)]
+      @id = @password = nil
     end
   end
 end
@@ -297,7 +292,7 @@ class Player < BasicPlayer
     @eol = $1
     str.chomp!
     (login, @name, password, ext) = str.split
-    parse_password(password)
+    set_password(password)
     if (ext)
       @protocol = "x1"
     else
