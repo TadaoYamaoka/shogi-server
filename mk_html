@@ -64,15 +64,46 @@ __END__
 <html>
 <head>
   <title>Shogi Server Rating</title>
+  <link rel="StyleSheet" type="text/css" href="http://wdoor.c.u-tokyo.ac.jp/shogi/shogi.css">
+  <style type="text/css"><!--
+    BODY {margin: 10px 60px;
+          text-align: center;}
+    TABLE {margin-left: auto;
+           margin-right: auto;
+           border-collapse: collapse;
+           border: solid 2px;}
+    TH    {border: solid 1px;}
+    TD    {padding-left: 10px;
+           padding-right: 10px;
+           border: solid 1px;}
+    .name {text-align: center;}
+    .rate, .ngames, .win_rate {text-align: right;}
+    .last_modified {text-align: left;}
+
+    P.footer {text-align: right;
+             font-size: 80%;}
+     
+  --></style>
 </head>
 <body>
 
 <h1>Shogi Server Rating</h1>
 
 <table>
+<colgroup>
+  <col class="name">
+  <col class="rate">
+  <col class="ngames">
+  <col class="ngames">
+  <col class="win_rate">
+  <col class="last_modified">
+</colgroup>
+<thead>
 <tr>
   <th>name</th> <th>rate</th> <th>win</th> <th>loss</th> <th>win_rate</th> <th>last_modified</th>
 </tr>
+</thead>
+<tbody>
 <% sorted_keys.each do |key| %>
   <%
     win  = yaml[key]['win']
@@ -81,15 +112,21 @@ __END__
     last_modified = yaml[key]['last_modified']
   %>
   <tr>
-    <td><%=h yaml[key]['name']%></td>
-    <td><%=yaml[key]['rate']%></td>
-    <td><%=win%></td>
-    <td><%=loss%></td>
-    <td><%="%.3f" % [win_rate]%></td>
-    <td><%=show_date(last_modified)%></td>
+    <td class="name"><%=h yaml[key]['name']%></td>
+    <td class="rate"><%="%5d"  % [ yaml[key]['rate'] ]%></td>
+    <td class="ngames"><%="%5d"  % [ win ]%></td>
+    <td class="ngames"><%="%5d"  % [ loss ]%></td>
+    <td class="win_rate"><%="%.3f" % [win_rate]%></td>
+    <td class="last_modified"><%=show_date(last_modified)%></td>
   </tr>
 <% end %>
+</tbody>
 </table>
+
+<p>The average of the rates is 1000. 
+
+<hr/>
+<p class="footer">Last modified at <%=Time.now%>
 
 </body>
 </html>
