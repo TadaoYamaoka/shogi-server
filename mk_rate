@@ -52,6 +52,7 @@ require 'gsl'
 $GAMES_LIMIT = $DEBUG ? 0 : 10
 WIN_MARK  = "win"
 LOSS_MARK = "lose"
+DRAW_MARK = "draw"
 
 # Holds players
 $players = Hash.new
@@ -382,6 +383,8 @@ def add(black_mark, black_name, white_name, white_mark, time)
     _add_win_loss(black_name, white_name)
   elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
     _add_win_loss(white_name, black_name)
+  elsif black_mark == DRAW_MARK && white_mark == DRAW_MARK
+    return
   else
     raise "Never reached!"
   end

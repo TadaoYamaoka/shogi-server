@@ -1,3 +1,8 @@
+2006-09-21  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate] It failed parse draw games. Now this bug has been fixed.
+	* [mk_html] Add CSS to look better.
+
 2006-09-15  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
