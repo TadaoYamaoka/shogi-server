@@ -212,6 +212,100 @@ class BasicPlayer
   end
 end
 
+
+class Login
+  def Login.good_login?(str)
+    tokens = str.split
+    if (((tokens.length == 3) || ((tokens.length == 4) && tokens[3] == "x1")) &&
+        (tokens[0] == "LOGIN") &&
+        (good_identifier?(tokens[1])))
+      return true
+    else
+      return false
+    end
+  end
+
+  def Login.good_game_name?(str)
+    if ((str =~ /^(.+)-\d+-\d+$/) && (good_identifier?($1)))
+      return true
+    else
+      return false
+    end
+  end
+
+  def Login.good_identifier?(str)
+    if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
+      return true
+    else
+      return false
+    end
+  end
+
+  def Login.factory(str, player)
+    (login, player.name, password, ext) = str.chomp.split
+    player.set_password(password)
+    if (ext)
+      return Loginx1.new(player)
+    else
+      return LoginCSA.new(player)
+    end
+  end
+
+  attr_reader :player, :csa_1st_str
+
+  def initialize(player)
+    @player = player
+    @csa_1st_str = nil
+  end
+
+  def process
+    @player.write_safe(sprintf("LOGIN:%s OK\n", @player.name))
+  end
+
+  def incorrect_duplicated_player(str)
+    @player.write_safe("LOGIN:incorrect\n")
+    @player.write_safe(sprintf("username %s is already connected\n", @player.name)) if (str.split.length >= 4)
+    sleep 3 # wait for sending the above messages.
+    @palyer.name = "%s [duplicated]" % [@player.name]
+    @player.finish
+  end
+end
+
+class LoginCSA < Login
+  PROTOCOL = "CSA"
+
+  def initialize(player)
+    super
+    @player.protocol = PROTOCOL
+  end
+
+  def process
+    super
+    log_message(sprintf("user %s run in CSA mode", @player.name))
+    if (self.class.good_game_name?(@player.password))
+      @csa_1st_str = "%%GAME #{@player.password} *"
+    else
+      @csa_1st_str = "%%GAME #{Default_Game_Name} *"
+    end
+  end
+end
+
+class Loginx1 < Login
+  PROTOCOL = "x1"
+
+  def initialize(player)
+    super
+    @player.protocol = PROTOCOL
+  end
+    
+  def process
+    super
+    log_message(sprintf("user %s run in %s mode", @player.name, PROTOCOL))
+    @player.write_safe(sprintf("##[LOGIN] +OK %s\n", PROTOCOL))
+  end
+end
+
+
 class Player < BasicPlayer
   def initialize(str, socket)
     super()
@@ -224,10 +318,12 @@ class Player < BasicPlayer
     @game_name = ""
     @mytime = 0                 # set in start method also
     @sente = nil
-    @writer_thread = nil
-    @main_thread = nil
     @write_queue = Queue::new
-    login(str)
+    @main_thread = Thread::current
+    @writer_thread = Thread::start do
+      Thread.pass
+      writer()
+    end
   end
 
   attr_accessor :socket, :status
@@ -247,6 +343,7 @@ class Player < BasicPlayer
     if (@status != "finished")
       @status = "finished"
       log_message(sprintf("user %s finish", @name))    
+      # TODO you should confirm that there is no message in the queue.
       Thread::kill(@writer_thread) if @writer_thread
       begin
         @socket.close if (! @socket.closed?)
@@ -287,37 +384,7 @@ class Player < BasicPlayer
     @socket.write_safe('##[HELP] available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"')
   end
 
-  def login(str)
-    str =~ /([\r\n]*)$/
-    @eol = $1
-    str.chomp!
-    (login, @name, password, ext) = str.split
-    set_password(password)
-    if (ext)
-      @protocol = "x1"
-    else
-      @protocol = "CSA"
-    end
-    @main_thread = Thread::current
-    @writer_thread = Thread::start do
-      writer()
-    end
-  end
-  
-  def run
-    write_safe(sprintf("LOGIN:%s OK\n", @name))
-    if (@protocol != "CSA")
-      log_message(sprintf("user %s run in %s mode", @name, @protocol))
-      write_safe(sprintf("##[LOGIN] +OK %s\n", @protocol))
-    else
-      log_message(sprintf("user %s run in CSA mode", @name))
-      if (good_game_name?(@password))
-        csa_1st_str = "%%GAME #{@password} *"
-      else
-        csa_1st_str = "%%GAME #{Default_Game_Name} *"
-      end
-    end
-    
+  def run(csa_1st_str=nil)
     while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
       begin
         $mutex.lock
@@ -345,17 +412,17 @@ class Player < BasicPlayer
             end
             s = @game.handle_one_move(move, self)
             @game.fh.print("#{comment}\n") if (comment && !s)
-            return if (s && @protocol == "CSA")
+            return if (s && @protocol == LoginCSA::PROTOCOL)
           end
         when /^%[^%]/, :timeout
           if (@status == "game")
             s = @game.handle_one_move(str, self)
-            return if (s && @protocol == "CSA")
+            return if (s && @protocol == LoginCSA::PROTOCOL)
           end
         when /^REJECT/
           if (@status == "agree_waiting")
             @game.reject(@name)
-            return if (@protocol == "CSA")
+            return if (@protocol == LoginCSA::PROTOCOL)
           else
             write_safe(sprintf("##[ERROR] you are in %s status. AGREE is valid in agree_waiting status\n", @status))
           end
@@ -412,7 +479,7 @@ class Player < BasicPlayer
           command_name = $1
           game_name = $2
           my_sente_str = $3
-          if (! good_game_name?(game_name))
+          if (! Login::good_game_name?(game_name))
             write_safe(sprintf("##[ERROR] bad game name\n"))
             next
           elsif ((@status == "connected") || (@status == "game_waiting"))
@@ -486,7 +553,7 @@ class Player < BasicPlayer
         when /^%%CHAT\s+(.+)/
           message = $1
           LEAGUE.players.each do |name, player|
-            if (player.protocol != "CSA")
+            if (player.protocol != LoginCSA::PROTOCOL)
               player.write_safe(sprintf("##[CHAT][%s] %s\n", @name, message)) 
             end
           end
@@ -1423,10 +1490,10 @@ class Game
     @sente.status = "connected"
     @gote.status = "connected"
 
-    if (@current_player.protocol == "CSA")
+    if (@current_player.protocol == LoginCSA::PROTOCOL)
       @current_player.finish
     end
-    if (@next_player.protocol == "CSA")
+    if (@next_player.protocol == LoginCSA::PROTOCOL)
       @next_player.finish
     end
     @monitors = Array::new
@@ -1872,34 +1939,6 @@ def parse_command_line
   return options
 end
 
-def good_game_name?(str)
-  if ((str =~ /^(.+)-\d+-\d+$/) &&
-      (good_identifier?($1)))
-    return true
-  else
-    return false
-  end
-end
-
-def good_identifier?(str)
-  if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
-    return true
-  else
-    return false
-  end
-end
-
-def good_login?(str)
-  tokens = str.split
-  if (((tokens.length == 3) || ((tokens.length == 4) && tokens[3] == "x1")) &&
-      (tokens[0] == "LOGIN") &&
-      (good_identifier?(tokens[1])))
-    return true
-  else
-    return false
-  end
-end
-
 def  write_pid_file(file)
   open(file, "w") do |fh|
     fh.print Process::pid, "\n"
@@ -1950,22 +1989,23 @@ def main
       Thread.pass
       client.sync = true
       player = nil
+      login  = nil
       while (str = client.gets_timeout(Login_Time))
         begin
           $mutex.lock
           str =~ /([\r\n]*)$/
           eol = $1
-          if (good_login?(str))
+          if (Login::good_login?(str))
             player = Player::new(str, client)
+            player.eol = eol
+            login  = Login::factory(str, player)
             if (LEAGUE.players[player.name])
               if ((LEAGUE.players[player.name].password == player.password) &&
                   (LEAGUE.players[player.name].status != "game"))
                 log_message(sprintf("user %s login forcely", player.name))
                 LEAGUE.players[player.name].kill
               else
-                client.write_safe("LOGIN:incorrect" + eol)
-                client.write_safe(sprintf("username %s is already connected%s", player.name, eol)) if (str.split.length >= 4)
-                client.close
+                login.incorrect_duplicated_player(str)
                 Thread::exit
                 return
               end
@@ -1986,7 +2026,8 @@ def main
         return
       end
       log_message(sprintf("user %s login", player.name))
-      player.run
+      login.process
+      player.run(login.csa_1st_str)
       begin
         $mutex.lock
         if (player.game)

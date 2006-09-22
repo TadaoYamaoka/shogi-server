@@ -1,3 +1,7 @@
+2006-09-22  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server] Refactored the login procedures.
+
 2006-09-21  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] It failed parse draw games. Now this bug has been fixed.
