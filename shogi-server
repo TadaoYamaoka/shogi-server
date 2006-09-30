@@ -243,19 +243,19 @@ class Login
 
   def Login.factory(str, player)
     (login, player.name, password, ext) = str.chomp.split
-    player.set_password(password)
     if (ext)
-      return Loginx1.new(player)
+      return Loginx1.new(player, password)
     else
-      return LoginCSA.new(player)
+      return LoginCSA.new(player, password)
     end
   end
 
   attr_reader :player, :csa_1st_str
 
-  def initialize(player)
+  def initialize(player, password)
     @player = player
     @csa_1st_str = nil
+    parse_password(password)
   end
 
   def process
@@ -266,7 +266,7 @@ class Login
     @player.write_safe("LOGIN:incorrect\n")
     @player.write_safe(sprintf("username %s is already connected\n", @player.name)) if (str.split.length >= 4)
     sleep 3 # wait for sending the above messages.
-    @palyer.name = "%s [duplicated]" % [@player.name]
+    @player.name = "%s [duplicated]" % [@player.name]
     @player.finish
   end
 end
@@ -274,30 +274,45 @@ end
 class LoginCSA < Login
   PROTOCOL = "CSA"
 
-  def initialize(player)
+  def initialize(player, password)
+    @gamename = nil
     super
     @player.protocol = PROTOCOL
+  end
+
+  def parse_password(password)
+    if Login.good_game_name?(password)
+      @gamename = password
+      @player.set_password(nil)
+    elsif password.split(",").size > 1
+      @gamename, *trip = password.split(",")
+      @player.set_password(trip.join(","))
+    else
+      @player.set_password(password)
+      @gamename = Default_Game_Name
+    end
+    @gamename = self.class.good_game_name?(@gamename) ? @gamename : Default_Game_Name
   end
 
   def process
     super
     log_message(sprintf("user %s run in CSA mode", @player.name))
-    if (self.class.good_game_name?(@player.password))
-      @csa_1st_str = "%%GAME #{@player.password} *"
-    else
-      @csa_1st_str = "%%GAME #{Default_Game_Name} *"
-    end
+    @csa_1st_str = "%%GAME #{@gamename} *"
   end
 end
 
 class Loginx1 < Login
   PROTOCOL = "x1"
 
-  def initialize(player)
+  def initialize(player, password)
     super
     @player.protocol = PROTOCOL
   end
-    
+  
+  def parse_password(password)
+    @player.set_password(password)
+  end
+
   def process
     super
     log_message(sprintf("user %s run in %s mode", @player.name, PROTOCOL))
