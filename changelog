@@ -1,3 +1,8 @@
+2006-10-02  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate] players who never win or lose are not rated in order
+	  the calculation to complete.
+
 2006-09-30  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server] The CSA mode supports the trip in a password.
@@ -28,7 +33,7 @@
 
 	* [shogi-server]
 	  - Re-design: trip is now a suffix of the password, not name.
-	  - Sipmlyfiled the output of %%RATING.
+	  - Simplified the output of %%RATING.
 	* [mk_rate]
 	  - Support "@" indentificaton in a name; players with same
 	    before-@-names are mapped to one.
