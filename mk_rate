@@ -123,7 +123,7 @@ class Rating
     @record = Record.new
     @n = win_loss_matrix
     case @n
-    when GSL::Matrix
+    when GSL::Matrix, GSL::Matrix::Int
       @size = @n.size1
     when ::Matrix
       @size = @n.row_size
@@ -344,29 +344,69 @@ end
 # Main methods
 #
 
-def mk_win_loss_matrix(players)
-  keys = players.keys.sort.reject do |k|
-    players[k].values.inject(0) {|sum, v| sum + v[0] + v[1]} < $GAMES_LIMIT ||
-    players[k].values.inject(0) {|sum, v| sum + v[0]} < 1 || # Never win
-    players[k].values.inject(0) {|sum, v| sum + v[1]} < 1    # Never lose
+def mk_matrix(players)
+	keys = players.keys.sort
+  size = keys.size
+  matrix =
+	  Matrix::Int[*
+		((0...size).collect do |k|
+      p1 = keys[k]
+      p1_hash = players[p1]
+		  ((0...size).collect do |j|
+			  if k == j
+				  0
+			  else
+          p2 = keys[j]
+          v = p1_hash[p2] || Vector[0,0]
+				  v[0]
+			  end
+		  end)
+		end)]
+  return matrix, keys
+end
+
+def delete_row(matrix, keys, delete_index)
+  size = keys.size
+  copied_cols = []
+  (0...size).each do |i|
+    next if i == delete_index
+    row = matrix.get_row(i)  # get_row returns a copy of the row
+    row.delete_at(delete_index)
+    copied_cols << row
+  end
+  new_matrix = Matrix::Int[*copied_cols]
+  new_keys = keys.clone
+  new_keys.delete_at(delete_index)
+  return new_matrix, new_keys
+end
+
+def filter(matrix, keys)
+  $stderr.puts keys.inspect if $DEBUG
+  $stderr.puts matrix.inspect if $DEBUG
+  size = keys.size
+  delete = []  
+  (0...size).each do |i|
+    row = matrix.row(i)
+    col = matrix.col(i)
+    win  = row.sum
+    loss = col.sum
+    if win < 1 || loss < 1 || win + loss < $GAMES_LIMIT
+      delete << i
+    end
   end
 
-  size = keys.size
-
-  matrix =
-    GSL::Matrix[*
-    ((0...size).collect do |k|
-    ((0...size).collect do |j|
-      if k == j
-        0
-      else
-        v = players[keys[k]][keys[j]]
-        v[0]
-      end
-    end)
-    end)]
+  # The recursion ends if there is nothing to delete
+  return matrix, keys if delete.empty?
   
-  return matrix, keys
+  delete.reverse.each do |i|
+    matrix, keys = delete_row(matrix, keys, i)
+  end
+  filter(matrix, keys)
+end
+
+def mk_win_loss_matrix(players)
+  matrix, keys = mk_matrix(players)
+  filter(matrix, keys)
 end
 
 def _add_win_loss(winner, loser)
@@ -448,8 +488,6 @@ def main
   end
 
   win_loss_matrix, keys = mk_win_loss_matrix($players)
-  $stderr.puts keys.inspect if $DEBUG
-  $stderr.puts win_loss_matrix.inspect if $DEBUG
   rating = Rating.new(win_loss_matrix)
   rating.rating
   rating.average!(Rating::AVERAGE_RATE)
@@ -457,14 +495,15 @@ def main
 
   yaml = {}
   keys.each_with_index do |p, i| # player_id, index#
-    win_loss = $players[p].values.inject(GSL::Vector[0,0]) {|sum, v| sum + v}
-    win = win_loss_matrix
+    win  = win_loss_matrix.row(i).sum
+    loss = win_loss_matrix.col(i).sum
+
     yaml[p] = 
       { 'name' => p.split("+")[0],
         'rate' => rating.rate[i],
         'last_modified' => $players_time[p].dup,
-        'win'  => win_loss[0],
-        'loss' => win_loss[1]}
+        'win'  => win,
+        'loss' => loss}
   end
   puts yaml.to_yaml
 end

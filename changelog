@@ -1,3 +1,7 @@
+2006-10-08  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate] Corrected making win_loss_matrix.
+
 2006-10-02  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] players who never win or lose are not rated in order
