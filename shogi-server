@@ -121,16 +121,20 @@ class League
     hash = search(player.id)
     if hash
       # a current user
-      player.name = hash['name']
-      player.rate = hash['rate']
-      player.modified_at = hash['last_modified']
+      player.name         = hash['name']
+      player.rate         = hash['rate']
+      player.modified_at  = hash['last_modified']
+      player.rating_group = hash['rating_group']
     end
   end
 
   def search(id)
     hash = nil
     @db.transaction do
-      hash = @db[id]
+      @db["players"].each do |group, players|
+        hash = players[id]
+        break if hash
+      end
     end
     hash
   end
@@ -138,11 +142,11 @@ class League
   def rated_players
     players = []
     @db.transaction(true) do
-      @db.roots.each do |id|
-        players << id
+      @db["players"].each do |group, players_hash|
+        players << players_hash.keys
       end
     end
-    return players.collect do |id|
+    return players.flatten.collect do |id|
       p = BasicPlayer.new
       p.id = id
       self.load(p)
@@ -164,6 +168,9 @@ class BasicPlayer
 
   # Score in the rating sysem
   attr_accessor :rate
+
+  # Group in the rating system
+  attr_accessor :rating_group
   
   # Last timestamp when the rate was modified
   attr_accessor :modified_at

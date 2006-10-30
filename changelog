@@ -1,3 +1,12 @@
+2006-10-30  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate][mk_html]
+	  - Put players into "connected" groups in order to
+	    show a correct, meaningful rating. In the group, each player has at
+	    least a game with other players.
+	  - The format of players.yaml was updated.
+	* [shogi-server] Followed the new format of players.yaml.
+
 2006-10-08  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] Corrected making win_loss_matrix.

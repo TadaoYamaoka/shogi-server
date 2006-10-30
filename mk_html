@@ -45,11 +45,35 @@ def main
   while l = gets do
     lines << l
   end
-  yaml = YAML::load(lines)
-
-  sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']}
-
+  file = YAML::load(lines)
   erb = ERB.new( DATA.read, nil, "%<>" )
+  tables = []
+
+  file["players"].each do |key, yaml|
+    sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']}
+
+  table = ERB.new(<<ENDTABLE, nil, "%<>")
+<% sorted_keys.each do |key| %>
+  <%
+    win  = yaml[key]['win']
+    loss = yaml[key]['loss']
+    win_rate = win.to_f / (win + loss)
+    last_modified = yaml[key]['last_modified']
+  %>
+  <tr>
+    <td class="name"><%=h yaml[key]['name']%></td>
+    <td class="rate"><%="%5d"  % [ yaml[key]['rate'] ]%></td>
+    <td class="ngames"><%="%5d"  % [ win ]%></td>
+    <td class="ngames"><%="%5d"  % [ loss ]%></td>
+    <td class="win_rate"><%="%.3f" % [win_rate]%></td>
+    <td class="last_modified"><%=show_date(last_modified)%></td>
+  </tr>
+<% end %>
+ENDTABLE
+        
+    tables << table.result(binding)
+  end
+
   body = erb.result(binding)
   puts body
 end
@@ -89,6 +113,7 @@ __END__
 
 <h1>Shogi Server Rating</h1>
 
+<% tables.each do |t| %>
 <table>
 <colgroup>
   <col class="name">
@@ -104,26 +129,12 @@ __END__
 </tr>
 </thead>
 <tbody>
-<% sorted_keys.each do |key| %>
-  <%
-    win  = yaml[key]['win']
-    loss = yaml[key]['loss']
-    win_rate = win.to_f / (win + loss)
-    last_modified = yaml[key]['last_modified']
-  %>
-  <tr>
-    <td class="name"><%=h yaml[key]['name']%></td>
-    <td class="rate"><%="%5d"  % [ yaml[key]['rate'] ]%></td>
-    <td class="ngames"><%="%5d"  % [ win ]%></td>
-    <td class="ngames"><%="%5d"  % [ loss ]%></td>
-    <td class="win_rate"><%="%.3f" % [win_rate]%></td>
-    <td class="last_modified"><%=show_date(last_modified)%></td>
-  </tr>
-<% end %>
+<%= t %>
 </tbody>
 </table>
+<% end %>
 
-<p>The average of the rates is 1000. 
+<p>The average of the rates is always 1000. 
 
 <hr/>
 <p class="footer">Last modified at <%=Time.now%>

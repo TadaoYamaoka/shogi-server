@@ -34,15 +34,26 @@
 # PREREQUIRE
 # ==========
 #
-#   Ruby bindings for the GNU Scientific Library (GSL) is required.
-#   You can download it from  http://rb-gsl.rubyforge.org/
-#   Or, if you use Debian, 
-#     $ sudo aptitude install libgsl-ruby1.8
+# Sample Commands to isntall prerequires will work for Debian.
+#
+# * Rubygems
+#   $ sudo aptitude install rubygems
+#
+# * Ruby bindings for the GNU Scientific Library (GSL)
+#   $ sudo aptitude install libgsl-ruby1.8
+#   Or, download it from  http://rb-gsl.rubyforge.org/ .
+#
+# * RGL: Ruby Graph Library
+#   $ sudo gem install rgl
+#   Or, download it from http://rubyforge.org/projects/rgl/ .
 #
 
 require 'yaml'
 require 'time'
 require 'gsl'
+require 'rubygems'
+require 'rgl/adjacency'
+require 'rgl/connected_components'
 
 #################################################
 # Constants
@@ -338,76 +349,184 @@ class Rating
   end
 end
 
+#################################################
+# Encapsulate a pair of keys and win loss matrix.
+#   - keys is an array of player IDs; [gps+123, foo+234, ...]
+#   - matrix holds games # where player i (row index) beats player j (column index).
+#     The row and column indexes match with the keys.
+#
+# This object should be immutable. If an internal state is being modified, a
+# new object is always returned.
+#
+class WinLossMatrix
+
+  ###############
+  # Class methods
+  #  
+
+  def self.mk_matrix(players)
+    keys = players.keys.sort
+    size = keys.size
+    matrix =
+      Matrix::Int[*
+      ((0...size).collect do |k|
+        p1 = keys[k]
+        p1_hash = players[p1]
+        ((0...size).collect do |j|
+          if k == j
+            0
+          else
+            p2 = keys[j]
+            v = p1_hash[p2] || Vector[0,0]
+            v[0]
+          end
+        end)
+      end)]
+    return WinLossMatrix.new(keys, matrix)
+  end
+
+  def self.mk_win_loss_matrix(players)
+    obj = mk_matrix(players)
+    return obj.filter
+  end
+
+  ##################
+  # Instance methods
+  #
+
+  # an array of player IDs; [gps+123, foo+234, ...]
+  attr_reader :keys
+
+  # matrix holds games # where player i (row index) beats player j (column index).
+  # The row and column indexes match with the keys.
+  attr_reader :matrix
+
+  def initialize(keys, matrix)
+    @keys   = keys
+    @matrix = matrix
+  end
+
+  ##
+  # Returns the size of the keys/matrix
+  #
+  def size
+    if @keys
+      @keys.size
+    else
+      nil
+    end
+  end
+
+  ##
+  # Removes a delete_index'th player and returns a new object.
+  #
+  def delete_row(delete_index)
+    copied_cols = []
+    (0...size).each do |i|
+      next if i == delete_index
+      row = @matrix.get_row(i)  # get_row returns a copy of the row
+      row.delete_at(delete_index)
+      copied_cols << row
+    end
+    new_matrix = Matrix::Int[*copied_cols]
+    new_keys = @keys.clone
+    new_keys.delete_at(delete_index)
+    return WinLossMatrix.new(new_keys, new_matrix)
+  end
+
+  ##
+  # Removes players in a rows; [1,3,5]
+  #
+  def delete_rows(rows)
+    obj = self
+    rows.sort.reverse.each do |index|
+      obj = obj.delete_row(index)
+    end
+    obj
+  end
+
+  ##
+  # Removes players who do not pass a criteria to be rated, and returns a new object.
+  # 
+  def filter
+    $stderr.puts @keys.inspect if $DEBUG
+    $stderr.puts @matrix.inspect if $DEBUG
+    delete = []  
+    (0...size).each do |i|
+      row = @matrix.row(i)
+      col = @matrix.col(i)
+      win  = row.sum
+      loss = col.sum
+      if win < 1 || loss < 1 || win + loss < $GAMES_LIMIT
+        delete << i
+      end
+    end
+
+    # The recursion ends if there is nothing to delete
+    return self if delete.empty?
+
+    new_obj = delete_rows(delete)
+    new_obj.filter
+  end
+
+  ##
+  # Cuts self into connecting groups such as each player in a group has at least
+  # one game with other players in the group. Returns them as an array.
+  #
+  def connected_subsets
+    g = RGL::AdjacencyGraph.new
+    (0...size).each do |k|
+      (0...size).each do |i|
+        next if k == i
+        if @matrix[k,i] > 0
+          g.add_edge(k,i)
+        end
+      end
+    end
+
+    subsets = []
+    g.each_connected_component do |c|
+      new_keys = []      
+      c.each do |v|
+        new_keys << keys[v.to_s.to_i]
+      end
+      subsets << new_keys
+    end
+
+    subsets = subsets.sort {|a,b| b.size <=> a.size}
+
+    result = subsets.collect do |keys|
+      matrix =
+        Matrix::Int[*
+        ((0...keys.size).collect do |k|
+          p1 = @keys.index(keys[k])
+          ((0...keys.size).collect do |j|
+            if k == j
+              0
+            else
+              p2 = @keys.index(keys[j])
+              @matrix[p1][p2]
+            end
+          end)
+        end)]
+      WinLossMatrix.new(keys, matrix)
+    end
+
+    return result
+  end
+
+  def to_s
+    "size : #{@keys.size}" + "\n" +
+    @keys.inspect + "\n" + 
+    @matrix.inspect
+  end
+
+end
 
 
 #################################################
 # Main methods
 #
-
-def mk_matrix(players)
-	keys = players.keys.sort
-  size = keys.size
-  matrix =
-	  Matrix::Int[*
-		((0...size).collect do |k|
-      p1 = keys[k]
-      p1_hash = players[p1]
-		  ((0...size).collect do |j|
-			  if k == j
-				  0
-			  else
-          p2 = keys[j]
-          v = p1_hash[p2] || Vector[0,0]
-				  v[0]
-			  end
-		  end)
-		end)]
-  return matrix, keys
-end
-
-def delete_row(matrix, keys, delete_index)
-  size = keys.size
-  copied_cols = []
-  (0...size).each do |i|
-    next if i == delete_index
-    row = matrix.get_row(i)  # get_row returns a copy of the row
-    row.delete_at(delete_index)
-    copied_cols << row
-  end
-  new_matrix = Matrix::Int[*copied_cols]
-  new_keys = keys.clone
-  new_keys.delete_at(delete_index)
-  return new_matrix, new_keys
-end
-
-def filter(matrix, keys)
-  $stderr.puts keys.inspect if $DEBUG
-  $stderr.puts matrix.inspect if $DEBUG
-  size = keys.size
-  delete = []  
-  (0...size).each do |i|
-    row = matrix.row(i)
-    col = matrix.col(i)
-    win  = row.sum
-    loss = col.sum
-    if win < 1 || loss < 1 || win + loss < $GAMES_LIMIT
-      delete << i
-    end
-  end
-
-  # The recursion ends if there is nothing to delete
-  return matrix, keys if delete.empty?
-  
-  delete.reverse.each do |i|
-    matrix, keys = delete_row(matrix, keys, i)
-  end
-  filter(matrix, keys)
-end
-
-def mk_win_loss_matrix(players)
-  matrix, keys = mk_matrix(players)
-  filter(matrix, keys)
-end
 
 def _add_win_loss(winner, loser)
   $players[winner] ||= Hash.new { GSL::Vector[0,0] }
@@ -458,7 +577,7 @@ def grep(file)
       black_name, black_mark = p2_name, p2_mark
       white_name, white_mark = p1_name, p1_mark
     else
-      raise "Never reach!: #{black} #{white} #{p1} #{p2}"
+      raise "Never reach!: #{black} #{white} #{p3} #{p2}"
     end
   end
   if /^'\$END_TIME:(.*)$/ =~ str
@@ -487,23 +606,31 @@ def main
     Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
   end
 
-  win_loss_matrix, keys = mk_win_loss_matrix($players)
-  rating = Rating.new(win_loss_matrix)
-  rating.rating
-  rating.average!(Rating::AVERAGE_RATE)
-  rating.integer!
+  obj = WinLossMatrix::mk_win_loss_matrix($players)
+  yaml = {} 
+  yaml["players"] = {}
+  rating_group = 0
+  obj.connected_subsets.each do |win_loss_matrix|
+    yaml["players"][rating_group] = {}
 
-  yaml = {}
-  keys.each_with_index do |p, i| # player_id, index#
-    win  = win_loss_matrix.row(i).sum
-    loss = win_loss_matrix.col(i).sum
+    rating = Rating.new(win_loss_matrix.matrix)
+    rating.rating
+    rating.average!(Rating::AVERAGE_RATE)
+    rating.integer!
 
-    yaml[p] = 
-      { 'name' => p.split("+")[0],
-        'rate' => rating.rate[i],
-        'last_modified' => $players_time[p].dup,
-        'win'  => win,
-        'loss' => loss}
+    win_loss_matrix.keys.each_with_index do |p, i| # player_id, index#
+      win  = win_loss_matrix.matrix.row(i).sum
+      loss = win_loss_matrix.matrix.col(i).sum
+
+      yaml["players"][rating_group][p] = 
+        { 'name' => p.split("+")[0],
+          'rating_group' => rating_group,
+          'rate' => rating.rate[i],
+          'last_modified' => $players_time[p].dup,
+          'win'  => win,
+          'loss' => loss}
+    end
+    rating_group += 1
   end
   puts yaml.to_yaml
 end
