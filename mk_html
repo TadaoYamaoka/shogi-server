@@ -46,14 +46,14 @@ def main
     lines << l
   end
   file = YAML::load(lines)
-  erb = ERB.new( DATA.read, nil, "%<>" )
+  erb = ERB.new( DATA.read, nil, "%>" )
   tables = []
 
   file["players"].each do |key, yaml|
     sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']}
 
-  table = ERB.new(<<ENDTABLE, nil, "%<>")
-<% sorted_keys.each do |key| %>
+  table = ERB.new(<<ENDTABLE, nil, "%>")
+% sorted_keys.each do |key|
   <%
     win  = yaml[key]['win']
     loss = yaml[key]['loss']
@@ -61,14 +61,14 @@ def main
     last_modified = yaml[key]['last_modified']
   %>
   <tr>
-    <td class="name"><%=h yaml[key]['name']%></td>
-    <td class="rate"><%="%5d"  % [ yaml[key]['rate'] ]%></td>
-    <td class="ngames"><%="%5d"  % [ win ]%></td>
-    <td class="ngames"><%="%5d"  % [ loss ]%></td>
-    <td class="win_rate"><%="%.3f" % [win_rate]%></td>
-    <td class="last_modified"><%=show_date(last_modified)%></td>
+    <td class="name">         <%= h yaml[key]['name'] %>            </td>
+    <td class="rate">         <%= "%5d"  % [ yaml[key]['rate'] ] %> </td>
+    <td class="ngames">       <%= "%5d"  % [ win ] %>               </td>
+    <td class="ngames">       <%= "%5d"  % [ loss ] %>              </td>
+    <td class="win_rate">     <%= "%.3f" % [win_rate] %>            </td>
+    <td class="last_modified"><%= show_date(last_modified) %>       </td>
   </tr>
-<% end %>
+% end
 ENDTABLE
         
     tables << table.result(binding)
@@ -96,6 +96,7 @@ __END__
            margin-right: auto;
            border-collapse: collapse;
            border: solid 2px;}
+    CAPTION { caption-side: left;}
     TH    {border: solid 1px;}
     TD    {padding-left: 10px;
            padding-right: 10px;
@@ -104,17 +105,17 @@ __END__
     .rate, .ngames, .win_rate {text-align: right;}
     .last_modified {text-align: left;}
 
-    P.footer {text-align: right;
-             font-size: 80%;}
-     
+    DIV.footer {text-align: right;
+                font-size: 80%;}
   --></style>
 </head>
 <body>
 
 <h1>Shogi Server Rating</h1>
 
-<% tables.each do |t| %>
+% tables.each_with_index do |t, index|
 <table>
+<caption>Group: <%=index%></caption>
 <colgroup>
   <col class="name">
   <col class="rate">
@@ -125,19 +126,33 @@ __END__
 </colgroup>
 <thead>
 <tr>
-  <th>name</th> <th>rate</th> <th>win</th> <th>loss</th> <th>win_rate</th> <th>last_modified</th>
+  <th>name</th>
+  <th>rate</th> 
+  <th>win</th> 
+  <th>loss</th> 
+  <th>win_rate</th> 
+  <th>last_modified</th>
 </tr>
 </thead>
 <tbody>
-<%= t %>
+  <%= t %>
 </tbody>
 </table>
-<% end %>
 
-<p>The average of the rates is always 1000. 
+<hr style="width:50%; margin:1em auto;">
+
+% end
+
+<p>Groups are independently rated. You can not compare rates across them.
+<p>The average of the rates in a group is always 1000. 
+<p><a href="http://wdoor.c.u-tokyo.ac.jp/shogi/">BACK</a>
 
 <hr/>
-<p class="footer">Last modified at <%=Time.now%>
+
+<div class="footer">
+  <p>Last modified at <%=Time.now%>
+  <p>$Revision$
+</div>
 
 </body>
 </html>

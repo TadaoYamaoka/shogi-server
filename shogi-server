@@ -17,6 +17,8 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+module ShogiServer # for a namespace
+
 Max_Write_Queue_Size = 1000
 Max_Identifier_Length = 32
 Default_Timeout = 60            # for single socket operation
@@ -31,9 +33,6 @@ Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
 Release.concat("-") if (Release == "")
 Revision = "$Revision$".gsub(/[^\.\d]/, '')
 
-STDOUT.sync = true
-STDERR.sync = true
-
 require 'getoptlong'
 require 'thread'
 require 'timeout'
@@ -42,8 +41,6 @@ require 'yaml'
 require 'yaml/store'
 require 'digest/md5'
 
-TCPSocket.do_not_reverse_lookup = true
-Thread.abort_on_exception = true
 
 
 class TCPSocket
@@ -156,6 +153,126 @@ class League
 end
 
 
+######################################################
+# Processes the LOGIN command.
+#
+class Login
+  def Login.good_login?(str)
+    tokens = str.split
+    if (((tokens.length == 3) || ((tokens.length == 4) && tokens[3] == "x1")) &&
+        (tokens[0] == "LOGIN") &&
+        (good_identifier?(tokens[1])))
+      return true
+    else
+      return false
+    end
+  end
+
+  def Login.good_game_name?(str)
+    if ((str =~ /^(.+)-\d+-\d+$/) && (good_identifier?($1)))
+      return true
+    else
+      return false
+    end
+  end
+
+  def Login.good_identifier?(str)
+    if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
+      return true
+    else
+      return false
+    end
+  end
+
+  def Login.factory(str, player)
+    (login, player.name, password, ext) = str.chomp.split
+    if (ext)
+      return Loginx1.new(player, password)
+    else
+      return LoginCSA.new(player, password)
+    end
+  end
+
+  attr_reader :player
+  
+  # the first command that will be executed just after LOGIN.
+  # If it is nil, the default process will be started.
+  attr_reader :csa_1st_str
+
+  def initialize(player, password)
+    @player = player
+    @csa_1st_str = nil
+    parse_password(password)
+  end
+
+  def process
+    @player.write_safe(sprintf("LOGIN:%s OK\n", @player.name))
+    log_message(sprintf("user %s run in %s mode", @player.name, @player.protocol))
+  end
+
+  def incorrect_duplicated_player(str)
+    @player.write_safe("LOGIN:incorrect\n")
+    @player.write_safe(sprintf("username %s is already connected\n", @player.name)) if (str.split.length >= 4)
+    sleep 3 # wait for sending the above messages.
+    @player.name = "%s [duplicated]" % [@player.name]
+    @player.finish
+  end
+end
+
+######################################################
+# Processes LOGIN for the CSA standard mode.
+#
+class LoginCSA < Login
+  PROTOCOL = "CSA"
+
+  def initialize(player, password)
+    @gamename = nil
+    super
+    @player.protocol = PROTOCOL
+  end
+
+  def parse_password(password)
+    if Login.good_game_name?(password)
+      @gamename = password
+      @player.set_password(nil)
+    elsif password.split(",").size > 1
+      @gamename, *trip = password.split(",")
+      @player.set_password(trip.join(","))
+    else
+      @player.set_password(password)
+      @gamename = Default_Game_Name
+    end
+    @gamename = self.class.good_game_name?(@gamename) ? @gamename : Default_Game_Name
+  end
+
+  def process
+    super
+    @csa_1st_str = "%%GAME #{@gamename} *"
+  end
+end
+
+######################################################
+# Processes LOGIN for the extented mode.
+#
+class Loginx1 < Login
+  PROTOCOL = "x1"
+
+  def initialize(player, password)
+    super
+    @player.protocol = PROTOCOL
+  end
+  
+  def parse_password(password)
+    @player.set_password(password)
+  end
+
+  def process
+    super
+    @player.write_safe(sprintf("##[LOGIN] +OK %s\n", PROTOCOL))
+  end
+end
+
+
 class BasicPlayer
   # Idetifier of the player in the rating system
   attr_accessor :id
@@ -168,14 +285,12 @@ class BasicPlayer
 
   # Score in the rating sysem
   attr_accessor :rate
-
+  
   # Group in the rating system
   attr_accessor :rating_group
-  
+
   # Last timestamp when the rate was modified
   attr_accessor :modified_at
-
-
 
   def initialize
     @name = nil
@@ -216,114 +331,6 @@ class BasicPlayer
     else
       @id = @password = nil
     end
-  end
-end
-
-
-class Login
-  def Login.good_login?(str)
-    tokens = str.split
-    if (((tokens.length == 3) || ((tokens.length == 4) && tokens[3] == "x1")) &&
-        (tokens[0] == "LOGIN") &&
-        (good_identifier?(tokens[1])))
-      return true
-    else
-      return false
-    end
-  end
-
-  def Login.good_game_name?(str)
-    if ((str =~ /^(.+)-\d+-\d+$/) && (good_identifier?($1)))
-      return true
-    else
-      return false
-    end
-  end
-
-  def Login.good_identifier?(str)
-    if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
-      return true
-    else
-      return false
-    end
-  end
-
-  def Login.factory(str, player)
-    (login, player.name, password, ext) = str.chomp.split
-    if (ext)
-      return Loginx1.new(player, password)
-    else
-      return LoginCSA.new(player, password)
-    end
-  end
-
-  attr_reader :player, :csa_1st_str
-
-  def initialize(player, password)
-    @player = player
-    @csa_1st_str = nil
-    parse_password(password)
-  end
-
-  def process
-    @player.write_safe(sprintf("LOGIN:%s OK\n", @player.name))
-  end
-
-  def incorrect_duplicated_player(str)
-    @player.write_safe("LOGIN:incorrect\n")
-    @player.write_safe(sprintf("username %s is already connected\n", @player.name)) if (str.split.length >= 4)
-    sleep 3 # wait for sending the above messages.
-    @player.name = "%s [duplicated]" % [@player.name]
-    @player.finish
-  end
-end
-
-class LoginCSA < Login
-  PROTOCOL = "CSA"
-
-  def initialize(player, password)
-    @gamename = nil
-    super
-    @player.protocol = PROTOCOL
-  end
-
-  def parse_password(password)
-    if Login.good_game_name?(password)
-      @gamename = password
-      @player.set_password(nil)
-    elsif password.split(",").size > 1
-      @gamename, *trip = password.split(",")
-      @player.set_password(trip.join(","))
-    else
-      @player.set_password(password)
-      @gamename = Default_Game_Name
-    end
-    @gamename = self.class.good_game_name?(@gamename) ? @gamename : Default_Game_Name
-  end
-
-  def process
-    super
-    log_message(sprintf("user %s run in CSA mode", @player.name))
-    @csa_1st_str = "%%GAME #{@gamename} *"
-  end
-end
-
-class Loginx1 < Login
-  PROTOCOL = "x1"
-
-  def initialize(player, password)
-    super
-    @player.protocol = PROTOCOL
-  end
-  
-  def parse_password(password)
-    @player.set_password(password)
-  end
-
-  def process
-    super
-    log_message(sprintf("user %s run in %s mode", @player.name, PROTOCOL))
-    @player.write_safe(sprintf("##[LOGIN] +OK %s\n", PROTOCOL))
   end
 end
 
@@ -1961,7 +1968,7 @@ def parse_command_line
   return options
 end
 
-def  write_pid_file(file)
+def write_pid_file(file)
   open(file, "w") do |fh|
     fh.print Process::pid, "\n"
   end
@@ -1986,6 +1993,7 @@ def mutex_watchdog(mutex, sec)
 end
 
 def main
+
   $mutex = Mutex::new
   Thread::start do
     Thread.pass
@@ -2064,8 +2072,16 @@ def main
     end
   end
 end
+module_function :main
+
+end # module ShogiServer
 
 if ($0 == __FILE__)
-  LEAGUE = League::new
-  main
+  STDOUT.sync = true
+  STDERR.sync = true
+  TCPSocket.do_not_reverse_lookup = true
+  Thread.abort_on_exception = true
+  
+  LEAGUE = ShogiServer::League::new
+  ShogiServer::main
 end
