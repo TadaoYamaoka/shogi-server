@@ -17,22 +17,6 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-module ShogiServer # for a namespace
-
-Max_Write_Queue_Size = 1000
-Max_Identifier_Length = 32
-Default_Timeout = 60            # for single socket operation
-
-Default_Game_Name = "default-1500-0"
-
-One_Time = 10
-Least_Time_Per_Move = 1
-Login_Time = 300                # time for LOGIN
-
-Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
-Release.concat("-") if (Release == "")
-Revision = "$Revision$".gsub(/[^\.\d]/, '')
-
 require 'getoptlong'
 require 'thread'
 require 'timeout'
@@ -40,7 +24,6 @@ require 'socket'
 require 'yaml'
 require 'yaml/store'
 require 'digest/md5'
-
 
 
 class TCPSocket
@@ -82,6 +65,23 @@ class TCPSocket
     end
   end
 end
+
+
+module ShogiServer # for a namespace
+
+Max_Write_Queue_Size = 1000
+Max_Identifier_Length = 32
+Default_Timeout = 60            # for single socket operation
+
+Default_Game_Name = "default-1500-0"
+
+One_Time = 10
+Least_Time_Per_Move = 1
+Login_Time = 300                # time for LOGIN
+
+Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
+Release.concat("-") if (Release == "")
+Revision = "$Revision$".gsub(/[^\.\d]/, '')
 
 
 class League
@@ -1902,6 +1902,7 @@ EOM
     end
   end
 end
+end # module ShogiServer
 
 #################################################
 # MAIN
@@ -2020,15 +2021,15 @@ def main
       client.sync = true
       player = nil
       login  = nil
-      while (str = client.gets_timeout(Login_Time))
+      while (str = client.gets_timeout(ShogiServer::Login_Time))
         begin
           $mutex.lock
           str =~ /([\r\n]*)$/
           eol = $1
-          if (Login::good_login?(str))
-            player = Player::new(str, client)
+          if (ShogiServer::Login::good_login?(str))
+            player = ShogiServer::Player::new(str, client)
             player.eol = eol
-            login  = Login::factory(str, player)
+            login  = ShogiServer::Login::factory(str, player)
             if (LEAGUE.players[player.name])
               if ((LEAGUE.players[player.name].password == player.password) &&
                   (LEAGUE.players[player.name].status != "game"))
@@ -2072,9 +2073,7 @@ def main
     end
   end
 end
-module_function :main
 
-end # module ShogiServer
 
 if ($0 == __FILE__)
   STDOUT.sync = true
@@ -2083,5 +2082,5 @@ if ($0 == __FILE__)
   Thread.abort_on_exception = true
   
   LEAGUE = ShogiServer::League::new
-  ShogiServer::main
+  main
 end
