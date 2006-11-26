@@ -1,3 +1,8 @@
+2006-11-26  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server] Sente (gote) was able to move gote's (sente's) hand.
+	  That move should be illegal. This issue has been fixed.
+
 2006-11-01  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] Skip "abnormal" games, which were finished because of
