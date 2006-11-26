@@ -1271,7 +1271,8 @@ class Board
     return true
   end
 
-  def handle_one_move(str, sente)
+  # sente is nil only if tests in test_board run
+  def handle_one_move(str, sente=nil)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       sg = $1
       x0 = $2.to_i
@@ -1299,10 +1300,13 @@ class Board
       return :illegal
     end
     
+
     if (sg == "+")
+      sente = true if sente == nil           # deprecated
       return :illegal unless sente == true   # black player's move must be black
       hands = @sente_hands
     else
+      sente = false if sente == nil          # deprecated
       return :illegal unless sente == false  # white player's move must be white
       hands = @gote_hands
     end
