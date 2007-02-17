@@ -368,7 +368,7 @@ class WinLossMatrix
     keys = players.keys.sort
     size = keys.size
     matrix =
-      Matrix::Int[*
+      Matrix[*
       ((0...size).collect do |k|
         p1 = keys[k]
         p1_hash = players[p1]
@@ -428,7 +428,7 @@ class WinLossMatrix
       row.delete_at(delete_index)
       copied_cols << row
     end
-    new_matrix = Matrix::Int[*copied_cols]
+    new_matrix = Matrix[*copied_cols]
     new_keys = @keys.clone
     new_keys.delete_at(delete_index)
     return WinLossMatrix.new(new_keys, new_matrix)
@@ -497,7 +497,7 @@ class WinLossMatrix
 
     result = subsets.collect do |keys|
       matrix =
-        Matrix::Int[*
+        Matrix[*
         ((0...keys.size).collect do |k|
           p1 = @keys.index(keys[k])
           ((0...keys.size).collect do |j|
@@ -528,11 +528,24 @@ end
 # Main methods
 #
 
-def _add_win_loss(winner, loser)
+# Half-life effect
+# After NHAFE_LIFE days value will get half.
+# 0.693 is constant, where exp(0.693) ~ 0.5
+NHAFE_LIFE=60
+def half_life(days)
+  if days < 7
+    return 1.0
+  else
+    Math::exp(-0.693/NHALFE_LIFE*(days-7))
+  end
+end
+
+def _add_win_loss(winner, loser, time)
+  how_long_days = (Time.now - time)/(3600*24)
   $players[winner] ||= Hash.new { GSL::Vector[0,0] }
   $players[loser]  ||= Hash.new { GSL::Vector[0,0] }
-  $players[winner][loser] += GSL::Vector[1,0]
-  $players[loser][winner] += GSL::Vector[0,1]
+  $players[winner][loser] += GSL::Vector[1.0*half_life(how_long_days),0]
+  $players[loser][winner] += GSL::Vector[0,1.0*half_life(how_long_days)]
 end
 
 def _add_time(player, time)
@@ -541,9 +554,9 @@ end
 
 def add(black_mark, black_name, white_name, white_mark, time)
   if black_mark == WIN_MARK && white_mark == LOSS_MARK
-    _add_win_loss(black_name, white_name)
+    _add_win_loss(black_name, white_name, time)
   elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
-    _add_win_loss(white_name, black_name)
+    _add_win_loss(white_name, black_name, time)
   elsif black_mark == DRAW_MARK && white_mark == DRAW_MARK
     return
   else
