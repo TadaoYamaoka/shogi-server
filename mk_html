@@ -49,8 +49,8 @@ def main
   erb = ERB.new( DATA.read, nil, "%>" )
   tables = []
 
-  file["players"].each do |key, yaml|
-    sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']}
+  file["players"].sort.each do |key, yaml| # sort groups in the order written in players.yaml
+    sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']} # sort players in a group by one's rate
 
   table = ERB.new(<<ENDTABLE, nil, "%>")
 % sorted_keys.each do |key|
@@ -59,8 +59,20 @@ def main
     loss = yaml[key]['loss']
     win_rate = win.to_f / (win + loss)
     last_modified = yaml[key]['last_modified']
+    
+    player_decoration = "default"
+
+    case (Time.now - last_modified)/(60*60*24)
+    when (0..1) then player_decoration = "today"
+    when (0..7) then player_decoration = "this_week"
+    end
+    
+    case key
+    when "yowai_gps+95908f6c18338f5340371f71523fc5e3" then player_decoration = "yowai_gps"
+    when "gps+11648e4e66e7ed6a86cb7f1d0cf604fe"       then player_decoration = "gps"
+    end
   %>
-  <tr>
+  <tr class="<%=player_decoration%>">
     <td class="name">         <%= h yaml[key]['name'] %>            </td>
     <td class="rate">         <%= "%5d"  % [ yaml[key]['rate'] ] %> </td>
     <td class="ngames">       <%= "%5d"  % [ win ] %>               </td>
@@ -95,15 +107,20 @@ __END__
     TABLE {margin-left: auto;
            margin-right: auto;
            border-collapse: collapse;
-           border: solid 2px;}
+           border: solid 2px;
+           width: 500px;}
     CAPTION { caption-side: left;}
     TH    {border: solid 1px;}
     TD    {padding-left: 10px;
            padding-right: 10px;
            border: solid 1px;}
-    .name {text-align: center;}
+    .name {text-align: center;
+           width: 180px;}
     .rate, .ngames, .win_rate {text-align: right;}
     .last_modified {text-align: left;}
+    .gps, .yowai_gps {background-color: lightgreen;}
+    .today     {background-color: #FFD700;}
+    .this_week {background-color: #FFDAB9;}
 
     DIV.footer {text-align: right;
                 font-size: 80%;}

@@ -1,3 +1,11 @@
+2007-02-18  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	  - Show groups in the order specified in players.html.
+	  - Players who gamed recently have a background color.
+	* [mk_rate]
+	  - Implemented half-life effect. Numbers of win/lose decrease by this effect.
+
 2006-11-26  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server] Sente (gote) was able to move gote's (sente's) hand.
