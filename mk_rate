@@ -531,12 +531,12 @@ end
 # Half-life effect
 # After NHAFE_LIFE days value will get half.
 # 0.693 is constant, where exp(0.693) ~ 0.5
-NHAFE_LIFE=60
+NHALF_LIFE=60
 def half_life(days)
   if days < 7
     return 1.0
   else
-    Math::exp(-0.693/NHALFE_LIFE*(days-7))
+    Math::exp(-0.693/NHALF_LIFE*(days-7))
   end
 end
 
