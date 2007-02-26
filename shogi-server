@@ -128,6 +128,7 @@ class League
   def search(id)
     hash = nil
     @db.transaction do
+      break unless  @db["players"]
       @db["players"].each do |group, players|
         hash = players[id]
         break if hash
@@ -139,6 +140,7 @@ class League
   def rated_players
     players = []
     @db.transaction(true) do
+      break unless  @db["players"]
       @db["players"].each do |group, players_hash|
         players << players_hash.keys
       end
