@@ -1933,10 +1933,10 @@ LICENSE
 SEE ALSO
 
 RELEASE
-	#{Release}
+	#{ShogiServer::Release}
 
 REVISION
-	#{Revision}
+	#{ShogiServer::Revision}
 EOM
 end
 
