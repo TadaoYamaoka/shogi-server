@@ -1,3 +1,9 @@
+2007-03-02  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Use WEBrick for server framework.
+	  - Daemon mode is available.
+
 2007-02-26  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -24,6 +24,8 @@ require 'socket'
 require 'yaml'
 require 'yaml/store'
 require 'digest/md5'
+require 'webrick'
+require 'fileutils'
 
 
 class TCPSocket
@@ -89,9 +91,14 @@ class League
     @games = Hash::new
     @players = Hash::new
     @event = nil
-    @db = YAML::Store.new( File.join(File.dirname(__FILE__), "players.yaml") )
+    @dir = File.dirname(__FILE__)
   end
-  attr_accessor :players, :games, :event
+  attr_accessor :players, :games, :event, :dir
+
+  # this should be called just after instanciating a League object.
+  def setup_players_database
+    @db = YAML::Store.new(File.join(@dir, "players.yaml"))
+  end
 
   def add(player)
     self.load(player) if player.id
@@ -377,7 +384,7 @@ class Player < BasicPlayer
       # TODO you should confirm that there is no message in the queue.
       Thread::kill(@writer_thread) if @writer_thread
       begin
-        @socket.close if (! @socket.closed?)
+#        @socket.close if (! @socket.closed?)
       rescue
         log_message(sprintf("user %s finish failed", @name))    
       end
@@ -609,7 +616,9 @@ class Player < BasicPlayer
         when /^\s*$/
           ## ignore null string
         else
-          write_safe(sprintf("##[ERROR] unknown command %s\n", str))
+          msg = "##[ERROR] unknown command %s\n" % [str]
+          write_safe(msg)
+          log_error(msg)
         end
       ensure
         $mutex.unlock
@@ -1469,7 +1478,7 @@ class Game
     
     @id = sprintf("%s+%s+%s+%s+%s", 
                   LEAGUE.event, @game_name, @sente.name, @gote.name, issue_current_time)
-    @logfile = @id + ".csa"
+    @logfile = File.join(LEAGUE.dir, @id + ".csa")
 
     LEAGUE.games[@id] = self
 
@@ -1920,7 +1929,7 @@ NAME
 	shogi-server - server for CSA server protocol
 
 SYNOPSIS
-	shogi-server event_name port_number
+	shogi-server [OPTIONS] event_name port_number
 
 DESCRIPTION
 	server for CSA server protocol
@@ -1928,6 +1937,8 @@ DESCRIPTION
 OPTIONS
 	--pid-file file
 		specify filename for logging process ID
+    --daemon dir
+        run as a daemon. Log files will be put in dir.
 
 LICENSE
 	this file is distributed under GPL version2 and might be compiled by Exerb
@@ -1943,25 +1954,23 @@ EOM
 end
 
 def log_message(str)
-  printf("%s message: %s\n", Time::new.to_s, str)
+  $logger.info(str)
 end
 
 def log_warning(str)
-  printf("%s warning: %s\n", Time::new.to_s, str)
+  $logger.warn(str)
 end
 
 def log_error(str)
-  printf("%s error: %s\n", Time::new.to_s, str)
+  $logger.error(str)
 end
 
 
 def parse_command_line
   options = Hash::new
-  parser = GetoptLong.new
-  parser.ordering = GetoptLong::REQUIRE_ORDER
-  parser.set_options(
-                     ["--pid-file", GetoptLong::REQUIRED_ARGUMENT])
-
+  parser = GetoptLong.new( ["--daemon",         GetoptLong::REQUIRED_ARGUMENT],
+                           ["--pid-file",       GetoptLong::REQUIRED_ARGUMENT]
+                         )
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -2018,12 +2027,27 @@ def main
 
   write_pid_file($options["pid-file"]) if ($options["pid-file"])
 
-  server = TCPserver.open(port)
+  dir = $options["daemon"] || nil
+  if dir && ! File.exist?(dir)
+    FileUtils.mkdir(dir)
+  end
+  log_file = dir ? File.join(dir, "shogi-server.log") : STDOUT
+  $logger = WEBrick::Log.new(log_file)
+
+  LEAGUE.dir = dir || File.dirname(__FILE__)
+  LEAGUE.setup_players_database
+
+  config = {}
+  config[:Port]       = port
+  config[:ServerType] = WEBrick::Daemon if $options["daemon"]
+  config[:Logger]     = $logger
+
+  server = WEBrick::GenericServer.new(config)
+  ["INT", "TERM"].each {|signal| trap(signal){ server.shutdown } }
+  $stderr.puts("server started as a deamon") if $options["daemon"] 
   log_message("server started")
 
-  while true
-    Thread::start(server.accept) do |client|
-      Thread.pass
+  server.start do |client|
       client.sync = true
       player = nil
       login  = nil
@@ -2043,8 +2067,11 @@ def main
                 LEAGUE.players[player.name].kill
               else
                 login.incorrect_duplicated_player(str)
-                Thread::exit
-                return
+                #Thread::exit
+                #return
+                # TODO
+                player = nil
+                break
               end
             end
             LEAGUE.add(player)
@@ -2058,9 +2085,10 @@ def main
         end
       end                       # login loop
       if (! player)
-        client.close
-        Thread::exit
-        return
+        #client.close
+        #Thread::exit
+        #return
+        next
       end
       log_message(sprintf("user %s login", player.name))
       login.process
@@ -2076,7 +2104,6 @@ def main
       ensure
         $mutex.unlock
       end
-    end
   end
 end
 
@@ -2086,7 +2113,7 @@ if ($0 == __FILE__)
   STDERR.sync = true
   TCPSocket.do_not_reverse_lookup = true
   Thread.abort_on_exception = true
-  
+
   LEAGUE = ShogiServer::League::new
   main
 end
