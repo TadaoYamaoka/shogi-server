@@ -50,8 +50,8 @@ def main
   tables = []
 
   file["players"].sort.each do |key, yaml| # sort groups in the order written in players.yaml
-    sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']} # sort players in a group by one's rate
-
+  sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']} # sort players in a group by one's rate
+  top_rate = nil  
   table = ERB.new(<<ENDTABLE, nil, "%>")
 % sorted_keys.each do |key|
   <%
@@ -71,14 +71,27 @@ def main
     when "yowai_gps+95908f6c18338f5340371f71523fc5e3" then player_decoration = "yowai_gps"
     when "gps+11648e4e66e7ed6a86cb7f1d0cf604fe"       then player_decoration = "gps"
     end
+
+    rate = yaml[key]['rate']
+    top_rate ||= rate
+    diff_rate = rate - top_rate
+    diff_possibility = 1.0/(1.0 + 10**(-diff_rate/400.0))
   %>
   <tr class="<%=player_decoration%>">
-    <td class="name">         <%= h yaml[key]['name'] %>            </td>
-    <td class="rate">         <%= "%5d"  % [ yaml[key]['rate'] ] %> </td>
-    <td class="ngames">       <%= "%5d"  % [ win ] %>               </td>
-    <td class="ngames">       <%= "%5d"  % [ loss ] %>              </td>
-    <td class="win_rate">     <%= "%.3f" % [win_rate] %>            </td>
-    <td class="last_modified"><%= show_date(last_modified) %>       </td>
+    <td class="name">
+        <span class="popup"><%= key %></span>
+        <%= h yaml[key]['name'] %> </td>
+    <td class="rate">
+        <span class="popup"><%= "%5d" % [ diff_rate ] %> | <%= "%.3f" % [ diff_possibility ] %></span>
+        <%= "%5d"  % [ rate ] %> </td>
+    <td class="ngames">
+        <%= "%5d"  % [ win ] %>  </td>
+    <td class="ngames">
+        <%= "%5d"  % [ loss ] %> </td>
+    <td class="win_rate">
+        <%= "%.3f" % [win_rate] %> </td>
+    <td class="last_modified">
+        <%= show_date(last_modified) %> </td>
   </tr>
 % end
 ENDTABLE
@@ -124,6 +137,23 @@ __END__
 
     DIV.footer {text-align: right;
                 font-size: 80%;}
+    
+    TD:hover .popup {
+      position: relative;   
+      display: inline;
+      background-color: #ffffaa;
+    }
+
+    .popup { display: none;
+             position: absolute;
+             top: 1em;
+             left: 7em;
+             white-space: nowrap;
+             border: 1px solid black;
+             padding:5px;
+             color:black;
+             text-decoration:none;
+           }
   --></style>
 </head>
 <body>

@@ -1,3 +1,7 @@
+2007-03-10  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html] Popup shows additional information.
+
 2007-03-02  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
