@@ -620,31 +620,33 @@ def main
     Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
   end
 
-  obj = WinLossMatrix::mk_win_loss_matrix($players)
   yaml = {} 
   yaml["players"] = {}
-  rating_group = 0
-  obj.connected_subsets.each do |win_loss_matrix|
-    yaml["players"][rating_group] = {}
+  if $players.size > 0
+    obj = WinLossMatrix::mk_win_loss_matrix($players)
+    rating_group = 0
+    obj.connected_subsets.each do |win_loss_matrix|
+      yaml["players"][rating_group] = {}
 
-    rating = Rating.new(win_loss_matrix.matrix)
-    rating.rating
-    rating.average!(Rating::AVERAGE_RATE)
-    rating.integer!
+      rating = Rating.new(win_loss_matrix.matrix)
+      rating.rating
+      rating.average!(Rating::AVERAGE_RATE)
+      rating.integer!
 
-    win_loss_matrix.keys.each_with_index do |p, i| # player_id, index#
-      win  = win_loss_matrix.matrix.row(i).sum
-      loss = win_loss_matrix.matrix.col(i).sum
+      win_loss_matrix.keys.each_with_index do |p, i| # player_id, index#
+        win  = win_loss_matrix.matrix.row(i).sum
+        loss = win_loss_matrix.matrix.col(i).sum
 
-      yaml["players"][rating_group][p] = 
-        { 'name' => p.split("+")[0],
-          'rating_group' => rating_group,
-          'rate' => rating.rate[i],
-          'last_modified' => $players_time[p].dup,
-          'win'  => win,
-          'loss' => loss}
+        yaml["players"][rating_group][p] = 
+          { 'name' => p.split("+")[0],
+            'rating_group' => rating_group,
+            'rate' => rating.rate[i],
+            'last_modified' => $players_time[p].dup,
+            'win'  => win,
+            'loss' => loss}
+      end
+      rating_group += 1
     end
-    rating_group += 1
   end
   puts yaml.to_yaml
 end

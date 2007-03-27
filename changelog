@@ -1,3 +1,9 @@
+2007-03-27  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate] When there were too few games to rate players (i.e. no
+	  player to rate), mk_rate caused an error. Now it no longer shows
+	  the error.
+
 2007-03-10  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html] Popup shows additional information.
