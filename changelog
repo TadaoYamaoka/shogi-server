@@ -1,3 +1,10 @@
+2007-04-01  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Implemented one of the keepalive protocol in CSA protocol; If clients
+	    send LF, the server sends back LF.
+	  - More care for socket errors.
+
 2007-03-27  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] When there were too few games to rate players (i.e. no

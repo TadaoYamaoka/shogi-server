@@ -48,8 +48,9 @@ class TCPSocket
         end
       rescue TimeoutError
         return :timeout
-      rescue
-        return nil
+      rescue Exception => ex
+        log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+        return :exception
       end
     else
       begin
@@ -397,7 +398,13 @@ class Player < BasicPlayer
 
   def writer
     while (str = @write_queue.pop)
-      @socket.write_safe(str)
+      begin
+        @socket.write(str)
+      rescue Exception => ex
+        log_error("Failed to send a message to #{@name}.")
+        log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+        return
+      end
     end
   end
 
@@ -418,13 +425,14 @@ class Player < BasicPlayer
     end
   end
 
-  def write_help
-    @socket.write_safe('##[HELP] available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"')
-  end
-
   def run(csa_1st_str=nil)
     while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
       begin
+        if (@writer_thread == nil || @writer_thread.status == false)
+          # The writer_thread has been killed because of socket errors.
+          return
+        end
+
         $mutex.lock
         if (csa_1st_str)
           str = csa_1st_str
@@ -438,8 +446,13 @@ class Player < BasicPlayer
         if (@status == "finished")
           return
         end
-        str.chomp! if (str.class == String)
+        str.chomp! if (str.class == String) # may be strip! ?
         case str
+        when "" 
+          # Application-level protocol for Keep-Alive
+          # If the server gets LF, it sends back LF.
+          # 30 sec rule (client may not send LF again within 30 sec) is not implemented yet.
+          write_safe("\n")
         when /^[\+\-][^%]/
           if (@status == "game")
             array_str = str.split(",")
@@ -456,7 +469,18 @@ class Player < BasicPlayer
           if (@status == "game")
             s = @game.handle_one_move(str, self)
             return if (s && @protocol == LoginCSA::PROTOCOL)
+          # else
+          #   begin
+          #     @socket.write("##[KEEPALIVE] #{Time.now}\n")
+          #   rescue Exception => ex
+          #     log_error("Failed to send a keepalive to #{@name}.")
+          #     log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+          #     return
+          #   end
           end
+        when :exception
+          log_error("Failed to receive a message from #{@name}.")
+          return
         when /^REJECT/
           if (@status == "agree_waiting")
             @game.reject(@name)
@@ -495,7 +519,8 @@ class Player < BasicPlayer
             LEAGUE.games[game_id].monitoroff(self)
           end
         when /^%%HELP/
-          write_help
+          write_safe(
+            %!##[HELP] available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"\n!)
         when /^%%RATING/
           players = LEAGUE.rated_players
           players.sort {|a,b| b.rate <=> a.rate}.each do |p|
@@ -2048,7 +2073,9 @@ def main
   log_message("server started")
 
   server.start do |client|
-      client.sync = true
+      # client.sync = true # this is already set in WEBrick 
+      client.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
+        # Keepalive time can be set by /proc/sys/net/ipv4/tcp_keepalive_time
       player = nil
       login  = nil
       while (str = client.gets_timeout(ShogiServer::Login_Time))
