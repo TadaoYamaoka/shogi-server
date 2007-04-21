@@ -638,6 +638,10 @@ class Player < BasicPlayer
           @status = "connected"
           write_safe("LOGOUT:completed\n")
           return
+        when /^CHALLENGE/
+          # This command is only available for CSA's official testing server.
+          # So, this means nothing for this program.
+          write_safe("CHALLENGE ACCEPTED\n")
         when /^\s*$/
           ## ignore null string
         else
