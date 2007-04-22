@@ -6,6 +6,7 @@
 	    because it is only available for CSA's official testing server and does
 	    not belong to the CSA standard protocol.  Therefor, when clients receive
 	    `CHALLENGE ACCEPTED' from this server, they must ignore it.
+	  - Show revision in a start up messeage.
 
 2007-04-01  Daigo Moriwaki <daigo at debian dot org>
 

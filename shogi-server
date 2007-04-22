@@ -2073,8 +2073,8 @@ def main
 
   server = WEBrick::GenericServer.new(config)
   ["INT", "TERM"].each {|signal| trap(signal){ server.shutdown } }
-  $stderr.puts("server started as a deamon") if $options["daemon"] 
-  log_message("server started")
+  $stderr.puts("server started as a deamon [Revision: #{ShogiServer::Revision}]") if $options["daemon"] 
+  log_message("server started [Revision: #{ShogiServer::Revision}]")
 
   server.start do |client|
       # client.sync = true # this is already set in WEBrick 
