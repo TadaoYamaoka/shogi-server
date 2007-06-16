@@ -1,0 +1,159 @@
+## Copyright (C) 2007 Daigo Moriwaki <daigo at debian dot org>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+require 'getoptlong'
+require 'timeout'
+require 'thread'
+require 'webrick'
+require 'socket'
+
+class ShogiClient
+  CLIENT_NAME     = "web"
+  CLIENT_PASSWORD = "web1235"
+
+  def initialize(config = {})
+    @@mutex = Mutex.new
+    config[:host] ||= "localhost"
+    config[:port] ||= 4081
+    @socket = TCPSocket.open(config[:host], config[:port])
+  end
+
+  def login
+    @socket.puts "LOGIN #{CLIENT_NAME} #{CLIENT_PASSWORD} x1"
+    gets_ok do |s|
+      /OK x1/ =~ s
+    end
+  end
+
+  def logout
+    @socket.puts "LOGOUT"
+    gets_ok
+  end
+
+  def who
+    @@mutex.synchronize do
+      @socket.puts "%%WHO"
+      gets_ok
+    end
+  end
+
+  def list
+    @@mutex.synchronize do
+      @socket.puts "%%LIST"
+      gets_ok
+    end
+  end
+
+  private
+
+  def gets_ok
+    buf = ""
+    timeout(5) do
+      loop do
+        s = @socket.gets
+        break unless s
+        buf << s
+        if block_given?
+          break if yield(s)
+        else
+          break if /OK$/ =~ s
+        end
+      end
+    end
+    return buf
+  rescue Timeout::Error
+    return buf
+  end
+end
+
+
+class ListServlet < WEBrick::HTTPServlet::AbstractServlet
+  def do_GET(req, res)
+    res.body = $client.list
+    res['Content-Type'] = "text/plain"
+  end
+end
+
+class WhoServlet < WEBrick::HTTPServlet::AbstractServlet
+  def do_GET(req, res)
+    res.body = $client.who
+    res['Content-Type'] = "text/plain"
+  end
+end
+
+def usage
+  $stderr.puts <<-EOF
+USAGE: #{$0} [--daemon dir] [--port port]
+  --daemon dir    Run as a daemon. Log files are put in dir
+  --port port     Listening port for HTTP server (default 4080) 
+  EOF
+end
+
+def parse_command_line
+  options = Hash::new
+  parser = GetoptLong.new( ["--daemon", GetoptLong::REQUIRED_ARGUMENT],
+                           ["--port",   GetoptLong::REQUIRED_ARGUMENT])
+  parser.quiet = true
+  begin
+    parser.each_option do |name, arg|
+      name.sub!(/^--/, '')
+      options[name] = arg.dup
+    end
+  rescue
+    usage
+    raise parser.error_message
+  end
+
+  dir = options["daemon"] || nil
+  if dir && ! File.exist?(dir)
+    FileUtils.mkdir(dir)
+  end
+  options["dir"] = dir || File.dirname(__FILE__)
+  
+  options["port"] ||= 4080
+  options["port"] = options["port"].to_i
+  
+  return options
+end
+
+
+def main
+  $options = parse_command_line
+
+  $client = ShogiClient.new
+  $client.login
+
+  http_log_file            = File.join($options["dir"], "shogi-server-httpd.log")
+  http_access_log_file     = File.join($options["dir"], "shogi-server-access.log")
+  http_config = {}
+  http_config[:Port]       = $options["port"]
+  http_config[:ServerType] = WEBrick::Daemon if $options["daemon"]
+  http_config[:Logger]     = WEBrick::Log.new(http_log_file)
+  http_config[:AccessLog]  = 
+          [[ WEBrick::Log.new(http_access_log_file), WEBrick::AccessLog::COMMON_LOG_FORMAT ]]
+  
+  
+  server = WEBrick::HTTPServer.new(http_config)
+  ["INT", "TERM"].each {|signal| trap(signal){ server.shutdown; $client.logout } }
+  server.mount("/list", ListServlet)
+  server.mount("/who",  WhoServlet)
+  server.start
+end
+
+if __FILE__ == $0
+  TCPSocket.do_not_reverse_lookup = true
+  main
+end

@@ -1,3 +1,10 @@
+2007-06-16  Daigo Moriwaki <daigo at debian dot org>
+
+	* [webserver]
+	  - Initial version. This web server is an interface between HTTP and
+	    shogi-server. Shogi-server commands are available over HTTP. As of
+	    now %%LIST and %%WHO commands are supported.
+
 2007-04-21  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
