@@ -28,7 +28,7 @@
 #   * Rated games, which were played by both rated players.
 #   * Rated players, who logged in the server with a name followed by a trip:
 #     "name,trip".
-#   * (Rated) players, who played more than $GAMES_LIMIT [ten] (rated) games. 
+#   * (Rated) players, who played more than $GAMES_LIMIT [15] (rated) games. 
 #
 #
 # PREREQUIRE
@@ -60,7 +60,7 @@ require 'rgl/connected_components'
 #
 
 # Count out players who play less games than $GAMES_LIMIT
-$GAMES_LIMIT = $DEBUG ? 0 : 10
+$GAMES_LIMIT = $DEBUG ? 0 : 15
 WIN_MARK  = "win"
 LOSS_MARK = "lose"
 DRAW_MARK = "draw"

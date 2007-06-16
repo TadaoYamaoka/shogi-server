@@ -2,8 +2,11 @@
 
 	* [webserver]
 	  - Initial version. This web server is an interface between HTTP and
-	    shogi-server. Shogi-server commands are available over HTTP. As of
-	    now %%LIST and %%WHO commands are supported.
+	    shogi-server. Shogi-server commands will be available over HTTP. As
+	    of now %%LIST and %%WHO commands are supported.
+	* [mk_rate]
+	  - Bumped up GAME_LIMIT (from 10) to 15 because the calculation of
+	    rates sometimes went wrong (infinite values).
 
 2007-04-21  Daigo Moriwaki <daigo at debian dot org>
 
@@ -13,7 +16,7 @@
 	    because it is only available for CSA's official testing server and does
 	    not belong to the CSA standard protocol.  Therefor, when clients receive
 	    `CHALLENGE ACCEPTED' from this server, they must ignore it.
-	  - Show revision in a start up messeage.
+	  - Show revision in a start up message.
 
 2007-04-01  Daigo Moriwaki <daigo at debian dot org>
 
