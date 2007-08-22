@@ -428,12 +428,13 @@ class Player < BasicPlayer
   def run(csa_1st_str=nil)
     while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
       begin
+        $mutex.lock
+
         if (@writer_thread == nil || @writer_thread.status == false)
           # The writer_thread has been killed because of socket errors.
           return
         end
 
-        $mutex.lock
         if (csa_1st_str)
           str = csa_1st_str
           csa_1st_str = nil
