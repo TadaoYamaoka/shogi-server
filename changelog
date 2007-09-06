@@ -1,3 +1,10 @@
+2007-09-06 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - The logic to detect Oute-Sennichite was not complete. Both players
+	    (checking side and escaping side) may cause Oute-Sennichite. The old
+	    logic only cared for the checking player. This issue has been fixed.
+
 2007-06-16  Daigo Moriwaki <daigo at debian dot org>
 
 	* [webserver]

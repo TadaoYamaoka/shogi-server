@@ -2,6 +2,7 @@
 ## $Id$
 
 ## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
+## Copyright (C) 2007 Daigo Moriwaki (daigo at debian dot org)
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -448,7 +449,8 @@ class Player < BasicPlayer
           return
         end
         str.chomp! if (str.class == String) # may be strip! ?
-        case str
+        log_message(str) if $DEBUG
+        case str 
         when "" 
           # Application-level protocol for Keep-Alive
           # If the server gets LF, it sends back LF.
@@ -653,9 +655,9 @@ class Player < BasicPlayer
       ensure
         $mutex.unlock
       end
-    end                         # enf of while
-  end
-end
+    end # enf of while
+  end # def run
+end # class
 
 class Piece
   PROMOTE = {"FU" => "TO", "KY" => "NY", "KE" => "NK", "GI" => "NG", "KA" => "UM", "HI" => "RY"}
@@ -1035,10 +1037,10 @@ end
 class Board
   def initialize
     @sente_hands = Array::new
-    @gote_hands = Array::new
-    @history = Hash::new
-    @sente_history = Hash::new
-    @gote_history = Hash::new
+    @gote_hands  = Array::new
+    @history       = Hash::new(0)
+    @sente_history = Hash::new(0)
+    @gote_history  = Hash::new(0)
     @array = [[], [], [], [], [], [], [], [], [], []]
     @move_count = 0
   end
@@ -1215,25 +1217,44 @@ class Board
     return true
   end
 
-  def oute_sennichite?(sente)
-    if (checkmated?(! sente))
-      str = to_s
-      if (sente)
-        if (@sente_history[str] && (@sente_history[str] >= 3)) # already 3 times
-          return true
-        end
+  # @[sente|gote]_history has at least one item while the player is checking the other or 
+  # the other escapes.
+  def update_sennichite(player)
+    str = to_s
+    @history[str] += 1
+    if checkmated?(!player)
+      if (player)
+        @sente_history["dummy"] = 1  # flag to see Sente player is checking Gote player
       else
-        if (@gote_history[str] && (@gote_history[str] >= 3)) # already 3 times
-          return true
-        end
+        @gote_history["dummy"]  = 1  # flag to see Gote player is checking Sente player
+      end
+    else
+      if (player)
+        @sente_history.clear # no more continuous check
+      else
+        @gote_history.clear  # no more continuous check
       end
     end
-    return false
+    if @sente_history.size > 0  # possible for Sente's or Gote's turn
+      @sente_history[str] += 1
+    end
+    if @gote_history.size > 0   # possible for Sente's or Gote's turn
+      @gote_history[str] += 1
+    end
+  end
+
+  def oute_sennichite?(player)
+    if (@sente_history[to_s] >= 4)
+      return :oute_sennichite_sente_lose
+    elsif (@gote_history[to_s] >= 4)
+      return :oute_sennichite_gote_lose
+    else
+      return nil
+    end
   end
 
   def sennichite?(sente)
-    str = to_s
-    if (@history[str] && (@history[str] >= 3)) # already 3 times
+    if (@history[to_s] >= 4) # already 3 times
       return true
     end
     return false
@@ -1363,7 +1384,9 @@ class Board
     tmp_board = Marshal.load(Marshal.dump(self))
     return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name, sente) == :illegal)
     return :oute_kaihimore if (tmp_board.checkmated?(sente))
-    return :oute_sennichite if tmp_board.oute_sennichite?(sente)
+    tmp_board.update_sennichite(sente)
+    os_result = tmp_board.oute_sennichite?(sente)
+    return os_result if os_result # :oute_sennichite_sente_lose or :oute_sennichite_gote_lose
     return :sennichite if tmp_board.sennichite?(sente)
 
     if ((x0 == 0) && (y0 == 0) && (name == "FU") && tmp_board.uchifuzume?(sente))
@@ -1373,20 +1396,7 @@ class Board
     move_to(x0, y0, x1, y1, name, sente)
     str = to_s
 
-    if (checkmated?(! sente))
-      if (sente)
-        @sente_history[str] = (@sente_history[str] || 0) + 1
-      else
-        @gote_history[str] = (@gote_history[str] || 0) + 1
-      end
-    else
-      if (sente)
-        @sente_history.clear
-      else
-        @gote_history.clear
-      end
-    end
-    @history[str] = (@history[str] || 0) + 1
+    update_sennichite(sente)
     return :normal
   end
 
@@ -1595,7 +1605,7 @@ class Game
         if ((move_status == :illegal) || (move_status == :uchifuzme) || (move_status == :oute_kaihimore))
           @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
         else
-          if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite) || (move_status == :oute_sennichite))
+          if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite) || (move_status == :oute_sennichite_sente_lose) || (move_status == :oute_sennichite_gote_lose))
             @sente.write_safe(sprintf("%s,T%d\n", str, t))
             @gote.write_safe(sprintf("%s,T%d\n", str, t))
             @fh.printf("%s\nT%d\n", str, t)
@@ -1624,10 +1634,12 @@ class Game
         toryo_lose()
       elsif (move_status == :outori)
         outori_win()
+      elsif (move_status == :oute_sennichite_sente_lose)
+        oute_sennichite_win_lose(@gote, @sente) # Sente is checking
+      elsif (move_status == :oute_sennichite_gote_lose)
+        oute_sennichite_win_lose(@sente, @gote) # Gote is checking
       elsif (move_status == :sennichite)
         sennichite_draw()
-      elsif (move_status == :oute_sennichite)
-        oute_sennichite_lose()
       elsif (move_status == :uchifuzume)
         uchifuzume_lose()
       elsif (move_status == :oute_kaihimore)
@@ -1686,14 +1698,18 @@ class Game
     end
   end
 
-  def oute_sennichite_lose
+  def oute_sennichite_win_lose(winner, loser)
     @current_player.status = "connected"
     @next_player.status = "connected"
-    @current_player.write_safe("#OUTE_SENNICHITE\n#LOSE\n")
-    @next_player.write_safe("#OUTE_SENNICHITE\n#WIN\n")
+    loser.write_safe("#OUTE_SENNICHITE\n#LOSE\n")
+    winner.write_safe("#OUTE_SENNICHITE\n#WIN\n")
     @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:oute_sennichite:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
+    if loser == @current_player
+      @fh.printf("'summary:oute_sennichite:%s lose:%s win\n", @current_player.name, @next_player.name)
+    else
+      @fh.printf("'summary:oute_sennichite:%s win:%s lose\n", @current_player.name, @next_player.name)
+    end
+    @result = GameResultWin.new(winner, loser)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @id))
@@ -1970,6 +1986,10 @@ RELEASE
 REVISION
 	#{ShogiServer::Revision}
 EOM
+end
+
+def log_debug(str)
+  $logger.debug(str)
 end
 
 def log_message(str)
