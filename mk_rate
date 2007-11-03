@@ -368,7 +368,7 @@ class WinLossMatrix
     keys = players.keys.sort
     size = keys.size
     matrix =
-      Matrix[*
+      GSL::Matrix[*
       ((0...size).collect do |k|
         p1 = keys[k]
         p1_hash = players[p1]
@@ -424,11 +424,15 @@ class WinLossMatrix
     copied_cols = []
     (0...size).each do |i|
       next if i == delete_index
-      row = @matrix.get_row(i)  # get_row returns a copy of the row
+      row = @matrix.row(i).clone
       row.delete_at(delete_index)
       copied_cols << row
     end
-    new_matrix = Matrix[*copied_cols]
+    if copied_cols.size == 0
+      new_matrix = GSL::Matrix.new
+    else
+      new_matrix = GSL::Matrix[*copied_cols]
+    end
     new_keys = @keys.clone
     new_keys.delete_at(delete_index)
     return WinLossMatrix.new(new_keys, new_matrix)
@@ -497,7 +501,7 @@ class WinLossMatrix
 
     result = subsets.collect do |keys|
       matrix =
-        Matrix[*
+        GSL::Matrix[*
         ((0...keys.size).collect do |k|
           p1 = @keys.index(keys[k])
           ((0...keys.size).collect do |j|
@@ -505,7 +509,7 @@ class WinLossMatrix
               0
             else
               p2 = @keys.index(keys[j])
-              @matrix[p1][p2]
+              @matrix[p1,p2]
             end
           end)
         end)]
