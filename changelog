@@ -1,3 +1,9 @@
+2007-11-03 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	 - Support Ruby 1.8.6 patch level 111 (or higher) and GSL 1.10 (or higher).
+	   It may not work with lower verions. 
+
 2007-09-06 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
