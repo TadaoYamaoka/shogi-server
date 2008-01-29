@@ -111,16 +111,16 @@ class League
     @players.delete(player.name)
   end
   
-  def get_player(status, game_name, sente, searcher=nil)
-    @players.each do |name, player|
-      if ((player.status == status) &&
-          (player.game_name == game_name) &&
-          ((sente == nil) || (player.sente == nil) || (player.sente == sente)) &&
-          ((searcher == nil) || (player != searcher)))
-        return player
-      end
+  def get_player(status, game_name, sente, searcher)
+    found = @players.find do |name, player|
+      (player.status == status) &&
+      (player.game_name == game_name) &&
+      ( (sente == nil) || 
+        (player.sente == nil) || 
+        (player.sente == sente) ) &&
+      (player != searcher)
     end
-    return nil
+    return found ? found.last : nil
   end
   
   def load(player)
@@ -554,14 +554,6 @@ class Player < BasicPlayer
             write_safe(sprintf("##[ERROR] you are in %s status. GAME is valid in connected or game_waiting status\n", @status))
             next
           end
-          if ((my_sente_str == "*") ||
-              (my_sente_str == "+") ||
-              (my_sente_str == "-"))
-            ## ok
-          else
-            write_safe(sprintf("##[ERROR] bad game option\n"))
-            next
-          end
 
           if (my_sente_str == "*")
             rival = LEAGUE.get_player("game_waiting", game_name, nil, self) # no preference
@@ -571,7 +563,10 @@ class Player < BasicPlayer
             rival = LEAGUE.get_player("game_waiting", game_name, true, self) # rival must be sente
           else
             ## never reached
+            write_safe(sprintf("##[ERROR] bad game option\n"))
+            next
           end
+
           if (rival)
             @game_name = game_name
             if ((my_sente_str == "*") && (rival.sente == nil))
@@ -1442,9 +1437,7 @@ class GameResult
   attr_reader :players, :black, :white
 
   def initialize(p1, p2)
-    @players = []
-    @players << p1
-    @players << p2
+    @players = [p1, p2]
     if p1.sente && !p2.sente
       @black, @white = p1, p2
     elsif !p1.sente && p2.sente
@@ -1841,20 +1834,20 @@ class Game
   end
 
   def propose
-    begin
-      @fh = open(@logfile, "w")
-      @fh.sync = true
+    @fh = open(@logfile, "w")
+    @fh.sync = true
 
-      @fh.printf("V2\n")
-      @fh.printf("N+%s\n", @sente.name)
-      @fh.printf("N-%s\n", @gote.name)
-      @fh.printf("$EVENT:%s\n", @id)
+    @fh.puts("V2")
+    @fh.puts("N+#{@sente.name}")
+    @fh.puts("N-#{@gote.name}")
+    @fh.puts("$EVENT:#{@id}")
 
-      @sente.write_safe(propose_message("+"))
-      @gote.write_safe(propose_message("-"))
+    @sente.write_safe(propose_message("+"))
+    @gote.write_safe(propose_message("-"))
 
-      @fh.printf("$START_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))
-      @fh.print <<EOM
+    now = Time::new.strftime("%Y/%m/%d %H:%M:%S")
+    @fh.puts("$START_TIME:#{now}")
+    @fh.print <<EOM
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
@@ -1866,7 +1859,6 @@ P8 * +KA *  *  *  *  * +HI *
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOM
-    end
   end
 
   def show()
