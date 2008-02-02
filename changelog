@@ -1,3 +1,10 @@
+2008-02-02 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Implemented a new feature, Floodgate mode, for covenience with
+	    public rating games. Now there is a special game "wdoor-900-0".
+	    Matching players for that game is scheduled each 30 minitues.
+
 2007-11-03 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]

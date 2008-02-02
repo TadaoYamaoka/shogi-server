@@ -2,7 +2,7 @@
 ## $Id$
 
 ## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
-## Copyright (C) 2007 Daigo Moriwaki (daigo at debian dot org)
+## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -88,14 +88,113 @@ Release.concat("-") if (Release == "")
 Revision = "$Revision$".gsub(/[^\.\d]/, '')
 
 
+
 class League
+
+  class Floodgate
+    class << self
+      def game_name?(str)
+        return "wdoor-900-0" == str
+      end
+    end
+
+    def initialize(league)
+      @league = league
+      @next_time = nil
+      charge
+    end
+
+    def run
+      @thread = Thread.new do
+        Thread.pass
+        while (true)
+          begin
+            sleep(20)
+            next if Time.now < @next_time
+            match_game
+            charge
+          rescue Exception => ex 
+            # ignore errors
+            log_error("[in Floodgate's thread] #{ex}")
+          end
+        end
+      end
+    end
+
+    def shutdown
+      @thread.kill if @thread
+    end
+
+    # private
+
+    def charge
+      now = Time.now
+      if now.min < 30
+        @next_time = Time.mktime(now.year, now.month, now.day, now.hour, 30)
+      else
+        @next_time = Time.mktime(now.year, now.month, now.day, now.hour+1)
+      end
+      # for test
+      # if now.sec < 30
+      #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
+      # else
+      #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min + 1)
+      # end
+    end
+
+    def match_game
+      players = @league.find_all_players do |pl|
+        pl.status == "game_waiting" &&
+        Floodgate.game_name?(pl.game_name) &&
+        pl.sente == nil
+      end
+      random_match(players)
+    end
+
+    def random_match(players)
+      if players.size < 2
+        log_message("Floodgate: too few players [%d]" % [players.size])
+        return
+      end
+      log_message("Floodgate: found %d players. Making games..." % [players.size])
+      random_players = players.sort{ rand < 0.5 ? 1 : -1 }
+      pairs = [[random_players.shift]]
+      while !random_players.empty? do
+        if pairs.last.size < 2
+          pairs.last << random_players.shift
+        else
+          pairs << [random_players.shift]
+        end 
+      end
+      if pairs.last.size < 2
+        pairs.pop
+      end
+      pairs.each do |pair|
+        start_game(pair.first, pair.last)
+      end
+    end
+
+    def start_game(p1, p2)
+      p1.sente = true
+      p2.sente = false
+      Game.new(p1.game_name, p1, p2)
+    end
+  end # class Floodgate
+
   def initialize
+    @mutex = Mutex.new # guard @players
     @games = Hash::new
     @players = Hash::new
     @event = nil
     @dir = File.dirname(__FILE__)
+    @floodgate = Floodgate.new(self)
+    @floodgate.run
   end
   attr_accessor :players, :games, :event, :dir
+
+  def shutdown
+    @floodgate.shutdown
+  end
 
   # this should be called just after instanciating a League object.
   def setup_players_database
@@ -104,21 +203,38 @@ class League
 
   def add(player)
     self.load(player) if player.id
-    @players[player.name] = player
+    @mutex.synchronize do
+      @players[player.name] = player
+    end
   end
   
   def delete(player)
-    @players.delete(player.name)
+    @mutex.synchronize do
+      @players.delete(player.name)
+    end
+  end
+
+  def find_all_players
+    found = nil
+    @mutex.synchronize do
+      found = @players.find_all do |name, player|
+        yield player
+      end
+    end
+    return found.map {|a| a.last}
   end
   
   def get_player(status, game_name, sente, searcher)
-    found = @players.find do |name, player|
-      (player.status == status) &&
-      (player.game_name == game_name) &&
-      ( (sente == nil) || 
-        (player.sente == nil) || 
-        (player.sente == sente) ) &&
-      (player != searcher)
+    found = nil
+    @mutex.synchronize do
+      found = @players.find do |name, player|
+        (player.status == status) &&
+        (player.game_name == game_name) &&
+        ( (sente == nil) || 
+          (player.sente == nil) || 
+          (player.sente == sente) ) &&
+        (player.name != searcher.name)
+      end
     end
     return found ? found.last : nil
   end
@@ -160,6 +276,10 @@ class League
       self.load(p)
       p
     end
+  end
+
+  def floodgate_game?(game_name)
+    return "wdoor-0-10" == game_name
   end
 end
 
@@ -555,16 +675,25 @@ class Player < BasicPlayer
             next
           end
 
-          if (my_sente_str == "*")
-            rival = LEAGUE.get_player("game_waiting", game_name, nil, self) # no preference
-          elsif (my_sente_str == "+")
-            rival = LEAGUE.get_player("game_waiting", game_name, false, self) # rival must be gote
-          elsif (my_sente_str == "-")
-            rival = LEAGUE.get_player("game_waiting", game_name, true, self) # rival must be sente
+          rival = nil
+          if (League::Floodgate.game_name?(game_name))
+            if (my_sente_str != "*")
+              write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n"), my_sente_str, game_name)
+              next
+            end
+            @sente = nil
           else
-            ## never reached
-            write_safe(sprintf("##[ERROR] bad game option\n"))
-            next
+            if (my_sente_str == "*")
+              rival = LEAGUE.get_player("game_waiting", game_name, nil, self) # no preference
+            elsif (my_sente_str == "+")
+              rival = LEAGUE.get_player("game_waiting", game_name, false, self) # rival must be gote
+            elsif (my_sente_str == "-")
+              rival = LEAGUE.get_player("game_waiting", game_name, true, self) # rival must be sente
+            else
+              ## never reached
+              write_safe(sprintf("##[ERROR] bad game option\n"))
+              next
+            end
           end
 
           if (rival)
@@ -591,8 +720,6 @@ class Player < BasicPlayer
               ## never reached
             end
             Game::new(@game_name, self, rival)
-            self.status = "agree_waiting"
-            rival.status = "agree_waiting"
           else # rival not found
             if (command_name == "GAME")
               @status = "game_waiting"
@@ -2074,7 +2201,12 @@ def main
   config[:Logger]     = $logger
 
   server = WEBrick::GenericServer.new(config)
-  ["INT", "TERM"].each {|signal| trap(signal){ server.shutdown } }
+  ["INT", "TERM"].each do |signal| 
+    trap(signal) do
+      LEAGUE.shutdown
+      server.shutdown
+    end
+  end
   $stderr.puts("server started as a deamon [Revision: #{ShogiServer::Revision}]") if $options["daemon"] 
   log_message("server started [Revision: #{ShogiServer::Revision}]")
 
