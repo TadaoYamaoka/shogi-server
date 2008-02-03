@@ -277,10 +277,6 @@ class League
       p
     end
   end
-
-  def floodgate_game?(game_name)
-    return "wdoor-0-10" == game_name
-  end
 end
 
 
