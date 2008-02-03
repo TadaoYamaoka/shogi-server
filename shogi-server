@@ -132,13 +132,13 @@ class League
       if now.min < 30
         @next_time = Time.mktime(now.year, now.month, now.day, now.hour, 30)
       else
-        @next_time = Time.mktime(now.year, now.month, now.day, now.hour+1)
+        @next_time = Time.mktime(now.year, now.month, now.day, now.hour) + 3600
       end
       # for test
       # if now.sec < 30
       #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
       # else
-      #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min + 1)
+      #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min) + 60
       # end
     end
 

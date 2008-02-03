@@ -3,6 +3,8 @@
 	* [shogi-server]
 	  - Game names that are recognized as the floodgate mode are now 
 	    /^floodgate-\d+-\d+$/.
+	  - Floodgate could not schedule the next time when it was the next
+	    day. This issue has been fixed.
 
 2008-02-02 Daigo Moriwaki <daigo at debian dot org>
 
