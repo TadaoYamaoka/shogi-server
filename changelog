@@ -1,3 +1,9 @@
+2008-02-03 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Game names that are recognized as the floodgate mode are now 
+	    /^floodgate-\d+-\d+$/.
+
 2008-02-02 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
