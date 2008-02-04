@@ -2182,6 +2182,7 @@ def main
   write_pid_file($options["pid-file"]) if ($options["pid-file"])
 
   dir = $options["daemon"] || nil
+  dir = File.expand_path(dir) if dir
   if dir && ! File.exist?(dir)
     FileUtils.mkdir(dir)
   end

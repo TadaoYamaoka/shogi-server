@@ -120,6 +120,7 @@ def parse_command_line
   end
 
   dir = options["daemon"] || nil
+  dir = File.expand_path(dir) if dir
   if dir && ! File.exist?(dir)
     FileUtils.mkdir(dir)
   end
