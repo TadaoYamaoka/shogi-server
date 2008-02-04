@@ -112,10 +112,11 @@ class League
             sleep(20)
             next if Time.now < @next_time
             match_game
-            charge
           rescue Exception => ex 
             # ignore errors
             log_error("[in Floodgate's thread] #{ex}")
+          ensure
+            charge
           end
         end
       end
