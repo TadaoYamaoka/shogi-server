@@ -1,16 +1,14 @@
 2008-02-04 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
-	  - In the daemon mode, if the specified directory was a relative
-	    path, the server could fail to start with a permission denied
-	    error. This issue has been fixed. The path is interpreted as 
-	    an absolute path before switching to daemon. 
-
 	* [webserver]
 	  - In the daemon mode, if the specified directory was a relative
 	    path, the server could fail to start with a permission denied
 	    error. This issue has been fixed. The path is interpreted as 
 	    an absolute path before switching to daemon. 
+	  - In the daemon mode, a wrong process id was written in 
+	    '--pid-file'. This issue has been fixed. Also, the pid file
+	    will be removed when the server shuts down.
 
 2008-02-03 Daigo Moriwaki <daigo at debian dot org>
 

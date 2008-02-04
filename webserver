@@ -21,6 +21,13 @@ require 'timeout'
 require 'thread'
 require 'webrick'
 require 'socket'
+require 'fileutils'
+
+def write_pid_file(file)
+  open(file, "w") do |fh|
+    fh.puts "#{$$}"
+  end
+end
 
 class ShogiClient
   CLIENT_NAME     = "web"
@@ -98,16 +105,18 @@ end
 
 def usage
   $stderr.puts <<-EOF
-USAGE: #{$0} [--daemon dir] [--port port]
+USAGE: #{$0} [--daemon dir] [--port port] [--pid-file file]
   --daemon dir    Run as a daemon. Log files are put in dir
   --port port     Listening port for HTTP server (default 4080) 
+  --pid-file file Write the process id to the file
   EOF
 end
 
 def parse_command_line
   options = Hash::new
-  parser = GetoptLong.new( ["--daemon", GetoptLong::REQUIRED_ARGUMENT],
-                           ["--port",   GetoptLong::REQUIRED_ARGUMENT])
+  parser = GetoptLong.new( ["--daemon",   GetoptLong::REQUIRED_ARGUMENT],
+                           ["--port",     GetoptLong::REQUIRED_ARGUMENT],
+                           ["--pid-file", GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -119,16 +128,16 @@ def parse_command_line
     raise parser.error_message
   end
 
-  dir = options["daemon"] || nil
+  dir = options["daemon"]
   dir = File.expand_path(dir) if dir
   if dir && ! File.exist?(dir)
     FileUtils.mkdir(dir)
   end
   options["dir"] = dir || File.dirname(__FILE__)
-  
   options["port"] ||= 4080
   options["port"] = options["port"].to_i
-  
+  options["pid-file"] = File.expand_path(options["pid-file"]) if options["pid-file"]
+
   return options
 end
 
@@ -147,6 +156,15 @@ def main
   http_config[:Logger]     = WEBrick::Log.new(http_log_file)
   http_config[:AccessLog]  = 
           [[ WEBrick::Log.new(http_access_log_file), WEBrick::AccessLog::COMMON_LOG_FORMAT ]]
+  if $options["pid-file"]
+    http_config[:StartCallback] = Proc.new do
+      write_pid_file($options["pid-file"])
+    end
+    http_config[:StopCallback] = Proc.new do
+      FileUtils.rm($options["pid-file"], :force => true)
+    end
+  end
+
   
   
   server = WEBrick::HTTPServer.new(http_config)

@@ -2140,7 +2140,7 @@ end
 
 def write_pid_file(file)
   open(file, "w") do |fh|
-    fh.print Process::pid, "\n"
+    fh.puts "#{$$}"
   end
 end
 
@@ -2179,9 +2179,7 @@ def main
   LEAGUE.event = ARGV.shift
   port = ARGV.shift
 
-  write_pid_file($options["pid-file"]) if ($options["pid-file"])
-
-  dir = $options["daemon"] || nil
+  dir = $options["daemon"]
   dir = File.expand_path(dir) if dir
   if dir && ! File.exist?(dir)
     FileUtils.mkdir(dir)
@@ -2196,6 +2194,15 @@ def main
   config[:Port]       = port
   config[:ServerType] = WEBrick::Daemon if $options["daemon"]
   config[:Logger]     = $logger
+  if $options["pid-file"]
+    pid_file = File.expand_path($options["pid-file"])
+    config[:StartCallback] = Proc.new do
+      write_pid_file(pid_file)
+    end
+    config[:StopCallback] = Proc.new do
+      FileUtils.rm(pid_file, :force => true)
+    end
+  end
 
   server = WEBrick::GenericServer.new(config)
   ["INT", "TERM"].each do |signal| 
