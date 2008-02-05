@@ -57,6 +57,8 @@ def main
     end
   end
 
+  popup_id = 0
+
   file["players"].sort.each do |key, yaml| # sort groups in the order written in players.yaml
   sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']} # sort players in a group by one's rate
   top_rate = nil  
@@ -87,11 +89,21 @@ def main
   %>
   <tr class="<%=player_decoration%>">
     <td class="name">
-        <span class="popup"><%= key %></span>
-        <%= h yaml[key]['name'] %> </td>
+        <span id="popup<%=popup_id+=1%>"><%= h yaml[key]['name'] %></span>
+        <script type="text/javascript">
+          var tooltip<%=popup_id%> = new YAHOO.widget.Tooltip("myTooltip", {
+            context:"popup<%=popup_id%>",
+            text:"<%= h key %>" } );
+        </script>
+    </td>
     <td class="rate">
-        <span class="popup"><%= "%5d" % [ diff_rate ] %> | <%= "%.3f" % [ diff_possibility ] %></span>
-        <%= rate != 0 ? "%5d"  % [ rate ] : "N/A" %> </td>
+        <span id="popup<%=popup_id+=1%>"><%= rate != 0 ? "%5d"  % [ rate ] : "N/A" %></span>
+        <script type="text/javascript">
+          var tooltip<%=popup_id%> = new YAHOO.widget.Tooltip("myTooltip", {
+            context:"popup<%=popup_id%>",
+            text:"Behind <%= "%5d" % [ diff_rate ] %> (<%= "%.3f" % [ diff_possibility ] %>)" } );
+        </script>
+    </td>
     <td class="ngames">
         <%= "%5d"  % [ win ] %>  </td>
     <td class="ngames">
@@ -122,50 +134,38 @@ __END__
 <head>
   <title>Shogi Server Rating</title>
   <link rel="StyleSheet" type="text/css" href="http://wdoor.c.u-tokyo.ac.jp/shogi/shogi.css">
+  <!-- CSS --> 
+  <!-- License: http://developer.yahoo.com/yui/license.html -->
+  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.4.1/build/reset-fonts-grids/reset-fonts-grids.css"> 
+  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.4.1/build/base/base-min.css"> 
+  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.4.1/build/container/assets/container.css"> 
+  <!-- Dependencies --> 
+  <script type="text/javascript" src="http://yui.yahooapis.com/2.4.1/build/yahoo-dom-event/yahoo-dom-event.js"></script> 
+  <!-- OPTIONAL: Animation (only required if enabling Animation) --> 
+  <script type="text/javascript" src="http://yui.yahooapis.com/2.4.1/build/animation/animation-min.js"></script> 
+  <!-- Source file --> 
+  <script type="text/javascript" src="http://yui.yahooapis.com/2.4.1/build/container/container-min.js"></script>
   <style type="text/css"><!--
-    BODY {margin: 10px 60px;
-          text-align: center;}
     TABLE {margin-left: auto;
-           margin-right: auto;
-           border-collapse: collapse;
-           border: solid 2px;
-           width: 500px;}
+           margin-right: auto;}
     CAPTION { caption-side: left;}
-    TH    {border: solid 1px;}
-    TD    {padding-left: 10px;
-           padding-right: 10px;
-           border: solid 1px;}
     .name {text-align: center;
            width: 180px;}
     .rate, .ngames, .win_rate {text-align: right;}
-    .last_modified {text-align: left;}
+    .last_modified {text-align: center;}
     .gps, .yowai_gps {background-color: lightgreen;}
     .today     {background-color: #FFD700;}
     .this_week {background-color: #FFDAB9;}
 
-    DIV.footer {text-align: right;
-                font-size: 80%;}
-    
-    TD:hover .popup {
-      position: relative;   
-      display: inline;
-      background-color: #ffffaa;
-    }
-
-    .popup { display: none;
-             position: absolute;
-             top: 1em;
-             left: 7em;
-             white-space: nowrap;
-             border: 1px solid black;
-             padding:5px;
-             color:black;
-             text-decoration:none;
-           }
+    #bd {text-align: center;}
+    #ft {text-align: right;}
   --></style>
 </head>
-<body>
+<body><div id="doc">
 
+<div id="hd"></div>
+
+<div id="bd">
 <h1>Shogi Server Rating</h1>
 
 % tables.each_with_index do |t, index|
@@ -203,12 +203,14 @@ __END__
 <p><a href="http://wdoor.c.u-tokyo.ac.jp/shogi/">BACK</a>
 
 <hr/>
+</div>
 
-<div class="footer">
+
+<div id="ft">
   <p>Last modified at <%=Time.now%>
   <p>$Revision$
 </div>
 
-</body>
+</div></body>
 </html>
 

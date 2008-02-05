@@ -2,6 +2,8 @@
 
 	* [mk_rate] [mk_html]
 	  - Display not-yet-rated players as well.
+	* [mk_html]
+	  - Use Yahoo! UI Library.
 
 2008-02-04 Daigo Moriwaki <daigo at debian dot org>
 
