@@ -60,7 +60,15 @@ def main
   popup_id = 0
 
   file["players"].sort.each do |key, yaml| # sort groups in the order written in players.yaml
-  sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']} # sort players in a group by one's rate
+  sorted_keys = yaml.keys.sort do |a,b| 
+    # sort players in a group by one's rate
+    if yaml[b]['rate'] == 0 && yaml[a]['rate'] == 0
+      # mainly for not-rated-yet players
+      yaml[b]['last_modified'] <=> yaml[a]['last_modified']
+    else
+      yaml[b]['rate'] <=> yaml[a]['rate']
+    end
+  end 
   top_rate = nil  
   table = ERB.new(<<ENDTABLE, nil, "%>")
 % sorted_keys.each do |key|
