@@ -210,9 +210,9 @@ class Rating
   end
 
   ##
-  # The initial value of the rate, which is of very importance for Newton method.
-  # This is based on my huristics; the higher the win probablity of a player is, 
-  # the greater points he takes.
+  # The initial value of the rate, which is of very importance for Newton
+  # method.  This is based on my huristics; the higher the win probablity of
+  # a player is, the greater points he takes.
   #
   def initial_rate
     possibility = 
@@ -450,7 +450,8 @@ class WinLossMatrix
   end
 
   ##
-  # Removes players who do not pass a criteria to be rated, and returns a new object.
+  # Removes players who do not pass a criteria to be rated, and returns a
+  # new object.
   # 
   def filter
     $stderr.puts @keys.inspect if $DEBUG
@@ -626,9 +627,9 @@ def main
 
   yaml = {} 
   yaml["players"] = {}
+  rating_group = 0
   if $players.size > 0
     obj = WinLossMatrix::mk_win_loss_matrix($players)
-    rating_group = 0
     obj.connected_subsets.each do |win_loss_matrix|
       yaml["players"][rating_group] = {}
 
@@ -651,6 +652,30 @@ def main
       end
       rating_group += 1
     end
+  end
+  rating_group -= 1
+  non_rated_group = 999 # large enough
+  yaml["players"][non_rated_group] = {}
+  $players.each_key do |id|
+    # skip players who have already been rated
+    found = false
+    (0..rating_group).each do |i|
+       found = true if yaml["players"][i][id]
+       break if found
+    end
+    next if found
+
+    v = GSL::Vector[0, 0]
+    $players[id].each_value {|value| v += value}
+    next if v[0] < 1 && v[1] < 1
+
+    yaml["players"][non_rated_group][id] =
+      { 'name' => id.split("+")[0],
+        'rating_group' => non_rated_group,
+        'rate' => 0,
+        'last_modified' => $players_time[id].dup,
+        'win'  => v[0],
+        'loss' => v[1]}
   end
   puts yaml.to_yaml
 end

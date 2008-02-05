@@ -48,6 +48,14 @@ def main
   file = YAML::load(lines)
   erb = ERB.new( DATA.read, nil, "%>" )
   tables = []
+  group_names = []
+  file["players"].keys.sort.each do |index|
+    if index < 999
+      group_names << "#{index}"
+    else
+      group_names << "Not-Yet-Rated Players"
+    end
+  end
 
   file["players"].sort.each do |key, yaml| # sort groups in the order written in players.yaml
   sorted_keys = yaml.keys.sort {|a,b| yaml[b]['rate'] <=> yaml[a]['rate']} # sort players in a group by one's rate
@@ -83,7 +91,7 @@ def main
         <%= h yaml[key]['name'] %> </td>
     <td class="rate">
         <span class="popup"><%= "%5d" % [ diff_rate ] %> | <%= "%.3f" % [ diff_possibility ] %></span>
-        <%= "%5d"  % [ rate ] %> </td>
+        <%= rate != 0 ? "%5d"  % [ rate ] : "N/A" %> </td>
     <td class="ngames">
         <%= "%5d"  % [ win ] %>  </td>
     <td class="ngames">
@@ -162,7 +170,7 @@ __END__
 
 % tables.each_with_index do |t, index|
 <table>
-<caption>Group: <%=index%></caption>
+<caption>Group: <%=group_names[index]%></caption>
 <colgroup>
   <col class="name">
   <col class="rate">
@@ -177,7 +185,7 @@ __END__
   <th>rate</th> 
   <th>win</th> 
   <th>loss</th> 
-  <th>win_rate</th> 
+  <th>&#37;</th> 
   <th>last_modified</th>
 </tr>
 </thead>
