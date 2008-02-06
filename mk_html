@@ -97,7 +97,7 @@ def main
   %>
   <tr class="<%=player_decoration%>">
     <td class="name">
-        <span id="popup<%=popup_id+=1%>"><%= h yaml[key]['name'] %></span>
+        <a id="popup<%=popup_id+=1%>" href="http://wdoor.c.u-tokyo.ac.jp/shogi/tools/view/latest-table.cgi?event=LATEST&user=<%= h yaml[key]['name'] %>"><%= h yaml[key]['name'] %></a>
         <script type="text/javascript">
           var tooltip<%=popup_id%> = new YAHOO.widget.Tooltip("myTooltip", {
             context:"popup<%=popup_id%>",
