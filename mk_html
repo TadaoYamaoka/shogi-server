@@ -40,6 +40,14 @@ USAGE: #{$0}
   exit 1
 end
 
+def remove_long_to_see_players(file)
+  return unless file["players"][999] # only for Not-Yet-Rated players
+
+  file["players"][999].delete_if do |key, value|
+    value['last_modified'] < Time.now - 24*3600*30 # 30 days
+  end
+end
+
 def main
   lines = ""
   while l = gets do
@@ -56,9 +64,10 @@ def main
       group_names << "Not-Yet-Rated Players"
     end
   end
+  remove_long_to_see_players(file)
 
   popup_id = 0
-
+        
   file["players"].sort.each do |key, yaml| # sort groups in the order written in players.yaml
   sorted_keys = yaml.keys.sort do |a,b| 
     # sort players in a group by one's rate

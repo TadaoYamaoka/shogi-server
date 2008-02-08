@@ -1,3 +1,11 @@
+2008-02-08 Daigo Moriwaki <daigo at debian dot org>
+
+	* [ml_html]
+	  - For the Not-Yet-Rated group, those who have not connected
+	    recently are not listed.
+	* [shogi-server]
+	  - Floodgate's thread checks the current time each 10 secs.
+
 2008-02-05 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate] [mk_html]

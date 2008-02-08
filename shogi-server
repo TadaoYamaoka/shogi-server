@@ -109,7 +109,7 @@ class League
         Thread.pass
         while (true)
           begin
-            sleep(20)
+            sleep(10)
             next if Time.now < @next_time
             match_game
             charge
