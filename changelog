@@ -1,3 +1,9 @@
+2008-02-13 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - When there are odd players wating for Floodgate, the random
+	    pairing deletes the player who has ever played the most games.
+
 2008-02-08 Daigo Moriwaki <daigo at debian dot org>
 
 	* [ml_html]

@@ -87,9 +87,50 @@ Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
 Release.concat("-") if (Release == "")
 Revision = "$Revision$".gsub(/[^\.\d]/, '')
 
-
-
 class League
+
+  class Pairing
+    def match(players)
+      #
+    end
+
+    def start_game(p1, p2)
+      p1.sente = true
+      p2.sente = false
+      Game.new(p1.game_name, p1, p2)
+    end
+    
+    def delete_most_playing_player(players)
+      if players.size % 2 == 1
+        max_player = players.max {|a,b| a.win + a.loss <=> b.win + b.loss}
+        players.delete(max_player)
+      end
+    end
+  end # Pairing
+
+  class RandomPairing < Pairing
+    def match(players)
+      if players.size < 2
+        log_message("Floodgate: too few players [%d]" % [players.size])
+        return
+      end
+      log_message("Floodgate: found %d players. Making games..." % [players.size])
+      delete_most_playing_player(players)
+
+      random_players = players.sort{ rand < 0.5 ? 1 : -1 }
+      pairs = [[random_players.shift]]
+      while !random_players.empty? do
+        if pairs.last.size < 2
+          pairs.last << random_players.shift
+        else
+          pairs << [random_players.shift]
+        end 
+      end
+      pairs.each do |pair|
+        start_game(pair.first, pair.last)
+      end
+    end
+  end # RadomPairing
 
   class Floodgate
     class << self
@@ -101,6 +142,7 @@ class League
     def initialize(league)
       @league = league
       @next_time = nil
+      @pairing = RandomPairing.new
       charge
     end
 
@@ -111,6 +153,7 @@ class League
           begin
             sleep(10)
             next if Time.now < @next_time
+            @league.reload
             match_game
             charge
           rescue Exception => ex 
@@ -148,36 +191,7 @@ class League
         Floodgate.game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      random_match(players)
-    end
-
-    def random_match(players)
-      if players.size < 2
-        log_message("Floodgate: too few players [%d]" % [players.size])
-        return
-      end
-      log_message("Floodgate: found %d players. Making games..." % [players.size])
-      random_players = players.sort{ rand < 0.5 ? 1 : -1 }
-      pairs = [[random_players.shift]]
-      while !random_players.empty? do
-        if pairs.last.size < 2
-          pairs.last << random_players.shift
-        else
-          pairs << [random_players.shift]
-        end 
-      end
-      if pairs.last.size < 2
-        pairs.pop
-      end
-      pairs.each do |pair|
-        start_game(pair.first, pair.last)
-      end
-    end
-
-    def start_game(p1, p2)
-      p1.sente = true
-      p2.sente = false
-      Game.new(p1.game_name, p1, p2)
+      @pairing.match(players)
     end
   end # class Floodgate
 
@@ -214,6 +228,10 @@ class League
     end
   end
 
+  def reload
+    @players.each {|player| load(player)}
+  end
+
   def find_all_players
     found = nil
     @mutex.synchronize do
@@ -247,6 +265,8 @@ class League
       player.rate         = hash['rate']
       player.modified_at  = hash['last_modified']
       player.rating_group = hash['rating_group']
+      player.win          = hash['win']
+      player.loss         = hash['loss']
     end
   end
 
@@ -412,6 +432,9 @@ class BasicPlayer
 
   # Score in the rating sysem
   attr_accessor :rate
+
+  # Number of games for win and loss in the rating system
+  attr_accessor :win, :loss
   
   # Group in the rating system
   attr_accessor :rating_group
