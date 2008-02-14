@@ -91,7 +91,11 @@ class League
 
   class Pairing
     def match(players)
-      #
+      if players.size < 2
+        log_message("Floodgate: too few players [%d]" % [players.size])
+      else
+        log_message("Floodgate: found %d players. Making games..." % [players.size])
+      end
     end
 
     def start_game(p1, p2)
@@ -101,36 +105,71 @@ class League
     end
     
     def delete_most_playing_player(players)
-      if players.size % 2 == 1
-        max_player = players.max {|a,b| a.win + a.loss <=> b.win + b.loss}
-        players.delete(max_player)
-      end
+      max_player = players.max {|a,b| a.win + a.loss <=> b.win + b.loss}
+      return players.delete(max_player)
     end
-  end # Pairing
 
-  class RandomPairing < Pairing
-    def match(players)
-      if players.size < 2
-        log_message("Floodgate: too few players [%d]" % [players.size])
+    def delete_least_rate_player(players)
+      min_player = players.min {|a,b| a.rate <=> b.rate}
+      return players.delete(min_player)
+    end
+
+    def pairing_and_start_game(players)
+      return if players.size < 2
+      if players.size % 2 == 1
+        log_warning("#Players should be even: %d" % [players.size])
         return
       end
-      log_message("Floodgate: found %d players. Making games..." % [players.size])
-      delete_most_playing_player(players)
+      sorted = players.sort{ rand < 0.5 ? 1 : -1 }
 
-      random_players = players.sort{ rand < 0.5 ? 1 : -1 }
-      pairs = [[random_players.shift]]
-      while !random_players.empty? do
+      pairs = [[sorted.shift]]
+      while !sorted.empty? do
         if pairs.last.size < 2
-          pairs.last << random_players.shift
+          pairs.last << sorted.shift
         else
-          pairs << [random_players.shift]
+          pairs << [sorted.shift]
         end 
       end
       pairs.each do |pair|
         start_game(pair.first, pair.last)
       end
     end
+  end # Pairing
+
+  class RandomPairing < Pairing
+    def match(players)
+      super
+      return if players.size < 2
+
+      if players.size % 2 == 1
+        delete_most_playing_player(players)
+      end
+      pairing_and_start_game(players)
+    end
   end # RadomPairing
+
+  class SwissPairing < Pairing
+    def match(players)
+      super
+      return if players.size < 2
+
+      win_players = players.find_all {|a| a.last_game_win?}
+      remains     = players - win_players
+      if win_players.size >= 2
+        if win_players.size % 2 == 1
+          remains << delete_least_rate_player(win_players)
+        end         
+        pairing_and_start_game(win_players)
+      else
+        remains.concat(win_players)
+      end
+      return if remains.size < 2
+      if remains.size % 2 == 1
+        delete_most_playing_player(remains)
+      end
+      pairing_and_start_game(remains)
+    end
+  end # SwissPairing
 
   class Floodgate
     class << self
@@ -142,7 +181,7 @@ class League
     def initialize(league)
       @league = league
       @next_time = nil
-      @pairing = RandomPairing.new
+      @pairing = SwissPairing.new
       charge
     end
 
@@ -207,6 +246,9 @@ class League
   attr_accessor :players, :games, :event, :dir
 
   def shutdown
+    @mutex.synchronize do
+      @players.each {|a| save(a)}
+    end
     @floodgate.shutdown
   end
 
@@ -224,12 +266,15 @@ class League
   
   def delete(player)
     @mutex.synchronize do
+      save(player)
       @players.delete(player.name)
     end
   end
 
   def reload
-    @players.each {|player| load(player)}
+    @mutex.synchronize do
+      @players.each {|player| load(player)}
+    end
   end
 
   def find_all_players
@@ -259,20 +304,34 @@ class League
   
   def load(player)
     hash = search(player.id)
-    if hash
-      # a current user
-      player.name         = hash['name']
-      player.rate         = hash['rate']
-      player.modified_at  = hash['last_modified']
-      player.rating_group = hash['rating_group']
-      player.win          = hash['win']
-      player.loss         = hash['loss']
+    return unless hash
+
+    # a current user
+    player.name          = hash['name']
+    player.rate          = hash['rate'] || 0
+    player.modified_at   = hash['last_modified']
+    player.rating_group  = hash['rating_group']
+    player.win           = hash['win']  || 0
+    player.loss          = hash['loss'] || 0
+    player.last_game_win = hash['last_game_win'] || false
+  end
+
+  def save(player)
+    @db.transaction do
+      break unless  @db["players"]
+      @db["players"].each do |group, players|
+        hash = players[player.id]
+        if hash
+          hash['last_game_win'] = player.last_game_win
+          break
+        end
+      end
     end
   end
 
   def search(id)
     hash = nil
-    @db.transaction do
+    @db.transaction(true) do
       break unless  @db["players"]
       @db["players"].each do |group, players|
         hash = players[id]
@@ -421,6 +480,13 @@ end
 
 
 class BasicPlayer
+  def initialize
+    @id = nil
+    @name = nil
+    @password = nil
+    @last_game_win = false
+  end
+
   # Idetifier of the player in the rating system
   attr_accessor :id
 
@@ -442,10 +508,8 @@ class BasicPlayer
   # Last timestamp when the rate was modified
   attr_accessor :modified_at
 
-  def initialize
-    @name = nil
-    @password = nil
-  end
+  # Whether win the previous game or not
+  attr_accessor :last_game_win
 
   def modified_at
     @modified_at || Time.now
@@ -460,6 +524,10 @@ class BasicPlayer
 
   def rated?
     @id != nil
+  end
+
+  def last_game_win?
+    return @last_game_win
   end
 
   def simple_id
@@ -1600,6 +1668,8 @@ class GameResultWin < GameResult
   def initialize(winner, loser)
     super
     @winner, @loser = winner, loser
+    @winner.last_game_win = true
+    @loser.last_game_win  = false
   end
 
   def to_s
@@ -1610,7 +1680,11 @@ class GameResultWin < GameResult
 end
 
 class GameResultDraw < GameResult
-
+  def initialize(p1, p2)
+    super
+    p1.last_game_win = false
+    p2.last_game_win = false
+  end
 end
 
 class Game

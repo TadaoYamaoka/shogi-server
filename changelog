@@ -1,3 +1,11 @@
+2008-02-14 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added a new pairing variation, Swiss-like style. Winners at the
+	    prevous games (his/her point of view, not the server's) are 
+	    paired first, and then the others are matched. This is the 
+	    default option now.
+
 2008-02-13 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
