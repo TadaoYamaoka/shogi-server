@@ -5,6 +5,12 @@
 	    prevous games (his/her point of view, not the server's) are 
 	    paired first, and then the others are matched. This is the 
 	    default option now.
+	  - Pairing classes are located in a separate source file,
+	    pairing.rb. The file is 'load'ed each time to be used,
+	    meaning that modifying the code will be applied to a running
+	    server.
+	  - You can specify a single player who will be out of pairing
+	    when there are odd players waiting for Floodgate.
 
 2008-02-13 Daigo Moriwaki <daigo at debian dot org>
 

@@ -89,88 +89,6 @@ Revision = "$Revision$".gsub(/[^\.\d]/, '')
 
 class League
 
-  class Pairing
-    def match(players)
-      if players.size < 2
-        log_message("Floodgate: too few players [%d]" % [players.size])
-      else
-        log_message("Floodgate: found %d players. Making games..." % [players.size])
-      end
-    end
-
-    def start_game(p1, p2)
-      p1.sente = true
-      p2.sente = false
-      Game.new(p1.game_name, p1, p2)
-    end
-    
-    def delete_most_playing_player(players)
-      max_player = players.max {|a,b| a.win + a.loss <=> b.win + b.loss}
-      return players.delete(max_player)
-    end
-
-    def delete_least_rate_player(players)
-      min_player = players.min {|a,b| a.rate <=> b.rate}
-      return players.delete(min_player)
-    end
-
-    def pairing_and_start_game(players)
-      return if players.size < 2
-      if players.size % 2 == 1
-        log_warning("#Players should be even: %d" % [players.size])
-        return
-      end
-      sorted = players.sort{ rand < 0.5 ? 1 : -1 }
-
-      pairs = [[sorted.shift]]
-      while !sorted.empty? do
-        if pairs.last.size < 2
-          pairs.last << sorted.shift
-        else
-          pairs << [sorted.shift]
-        end 
-      end
-      pairs.each do |pair|
-        start_game(pair.first, pair.last)
-      end
-    end
-  end # Pairing
-
-  class RandomPairing < Pairing
-    def match(players)
-      super
-      return if players.size < 2
-
-      if players.size % 2 == 1
-        delete_most_playing_player(players)
-      end
-      pairing_and_start_game(players)
-    end
-  end # RadomPairing
-
-  class SwissPairing < Pairing
-    def match(players)
-      super
-      return if players.size < 2
-
-      win_players = players.find_all {|a| a.last_game_win?}
-      remains     = players - win_players
-      if win_players.size >= 2
-        if win_players.size % 2 == 1
-          remains << delete_least_rate_player(win_players)
-        end         
-        pairing_and_start_game(win_players)
-      else
-        remains.concat(win_players)
-      end
-      return if remains.size < 2
-      if remains.size % 2 == 1
-        delete_most_playing_player(remains)
-      end
-      pairing_and_start_game(remains)
-    end
-  end # SwissPairing
-
   class Floodgate
     class << self
       def game_name?(str)
@@ -181,7 +99,6 @@ class League
     def initialize(league)
       @league = league
       @next_time = nil
-      @pairing = SwissPairing.new
       charge
     end
 
@@ -230,7 +147,8 @@ class League
         Floodgate.game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      @pairing.match(players)
+      load File.join(File.dirname(__FILE__), "pairing.rb")
+      Pairing.default_pairing.match(players)
     end
   end # class Floodgate
 
