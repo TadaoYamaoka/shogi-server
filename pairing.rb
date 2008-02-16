@@ -97,7 +97,8 @@ module ShogiServer
       end
       return if remains.size < 2
       if remains.size % 2 == 1
-        delete_most_playing_player(remains)
+        delete_player_at_random(remains)
+        # delete_most_playing_player(remains)
       end
       pairing_and_start_game(remains)
     end
