@@ -44,6 +44,7 @@ class TCPSocket
   def gets_safe(t = nil)
     if (t && t > 0)
       begin
+        return :exception if closed?
         timeout(t) do
           return self.gets
         end
@@ -55,6 +56,7 @@ class TCPSocket
       end
     else
       begin
+        return nil if closed?
         return self.gets
       rescue
         return nil
@@ -556,7 +558,7 @@ class Player < BasicPlayer
       begin
         $mutex.lock
 
-        if (@writer_thread == nil || @writer_thread.status == false)
+        if (@writer_thread == nil || !@writer_thread.status)
           # The writer_thread has been killed because of socket errors.
           return
         end
@@ -2296,7 +2298,7 @@ if ($0 == __FILE__)
   STDOUT.sync = true
   STDERR.sync = true
   TCPSocket.do_not_reverse_lookup = true
-  Thread.abort_on_exception = true
+  Thread.abort_on_exception = false
 
   LEAGUE = ShogiServer::League::new
   main

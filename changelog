@@ -1,3 +1,9 @@
+2008-02-16 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Thread.abort_on_exception is now false, meaning that 
+	    a thread's abort does not affect the others. 
+
 2008-02-14 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
