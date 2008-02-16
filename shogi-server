@@ -1297,7 +1297,7 @@ class Board
         return false
       end
     else                        # gote
-      if ((rival_ou.y != 0) &&
+      if ((rival_ou.y != 1) &&
           (@array[rival_ou.x][rival_ou.y - 1]) &&
           (@array[rival_ou.x][rival_ou.y - 1].name == "FU") &&
           (@array[rival_ou.x][rival_ou.y - 1].sente == sente)) # uchifu true
@@ -1307,9 +1307,8 @@ class Board
         return false
       end
     end
-    
+
     ## case: rival_ou is moving
-    escaped = false
     rival_ou.movable_grids.each do |(cand_x, cand_y)|
       tmp_board = Marshal.load(Marshal.dump(self))
       s = tmp_board.move_to(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU", ! sente)
@@ -1327,17 +1326,30 @@ class Board
         if (@array[x][y] &&
             (@array[x][y].sente != sente) &&
             @array[x][y].movable_grids.include?([fu_x, fu_y])) # capturable
+          
+          names = []
           if (@array[x][y].promoted)
-            name = @array[x][y].promoted_name
+            names << @array[x][y].promoted_name
           else
-            name = @array[x][y].name
+            names << @array[x][y].name
+            if @array[x][y].promoted_name && 
+               @array[x][y].move_to?(fu_x, fu_y, @array[x][y].promoted_name)
+              names << @array[x][y].promoted_name 
+            end
           end
-          tmp_board = Marshal.load(Marshal.dump(self))
-          s = tmp_board.move_to(x, y, fu_x, fu_y, name, ! sente)
-          raise "internal error" if (s != true)
-          if (! tmp_board.checkmated?(! sente)) # good move
-            return false
+          names.map! do |name|
+            tmp_board = Marshal.load(Marshal.dump(self))
+            s = tmp_board.move_to(x, y, fu_x, fu_y, name, ! sente)
+            if s == :illegal
+              s # result
+            else
+              tmp_board.checkmated?(! sente) # result
+            end
           end
+          all_illegal = names.find {|a| a != :illegal}
+          raise "internal error: legal move not found" if all_illegal == nil
+          r = names.find {|a| a == false} # good move
+          return false if r == false # found good move
         end
         y = y + 1
       end

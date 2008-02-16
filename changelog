@@ -3,6 +3,9 @@
 	* [shogi-server]
 	  - Thread.abort_on_exception is now false, meaning that 
 	    a thread's abort does not affect the others. 
+	  - The uchifuzume check did not generate promoting moves, which
+	    could crash the server with illegal moves. This issue has
+	    been fixed.
 
 2008-02-14 Daigo Moriwaki <daigo at debian dot org>
 
