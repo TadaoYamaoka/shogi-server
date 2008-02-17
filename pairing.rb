@@ -37,6 +37,7 @@ module ShogiServer
     end
     
     def delete_most_playing_player(players)
+      # TODO ??? undefined method `<=>' for nil:NilClass
       max_player = players.max {|a,b| a.win + a.loss <=> b.win + b.loss}
       return players.delete(max_player)
     end
@@ -74,7 +75,7 @@ module ShogiServer
       return if players.size < 2
 
       if players.size % 2 == 1
-        delete_most_playing_player(players)
+        delete_player_at_random(players)
       end
       pairing_and_start_game(players)
     end
