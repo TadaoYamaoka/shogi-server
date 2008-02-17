@@ -685,7 +685,7 @@ class Player < BasicPlayer
           rival = nil
           if (League::Floodgate.game_name?(game_name))
             if (my_sente_str != "*")
-              write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n"), my_sente_str, game_name)
+              write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n", my_sente_str, game_name))
               next
             end
             @sente = nil
