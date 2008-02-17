@@ -2310,7 +2310,7 @@ if ($0 == __FILE__)
   STDOUT.sync = true
   STDERR.sync = true
   TCPSocket.do_not_reverse_lookup = true
-  Thread.abort_on_exception = false
+  Thread.abort_on_exception = $DEBUG ? true : false
 
   LEAGUE = ShogiServer::League::new
   main
