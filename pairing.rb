@@ -27,6 +27,10 @@ module ShogiServer
       Game.new(p1.game_name, p1, p2)
     end
 
+    def include_newbie?(players)
+      return players.find{|a| a.rate == 0} == nil ? false : true
+    end
+
     def delete_player_at_random(players)
       return players.delete_at(rand(players.size))
     end
@@ -90,7 +94,11 @@ module ShogiServer
       remains     = players - win_players
       if win_players.size >= 2
         if win_players.size % 2 == 1
-          remains << delete_least_rate_player(win_players)
+          if include_newbie?(win_players)
+            remains << delete_player_at_random(win_players)
+          else
+            remains << delete_least_rate_player(win_players)
+          end
         end         
         pairing_and_start_game(win_players)
       else
