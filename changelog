@@ -1,3 +1,8 @@
+2008-02-21 Daigo Moriwaki <daigo at debian dot org>
+
+	* [util/players-graph.rb]
+	  - Released. Draw a chart for a player's rating score.
+
 2008-02-17 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
