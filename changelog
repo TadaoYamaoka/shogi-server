@@ -1,3 +1,11 @@
+2008-02-23 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - A comment is converted to EUC-JP and then written in a log.
+	    Note that this convertion guesses the input encoding. Clients
+	    are recommended to send EUC-JP compatible strings to the
+	    server.
+
 2008-02-21 Daigo Moriwaki <daigo at debian dot org>
 
 	* [util/players-graph.rb]

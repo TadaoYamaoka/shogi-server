@@ -18,6 +18,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'kconv'
 require 'getoptlong'
 require 'thread'
 require 'timeout'
@@ -589,7 +590,7 @@ class Player < BasicPlayer
             move = array_str.shift
             additional = array_str.shift
             if /^'(.*)/ =~ additional
-              comment = array_str.unshift("'*#{$1}")
+              comment = array_str.unshift("'*#{$1.toeuc}")
             end
             s = @game.handle_one_move(move, self)
             @game.fh.print("#{comment}\n") if (comment && !s)
