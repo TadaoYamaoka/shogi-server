@@ -260,7 +260,8 @@ end
 class Login
   def Login.good_login?(str)
     tokens = str.split
-    if (((tokens.length == 3) || ((tokens.length == 4) && tokens[3] == "x1")) &&
+    if (((tokens.length == 3) || 
+        ((tokens.length == 4) && tokens[3] == "x1")) &&
         (tokens[0] == "LOGIN") &&
         (good_identifier?(tokens[1])))
       return true
@@ -287,7 +288,7 @@ class Login
 
   def Login.factory(str, player)
     (login, player.name, password, ext) = str.chomp.split
-    if (ext)
+    if ext
       return Loginx1.new(player, password)
     else
       return LoginCSA.new(player, password)
@@ -499,10 +500,7 @@ class Player < BasicPlayer
   end
 
   def to_s
-    if ((status == "game_waiting") ||
-        (status == "start_waiting") ||
-        (status == "agree_waiting") ||
-        (status == "game"))
+    if ["game_waiting", "start_waiting", "agree_waiting", "game"].include?(status)
       if (@sente)
         return sprintf("%s %s %s %s +", @name, @protocol, @status, @game_name)
       elsif (@sente == false)
@@ -742,7 +740,8 @@ class Player < BasicPlayer
 end # class
 
 class Piece
-  PROMOTE = {"FU" => "TO", "KY" => "NY", "KE" => "NK", "GI" => "NG", "KA" => "UM", "HI" => "RY"}
+  PROMOTE = {"FU" => "TO", "KY" => "NY", "KE" => "NK", 
+             "GI" => "NG", "KA" => "UM", "HI" => "RY"}
   def initialize(board, x, y, sente, promoted=false)
     @board = board
     @x = x
@@ -1445,7 +1444,6 @@ class Board
       return :illegal
     end
     
-
     if (sg == "+")
       sente = true if sente == nil           # deprecated
       return :illegal unless sente == true   # black player's move must be black
@@ -1585,26 +1583,23 @@ class Game
     end
 
     if (player0.sente)
-      @sente = player0
-      @gote = player1
+      @sente, @gote = player0, player1
     else
-      @sente = player1
-      @gote = player0
+      @sente, @gote = player1, player0
     end
-    @current_player = @sente
-    @next_player = @gote
-
+    @current_player, @next_player = @sente, @gote
     @sente.game = self
-    @gote.game = self
+    @gote.game  = self
 
     @last_move = ""
     @current_turn = 0
 
     @sente.status = "agree_waiting"
-    @gote.status = "agree_waiting"
-    
+    @gote.status  = "agree_waiting"
+
     @id = sprintf("%s+%s+%s+%s+%s", 
-                  LEAGUE.event, @game_name, @sente.name, @gote.name, issue_current_time)
+                  LEAGUE.event, @game_name, 
+                  @sente.name, @gote.name, issue_current_time)
     @logfile = File.join(LEAGUE.dir, @id + ".csa")
 
     LEAGUE.games[@id] = self
@@ -1643,7 +1638,7 @@ class Game
   end
 
   def kill(killer)
-    if ((@sente.status == "agree_waiting") || (@sente.status == "start_waiting"))
+    if ["agree_waiting", "start_waiting"].include?(@sente.status)
       reject(killer.name)
     elsif (@current_player == killer)
       abnormal_lose()
@@ -1676,80 +1671,75 @@ class Game
   end
 
   def handle_one_move(str, player)
+    return nil unless @current_player == player
+
     finish_flag = true
-    if (@current_player == player)
-      @end_time = Time::new
-      t = (@end_time - @start_time).floor
-      t = Least_Time_Per_Move if (t < Least_Time_Per_Move)
-      
-      move_status = nil
-      if ((@current_player.mytime - t <= -@byoyomi) && ((@total_time > 0) || (@byoyomi > 0)))
-        status = :timeout
-      elsif (str == :timeout)
-        return false            # time isn't expired. players aren't swapped. continue game
-      else
-        @current_player.mytime = @current_player.mytime - t
-        if (@current_player.mytime < 0)
-          @current_player.mytime = 0
-        end
-
-#        begin
-          move_status = @board.handle_one_move(str, @sente == @current_player)
-#        rescue
-#          log_error("handle_one_move raise exception for #{str}")
-#          move_status = :illegal
-#        end
-
-        if ((move_status == :illegal) || (move_status == :uchifuzme) || (move_status == :oute_kaihimore))
-          @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
-        else
-          if ((move_status == :normal) || (move_status == :outori) || (move_status == :sennichite) || (move_status == :oute_sennichite_sente_lose) || (move_status == :oute_sennichite_gote_lose))
-            @sente.write_safe(sprintf("%s,T%d\n", str, t))
-            @gote.write_safe(sprintf("%s,T%d\n", str, t))
-            @fh.printf("%s\nT%d\n", str, t)
-            @last_move = sprintf("%s,T%d", str, t)
-            @current_turn = @current_turn + 1
-          end
-
-          @monitors.each do |monitor|
-            monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@id}] "))
-            monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
-          end
-        end
+    @end_time = Time::new
+    t = [(@end_time - @start_time).floor, Least_Time_Per_Move].max
+    
+    move_status = nil
+    if ((@current_player.mytime - t <= -@byoyomi) && 
+        ((@total_time > 0) || (@byoyomi > 0)))
+      status = :timeout
+    elsif (str == :timeout)
+      return false            # time isn't expired. players aren't swapped. continue game
+    else
+      @current_player.mytime -= t
+      if (@current_player.mytime < 0)
+        @current_player.mytime = 0
       end
 
-      if (@next_player.status != "game") # rival is logout or disconnected
-        abnormal_win()
-      elsif (status == :timeout)
-        timeout_lose()
-      elsif (move_status == :illegal)
-        illegal_lose()
-      elsif (move_status == :kachi_win)
-        kachi_win()
-      elsif (move_status == :kachi_lose)
-        kachi_lose()
-      elsif (move_status == :toryo)
-        toryo_lose()
-      elsif (move_status == :outori)
-        outori_win()
-      elsif (move_status == :oute_sennichite_sente_lose)
-        oute_sennichite_win_lose(@gote, @sente) # Sente is checking
-      elsif (move_status == :oute_sennichite_gote_lose)
-        oute_sennichite_win_lose(@sente, @gote) # Gote is checking
-      elsif (move_status == :sennichite)
-        sennichite_draw()
-      elsif (move_status == :uchifuzume)
-        uchifuzume_lose()
-      elsif (move_status == :oute_kaihimore)
-        oute_kaihimore_lose()
+      move_status = @board.handle_one_move(str, @sente == @current_player)
+
+      if [:illegal, :uchifuzme, :oute_kaihimore].include?(move_status)
+        @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
       else
-        finish_flag = false
+        if [:normal, :outori, :sennichite, :oute_sennichite_sente_lose, :oute_sennichite_gote_lose].include?(move_status)
+          @sente.write_safe(sprintf("%s,T%d\n", str, t))
+          @gote.write_safe(sprintf("%s,T%d\n", str, t))
+          @fh.printf("%s\nT%d\n", str, t)
+          @last_move = sprintf("%s,T%d", str, t)
+          @current_turn += 1
+        end
+
+        @monitors.each do |monitor|
+          monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@id}] "))
+          monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
+        end
       end
-      finish() if finish_flag
-      (@current_player, @next_player) = [@next_player, @current_player]
-      @start_time = Time::new
-      return finish_flag
     end
+
+    if (@next_player.status != "game") # rival is logout or disconnected
+      abnormal_win()
+    elsif (status == :timeout)
+      timeout_lose()
+    elsif (move_status == :illegal)
+      illegal_lose()
+    elsif (move_status == :kachi_win)
+      kachi_win()
+    elsif (move_status == :kachi_lose)
+      kachi_lose()
+    elsif (move_status == :toryo)
+      toryo_lose()
+    elsif (move_status == :outori)
+      outori_win()
+    elsif (move_status == :oute_sennichite_sente_lose)
+      oute_sennichite_win_lose(@gote, @sente) # Sente is checking
+    elsif (move_status == :oute_sennichite_gote_lose)
+      oute_sennichite_win_lose(@sente, @gote) # Gote is checking
+    elsif (move_status == :sennichite)
+      sennichite_draw()
+    elsif (move_status == :uchifuzume)
+      uchifuzume_lose()
+    elsif (move_status == :oute_kaihimore)
+      oute_kaihimore_lose()
+    else
+      finish_flag = false
+    end
+    finish() if finish_flag
+    @current_player, @next_player = @next_player, @current_player
+    @start_time = Time::new
+    return finish_flag
   end
 
   def abnormal_win
@@ -2069,8 +2059,8 @@ DESCRIPTION
 OPTIONS
 	--pid-file file
 		specify filename for logging process ID
-    --daemon dir
-        run as a daemon. Log files will be put in dir.
+        --daemon dir
+                run as a daemon. Log files will be put in dir.
 
 LICENSE
 	this file is distributed under GPL version2 and might be compiled by Exerb
@@ -2104,9 +2094,9 @@ end
 
 def parse_command_line
   options = Hash::new
-  parser = GetoptLong.new( ["--daemon",         GetoptLong::REQUIRED_ARGUMENT],
-                           ["--pid-file",       GetoptLong::REQUIRED_ARGUMENT]
-                         )
+  parser = GetoptLong.new(
+    ["--daemon",   GetoptLong::REQUIRED_ARGUMENT],
+    ["--pid-file", GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
