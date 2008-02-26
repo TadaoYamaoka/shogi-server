@@ -29,54 +29,19 @@ require 'digest/md5'
 require 'webrick'
 require 'fileutils'
 
-
-class TCPSocket
-  def gets_timeout(t = Default_Timeout)
-    begin
-      timeout(t) do
-        return self.gets
-      end
-    rescue TimeoutError
-      return nil
-    rescue
-      return nil
-    end
+def gets_safe(socket, timeout=nil)
+  if r = select([socket], nil, nil, timeout)
+    return r[0].first.gets
+  else
+    return :timeout
   end
-  def gets_safe(t = nil)
-    if (t && t > 0)
-      begin
-        return :exception if closed?
-        timeout(t) do
-          return self.gets
-        end
-      rescue TimeoutError
-        return :timeout
-      rescue Exception => ex
-        log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
-        return :exception
-      end
-    else
-      begin
-        return nil if closed?
-        return self.gets
-      rescue
-        return nil
-      end
-    end
-  end
-  def write_safe(str)
-    begin
-      return self.write(str)
-    rescue
-      return nil
-    end
-  end
+rescue Exception => ex
+  log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+  return :exception
 end
-
 
 module ShogiServer # for a namespace
 
-Max_Write_Queue_Size = 1000
 Max_Identifier_Length = 32
 Default_Timeout = 60            # for single socket operation
 
@@ -150,6 +115,7 @@ class League
         Floodgate.game_name?(pl.game_name) &&
         pl.sente == nil
       end
+      log_warning("DEBUG: %s" % [File.join(File.dirname(__FILE__), "pairing.rb")])
       load File.join(File.dirname(__FILE__), "pairing.rb")
       Pairing.default_pairing.match(players)
     end
@@ -208,6 +174,14 @@ class League
     return found.map {|a| a.last}
   end
   
+  def find(player_name)
+    found = nil
+    @mutex.synchronize do
+      found = @players[player_name]
+    end
+    return found
+  end
+
   def get_player(status, game_name, sente, searcher)
     found = nil
     @mutex.synchronize do
@@ -475,28 +449,23 @@ end
 
 
 class Player < BasicPlayer
-  def initialize(str, socket)
+  def initialize(str, socket, eol=nil)
     super()
     @socket = socket
-    @status = "connected"        # game_waiting -> agree_waiting -> start_waiting -> game -> finished
+    @status = "connected"       # game_waiting -> agree_waiting -> start_waiting -> game -> finished
 
     @protocol = nil             # CSA or x1
-    @eol = "\m"                 # favorite eol code
+    @eol = eol || "\m"          # favorite eol code
     @game = nil
     @game_name = ""
     @mytime = 0                 # set in start method also
     @sente = nil
-    @write_queue = Queue::new
     @main_thread = Thread::current
-    @writer_thread = Thread::start do
-      Thread.pass
-      writer()
-    end
   end
 
   attr_accessor :socket, :status
   attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
-  attr_accessor :main_thread, :writer_thread, :write_queue
+  attr_accessor :main_thread
   
   def kill
     log_message(sprintf("user %s killed", @name))
@@ -511,8 +480,6 @@ class Player < BasicPlayer
     if (@status != "finished")
       @status = "finished"
       log_message(sprintf("user %s finish", @name))    
-      # TODO you should confirm that there is no message in the queue.
-      Thread::kill(@writer_thread) if @writer_thread
       begin
 #        @socket.close if (! @socket.closed?)
       rescue
@@ -522,18 +489,12 @@ class Player < BasicPlayer
   end
 
   def write_safe(str)
-    @write_queue.push(str.gsub(/[\r\n]+/, @eol))
-  end
-
-  def writer
-    while (str = @write_queue.pop)
-      begin
-        @socket.write(str)
-      rescue Exception => ex
-        log_error("Failed to send a message to #{@name}.")
-        log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
-        return
-      end
+    begin
+      @socket.write(str)
+    rescue Exception => ex
+      log_error("Failed to send a message to #{@name}.")
+      log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+      # TODO close
     end
   end
 
@@ -555,22 +516,13 @@ class Player < BasicPlayer
   end
 
   def run(csa_1st_str=nil)
-    while (csa_1st_str || (str = @socket.gets_safe(Default_Timeout)))
+    while (csa_1st_str || (str = gets_safe(@socket, Default_Timeout)))
       begin
         $mutex.lock
-
-        if (@writer_thread == nil || !@writer_thread.status)
-          # The writer_thread has been killed because of socket errors.
-          return
-        end
 
         if (csa_1st_str)
           str = csa_1st_str
           csa_1st_str = nil
-        end
-        if (@write_queue.size > Max_Write_Queue_Size)
-          log_warning(sprintf("write_queue of %s is %d", @name, @write_queue.size))
-	        return
         end
 
         if (@status == "finished")
@@ -2192,6 +2144,42 @@ def mutex_watchdog(mutex, sec)
   end
 end
 
+def login_loop(client)
+  player = login = nil
+ 
+  while r = select([client], nil, nil, ShogiServer::Login_Time) do
+    break unless str = r[0].first.gets
+    $mutex.lock # guards LEAGUE
+    begin
+      str =~ /([\r\n]*)$/
+      eol = $1
+      if (ShogiServer::Login::good_login?(str))
+        player = ShogiServer::Player::new(str, client, eol)
+        login  = ShogiServer::Login::factory(str, player)
+        if (current_player = LEAGUE.find(player.name))
+          if (current_player.password == player.password &&
+              current_player.status != "game")
+            log_message(sprintf("user %s login forcely", player.name))
+            current_player.kill
+          else
+            login.incorrect_duplicated_player(str)
+            player = nil
+            break
+          end
+        end
+        LEAGUE.add(player)
+        break
+      else
+        client.write_safe("LOGIN:incorrect" + eol)
+        client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol) if (str.split.length >= 4)
+      end
+    ensure
+      $mutex.unlock
+    end
+  end                       # login loop
+  return [player, login]
+end
+
 def main
 
   $mutex = Mutex::new
@@ -2215,7 +2203,7 @@ def main
     FileUtils.mkdir(dir)
   end
   log_file = dir ? File.join(dir, "shogi-server.log") : STDOUT
-  $logger = WEBrick::Log.new(log_file)
+  $logger = WEBrick::Log.new(log_file) # thread safe
 
   LEAGUE.dir = dir || File.dirname(__FILE__)
   LEAGUE.setup_players_database
@@ -2248,50 +2236,12 @@ def main
       # client.sync = true # this is already set in WEBrick 
       client.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
         # Keepalive time can be set by /proc/sys/net/ipv4/tcp_keepalive_time
-      player = nil
-      login  = nil
-      while (str = client.gets_timeout(ShogiServer::Login_Time))
-        begin
-          $mutex.lock
-          str =~ /([\r\n]*)$/
-          eol = $1
-          if (ShogiServer::Login::good_login?(str))
-            player = ShogiServer::Player::new(str, client)
-            player.eol = eol
-            login  = ShogiServer::Login::factory(str, player)
-            if (LEAGUE.players[player.name])
-              if ((LEAGUE.players[player.name].password == player.password) &&
-                  (LEAGUE.players[player.name].status != "game"))
-                log_message(sprintf("user %s login forcely", player.name))
-                LEAGUE.players[player.name].kill
-              else
-                login.incorrect_duplicated_player(str)
-                #Thread::exit
-                #return
-                # TODO
-                player = nil
-                break
-              end
-            end
-            LEAGUE.add(player)
-            break
-          else
-            client.write_safe("LOGIN:incorrect" + eol)
-            client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol) if (str.split.length >= 4)
-          end
-        ensure
-          $mutex.unlock
-        end
-      end                       # login loop
-      if (! player)
-        #client.close
-        #Thread::exit
-        #return
-        next
-      end
+      player, login = login_loop(client) # loop
+      next unless player
+
       log_message(sprintf("user %s login", player.name))
       login.process
-      player.run(login.csa_1st_str)
+      player.run(login.csa_1st_str) # loop
       begin
         $mutex.lock
         if (player.game)
