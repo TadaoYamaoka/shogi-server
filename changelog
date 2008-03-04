@@ -1,3 +1,10 @@
+2008-03-04 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - If the computed ratings do not stabilize, then mk_rate aborts.
+	      $ ./mk_rate dir && ./mk_rate dir > players.yaml 
+	    can avoid rewriting the invalid ratings to the file.
+
 2008-02-23 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
