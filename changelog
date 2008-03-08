@@ -1,3 +1,9 @@
+2008-03-08 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	- Added an option --wdoor. In this mode, a rate expected at Shogi
+	  Club 24 is calculated from YSS's rating (he is 2400 now). 
+
 2008-03-04 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
@@ -9,7 +15,7 @@
 
 	* [shogi-server]
 	  - A comment is converted to EUC-JP and then written in a log.
-	    Note that this convertion guesses the input encoding. Clients
+	    Note that this conversion guesses the input encoding. Clients
 	    are recommended to send EUC-JP compatible strings to the
 	    server.
 
@@ -37,7 +43,7 @@
 
 	* [shogi-server]
 	  - Added a new pairing variation, Swiss-like style. Winners at the
-	    prevous games (his/her point of view, not the server's) are 
+	    previous games (his/her point of view, not the server's) are 
 	    paired first, and then the others are matched. This is the 
 	    default option now.
 	  - Pairing classes are located in a separate source file,
