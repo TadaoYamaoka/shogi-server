@@ -282,7 +282,8 @@ class Rating
       $stderr.puts "f: %s -> %f" % [f.to_a.inspect, f.nrm2] if $DEBUG
 
       # GSL::Linalg::LU.solve or GSL::Linalg::HH.solve would be available instead.
-      a = GSL::Linalg::HH.solve(j, f)
+      #a = GSL::Linalg::HH.solve(j, f)
+      a, = GSL::MultiFit::linear(j, f)
       a = self.class.average(a)
       # $stderr.puts "a: %s -> %f" % [a.to_a.inspect, a.nrm2] if $DEBUG
       
