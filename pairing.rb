@@ -4,8 +4,8 @@ module ShogiServer
 
     class << self
       def default_pairing
-        return SwissPairing.new
-        #return ExcludeSacrifice.new(SwissPairing.new)
+        #return SwissPairing.new
+        return ExcludeSacrifice.new(SwissPairing.new)
         #return RandomPairing.new
         #return ExcludeSacrifice.new(RandomPairing.new)
       end
