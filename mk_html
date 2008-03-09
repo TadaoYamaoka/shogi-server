@@ -160,7 +160,7 @@ def main
         <%= show_date(last_modified) %> </td>
 % if $wdoor & yss_rate
     <td class="rate">
-        <%= rate != 0 ? "%5d"  % [ 2400 - yss_rate + rate ] : "N/A" %> </td>
+        <%= rate != 0 ? "%5d"  % [ 2300 - yss_rate + rate ] : "N/A" %> </td>
 % end
   </tr>
 % end
