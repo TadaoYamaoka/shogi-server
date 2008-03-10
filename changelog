@@ -1,3 +1,10 @@
+2008-03-10 Daigo Moriwaki <daigo at debian dot org>
+
+	* [util/players-graph.rb]
+	  - Applied Kaneko-san's patch, which also shows expected-rate24
+	    rates.
+	  - Small PNG gets smaller.
+
 2008-03-08 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html]

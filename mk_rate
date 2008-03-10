@@ -694,6 +694,7 @@ def main
   end
   unless validate(yaml)
     $stderr.puts "Aborted. It did not result in valid ratings."
+    $stderr.puts yaml.to_yaml if $DEBUG
     exit 10
   end
   puts yaml.to_yaml
