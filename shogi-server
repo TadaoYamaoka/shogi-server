@@ -1124,6 +1124,7 @@ class Board
     @gote_history  = Hash::new(0)
     @array = [[], [], [], [], [], [], [], [], [], []]
     @move_count = 0
+    @teban = nil # black => true, white => false
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history
   attr_reader :move_count
@@ -1158,6 +1159,7 @@ class Board
     (1..9).each do |i|
       PieceFU::new(self, i, 7, true)
     end
+    @teban = true
   end
 
   def have_piece?(hands, name)
@@ -1196,6 +1198,7 @@ class Board
       @array[x0][y0].move_to(x1, y1)
     end
     @move_count += 1
+    @teban = @teban ? false : true
     return true
   end
 
@@ -1486,7 +1489,6 @@ class Board
     end
 
     move_to(x0, y0, x1, y1, name, sente)
-    str = to_s
 
     update_sennichite(sente)
     return :normal
@@ -1525,7 +1527,7 @@ class Board
       end
       a.push("\n")
     end
-    a.push("+\n")
+    a.push("%s\n" % [@teban ? "+" : "-"])
     return a.join
   end
 end

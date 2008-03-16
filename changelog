@@ -1,3 +1,11 @@
+2008-03-16 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Erroneously, Board#to_s's current player was always Black.
+	    It caused wrong determination of sennichite since it did not
+	    care about the current player of a state. This has been fixed.
+	    Thanks Takada-san for reporting this bug.
+
 2008-03-10 Daigo Moriwaki <daigo at debian dot org>
 
 	* [util/players-graph.rb]
