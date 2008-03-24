@@ -461,12 +461,15 @@ class Player < BasicPlayer
     @game_name = ""
     @mytime = 0                 # set in start method also
     @sente = nil
+    @socket_buffer = []
     @main_thread = Thread::current
+    @mutex_write_guard = Mutex.new
   end
 
   attr_accessor :socket, :status
   attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
   attr_accessor :main_thread
+  attr_reader :socket_buffer
   
   def kill
     log_message(sprintf("user %s killed", @name))
@@ -490,12 +493,18 @@ class Player < BasicPlayer
   end
 
   def write_safe(str)
-    begin
-      @socket.write(str)
-    rescue Exception => ex
-      log_error("Failed to send a message to #{@name}.")
-      log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
-      # TODO close
+    @mutex_write_guard.synchronize do
+      begin
+        if r = select(nil, [@socket], nil, 20)
+          r[1].first.write(str)
+        else
+          log_error("Sending a message to #{@name} timed up.")
+        end
+      rescue Exception => ex
+        log_error("Failed to send a message to #{@name}.")
+        log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+        # TODO close
+      end
     end
   end
 
@@ -514,9 +523,11 @@ class Player < BasicPlayer
   end
 
   def run(csa_1st_str=nil)
-    while (csa_1st_str || (str = gets_safe(@socket, Default_Timeout)))
+    while (csa_1st_str || 
+           str = @socket_buffer.shift || gets_safe(@socket, Default_Timeout))
+      $mutex.lock
       begin
-        $mutex.lock
+        log_message(str) if $DEBUG
 
         if (csa_1st_str)
           str = csa_1st_str
@@ -527,7 +538,6 @@ class Player < BasicPlayer
           return
         end
         str.chomp! if (str.class == String) # may be strip! ?
-        log_message(str) if $DEBUG
         case str 
         when "" 
           # Application-level protocol for Keep-Alive
@@ -543,7 +553,7 @@ class Player < BasicPlayer
               comment = array_str.unshift("'*#{$1.toeuc}")
             end
             s = @game.handle_one_move(move, self)
-            @game.fh.print("#{comment}\n") if (comment && !s)
+            @game.fh.print("#{Kconv.toeuc(comment.first)}\n") if (comment && comment.first && !s)
             return if (s && @protocol == LoginCSA::PROTOCOL)
           end
         when /^%[^%]/, :timeout
@@ -734,6 +744,9 @@ class Player < BasicPlayer
         end
       ensure
         $mutex.unlock
+      end
+      unless @socket_buffer.empty?
+        sleep 10
       end
     end # enf of while
   end # def run
@@ -1589,6 +1602,8 @@ class Game
     else
       @sente, @gote = player1, player0
     end
+    @sente.socket_buffer.clear
+    @gote.socket_buffer.clear
     @current_player, @next_player = @sente, @gote
     @sente.game = self
     @gote.game  = self
@@ -1672,8 +1687,16 @@ class Game
     LEAGUE.games.delete(@id)
   end
 
+  # class Game
   def handle_one_move(str, player)
-    return nil unless @current_player == player
+    unless @current_player == player
+      @fh.puts("'Skipped %s" % [str])
+      log_warning("Skipped a move [%s] scince it is not %s 's turn." %
+                  [str, player.name])
+      player.socket_buffer.unshift(str)
+      Thread.pass
+      return nil
+    end
 
     finish_flag = true
     @end_time = Time::new
@@ -1697,6 +1720,7 @@ class Game
         @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
       else
         if [:normal, :outori, :sennichite, :oute_sennichite_sente_lose, :oute_sennichite_gote_lose].include?(move_status)
+          # Thinking time includes network traffic
           @sente.write_safe(sprintf("%s,T%d\n", str, t))
           @gote.write_safe(sprintf("%s,T%d\n", str, t))
           @fh.printf("%s\nT%d\n", str, t)

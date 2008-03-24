@@ -1,3 +1,14 @@
+2008-03-24 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Converting characters for comments in moves caused an error. This 
+	    issue has been fixed.
+	  - If a player moves in the opponent's turn, it is illegal. But the
+	    current CSA protocol does not clearly define a way to tell so to 
+	    the players. This shogi-server internally keeps such a move in a
+	    buffer and replay it when the player of the move gets his/her 
+	    turn.
+
 2008-03-16 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
