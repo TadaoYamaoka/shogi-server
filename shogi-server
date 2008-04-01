@@ -2186,8 +2186,8 @@ def login_loop(client)
         LEAGUE.add(player)
         break
       else
-        client.write_safe("LOGIN:incorrect" + eol)
-        client.write_safe("type 'LOGIN name password' or 'LOGIN name password x1'" + eol) if (str.split.length >= 4)
+        client.write("LOGIN:incorrect" + eol)
+        client.write("type 'LOGIN name password' or 'LOGIN name password x1'" + eol) if (str.split.length >= 4)
       end
     ensure
       $mutex.unlock
