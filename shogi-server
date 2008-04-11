@@ -495,15 +495,17 @@ class Player < BasicPlayer
   def write_safe(str)
     @mutex_write_guard.synchronize do
       begin
+        if @socket.closed?
+          log_warning("%s's socket has been closed." % [@name])
+          return
+        end
         if r = select(nil, [@socket], nil, 20)
           r[1].first.write(str)
         else
           log_error("Sending a message to #{@name} timed up.")
         end
       rescue Exception => ex
-        log_error("Failed to send a message to #{@name}.")
-        log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
-        # TODO close
+        log_error("Failed to send a message to #{@name}. #{ex.class}: #{ex.message}\t#{ex.backtrace[0]}")
       end
     end
   end
@@ -523,11 +525,15 @@ class Player < BasicPlayer
   end
 
   def run(csa_1st_str=nil)
-    while (csa_1st_str || 
-           str = @socket_buffer.shift || gets_safe(@socket, Default_Timeout))
+    while ( csa_1st_str || 
+            str = gets_safe(@socket, (@socket_buffer.empty? ? Default_Timeout : 1)) )
       $mutex.lock
       begin
-        log_message(str) if $DEBUG
+        if (@game && @game.turn?(self))
+          @socket_buffer << str
+          str = @socket_buffer.shift
+        end
+        log_message("%s (%s)" % [str, @socket_buffer.map {|a| String === a ? a.strip : a }.join(",")]) if $DEBUG
 
         if (csa_1st_str)
           str = csa_1st_str
@@ -744,9 +750,6 @@ class Player < BasicPlayer
         end
       ensure
         $mutex.unlock
-      end
-      unless @socket_buffer.empty?
-        sleep 10
       end
     end # enf of while
   end # def run
@@ -1639,6 +1642,10 @@ class Game
     @sente.rated? && @gote.rated?
   end
 
+  def turn?(player)
+    return player.status == "game" && @current_player == player
+  end
+
   def monitoron(monitor)
     @monitors.delete(monitor)
     @monitors.push(monitor)
@@ -1689,12 +1696,13 @@ class Game
 
   # class Game
   def handle_one_move(str, player)
-    unless @current_player == player
-      @fh.puts("'Skipped %s" % [str])
-      log_warning("Skipped a move [%s] scince it is not %s 's turn." %
+    unless turn?(player)
+      return false if str == :timeout
+
+      @fh.puts("'Deferred %s" % [str])
+      log_warning("Deferred a move [%s] scince it is not %s 's turn." %
                   [str, player.name])
-      player.socket_buffer.unshift(str)
-      Thread.pass
+      player.socket_buffer << str # always in the player's thread
       return nil
     end
 

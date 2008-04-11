@@ -1,3 +1,9 @@
+2008-04-11 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Improved a way to handle diferred moves (2008-03-24's change),
+	    based on Tomoyuki Kaneko's patch.
+
 2008-04-01 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
