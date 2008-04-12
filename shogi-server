@@ -145,7 +145,7 @@ class League
   end
 
   def add(player)
-    self.load(player) if player.id
+    self.load(player) if player.player_id
     @mutex.synchronize do
       @players[player.name] = player
     end
@@ -198,7 +198,7 @@ class League
   end
   
   def load(player)
-    hash = search(player.id)
+    hash = search(player.player_id)
     return unless hash
 
     # a current user
@@ -215,7 +215,7 @@ class League
     @db.transaction do
       break unless  @db["players"]
       @db["players"].each do |group, players|
-        hash = players[player.id]
+        hash = players[player.player_id]
         if hash
           hash['last_game_win'] = player.last_game_win
           break
@@ -224,12 +224,12 @@ class League
     end
   end
 
-  def search(id)
+  def search(player_id)
     hash = nil
     @db.transaction(true) do
       break unless  @db["players"]
       @db["players"].each do |group, players|
-        hash = players[id]
+        hash = players[player_id]
         break if hash
       end
     end
@@ -244,9 +244,9 @@ class League
         players << players_hash.keys
       end
     end
-    return players.flatten.collect do |id|
+    return players.flatten.collect do |player_id|
       p = BasicPlayer.new
-      p.id = id
+      p.player_id = player_id
       self.load(p)
       p
     end
@@ -377,14 +377,14 @@ end
 
 class BasicPlayer
   def initialize
-    @id = nil
+    @player_id = nil
     @name = nil
     @password = nil
     @last_game_win = false
   end
 
   # Idetifier of the player in the rating system
-  attr_accessor :id
+  attr_accessor :player_id
 
   # Name of the player
   attr_accessor :name
@@ -419,14 +419,14 @@ class BasicPlayer
   end
 
   def rated?
-    @id != nil
+    @player_id != nil
   end
 
   def last_game_win?
     return @last_game_win
   end
 
-  def simple_id
+  def simple_player_id
     if @trip
       simple_name = @name.gsub(/@.*?$/, '')
       "%s+%s" % [simple_name, @trip[0..8]]
@@ -436,14 +436,14 @@ class BasicPlayer
   end
 
   ##
-  # Parses str in the LOGIN command, sets up @id and @trip
+  # Parses str in the LOGIN command, sets up @player_id and @trip
   #
   def set_password(str)
     if str && !str.empty?
       @password = str.strip
-      @id   = "%s+%s" % [@name, Digest::MD5.hexdigest(@password)]
+      @player_id   = "%s+%s" % [@name, Digest::MD5.hexdigest(@password)]
     else
-      @id = @password = nil
+      @player_id = @password = nil
     end
   end
 end
@@ -622,7 +622,7 @@ class Player < BasicPlayer
           players = LEAGUE.rated_players
           players.sort {|a,b| b.rate <=> a.rate}.each do |p|
             write_safe("##[RATING] %s \t %4d @%s\n" % 
-                       [p.simple_id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
+                       [p.simple_player_id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
           end
           write_safe("##[RATING] +OK\n")
         when /^%%VERSION/
@@ -1574,8 +1574,8 @@ class GameResultWin < GameResult
   end
 
   def to_s
-    black_name = @black.id || @black.name
-    white_name = @white.id || @white.name
+    black_name = @black.player_id || @black.name
+    white_name = @white.player_id || @white.name
     "%s:%s" % [black_name, white_name]
   end
 end
@@ -1617,14 +1617,14 @@ class Game
     @sente.status = "agree_waiting"
     @gote.status  = "agree_waiting"
 
-    @id = sprintf("%s+%s+%s+%s+%s", 
+    @game_id = sprintf("%s+%s+%s+%s+%s", 
                   LEAGUE.event, @game_name, 
                   @sente.name, @gote.name, issue_current_time)
-    @logfile = File.join(LEAGUE.dir, @id + ".csa")
+    @logfile = File.join(LEAGUE.dir, @game_id + ".csa")
 
-    LEAGUE.games[@id] = self
+    LEAGUE.games[@game_id] = self
 
-    log_message(sprintf("game created %s", @id))
+    log_message(sprintf("game created %s", @game_id))
 
     @board = Board::new
     @board.initial
@@ -1634,7 +1634,7 @@ class Game
 
     propose
   end
-  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :id, :board, :current_player, :next_player, :fh, :monitors
+  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors
   attr_accessor :last_move, :current_turn
   attr_reader   :result
 
@@ -1656,8 +1656,8 @@ class Game
   end
 
   def reject(rejector)
-    @sente.write_safe(sprintf("REJECT:%s by %s\n", @id, rejector))
-    @gote.write_safe(sprintf("REJECT:%s by %s\n", @id, rejector))
+    @sente.write_safe(sprintf("REJECT:%s by %s\n", @game_id, rejector))
+    @gote.write_safe(sprintf("REJECT:%s by %s\n", @game_id, rejector))
     finish
   end
 
@@ -1671,7 +1671,7 @@ class Game
   end
 
   def finish
-    log_message(sprintf("game finished %s", @id))
+    log_message(sprintf("game finished %s", @game_id))
     @fh.printf("'$END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))    
     @fh.close
 
@@ -1691,7 +1691,7 @@ class Game
     @gote = nil
     @current_player = nil
     @next_player = nil
-    LEAGUE.games.delete(@id)
+    LEAGUE.games.delete(@game_id)
   end
 
   # class Game
@@ -1737,8 +1737,8 @@ class Game
         end
 
         @monitors.each do |monitor|
-          monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@id}] "))
-          monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @id))
+          monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@game_id}] "))
+          monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @game_id))
         end
       end
     end
@@ -1787,7 +1787,7 @@ class Game
     @result = GameResultWin.new(@current_player, @next_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @game_id))
     end
   end
 
@@ -1802,7 +1802,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @game_id))
     end
   end
 
@@ -1816,7 +1816,7 @@ class Game
     @result = GameResultDraw.new(@current_player, @next_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @game_id))
     end
   end
 
@@ -1834,7 +1834,7 @@ class Game
     @result = GameResultWin.new(winner, loser)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @game_id))
     end
   end
 
@@ -1848,7 +1848,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
     end
   end
 
@@ -1862,7 +1862,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
     end
   end
 
@@ -1876,7 +1876,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
     end
   end
 
@@ -1890,7 +1890,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @game_id))
     end
   end
 
@@ -1905,7 +1905,7 @@ class Game
     @result = GameResultWin.new(@current_player, @next_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @game_id))
     end
   end
 
@@ -1920,7 +1920,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @game_id))
     end
   end
 
@@ -1935,7 +1935,7 @@ class Game
     @result = GameResultWin.new(@next_player, @current_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @game_id))
     end
   end
 
@@ -1949,14 +1949,14 @@ class Game
     @result = GameResultWin.new(@current_player, @next_player)
     @fh.printf("'rating:#{@result.to_s}\n") if rated?
     @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @id))
+      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
     end
   end
 
   def start
-    log_message(sprintf("game started %s", @id))
-    @sente.write_safe(sprintf("START:%s\n", @id))
-    @gote.write_safe(sprintf("START:%s\n", @id))
+    log_message(sprintf("game started %s", @game_id))
+    @sente.write_safe(sprintf("START:%s\n", @game_id))
+    @gote.write_safe(sprintf("START:%s\n", @game_id))
     @sente.mytime = @total_time
     @gote.mytime = @total_time
     @start_time = Time::new
@@ -1969,7 +1969,7 @@ class Game
     @fh.puts("V2")
     @fh.puts("N+#{@sente.name}")
     @fh.puts("N-#{@gote.name}")
-    @fh.puts("$EVENT:#{@id}")
+    @fh.puts("$EVENT:#{@game_id}")
 
     @sente.write_safe(propose_message("+"))
     @gote.write_safe(propose_message("-"))
@@ -1997,7 +1997,7 @@ Protocol_Version:1.1
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
-Game_ID:#{@id}
+Game_ID:#{@game_id}
 Name+:#{@sente.name}
 Name-:#{@gote.name}
 Rematch_On_Draw:NO
@@ -2030,7 +2030,7 @@ Protocol_Version:1.1
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
-Game_ID:#{@id}
+Game_ID:#{@game_id}
 Name+:#{@sente.name}
 Name-:#{@gote.name}
 Your_Turn:#{sg_flag}

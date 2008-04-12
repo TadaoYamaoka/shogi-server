@@ -124,9 +124,9 @@ module ShogiServer
     def match(players)
       if @sacrifice && 
          players.size % 2 == 1 && 
-         players.find{|a| a.id == @sacrifice}
+         players.find{|a| a.player_id == @sacrifice}
         log_message("Floodgate: first, exclude %s" % [@sacrifice])
-        players.delete_if{|a| a.id == @sacrifice}
+        players.delete_if{|a| a.player_id == @sacrifice}
       end
       @pairing.match(players)
     end

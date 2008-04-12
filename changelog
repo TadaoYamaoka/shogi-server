@@ -1,3 +1,8 @@
+2008-04-12 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Renamed variables (@id) since they caused Ruby's warning.
+
 2008-04-11 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
