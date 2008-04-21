@@ -51,6 +51,7 @@
 
 require 'yaml'
 require 'time'
+require 'getoptlong'
 require 'gsl'
 require 'rubygems'
 require 'rgl/adjacency'
@@ -538,12 +539,11 @@ end
 # Half-life effect
 # After NHAFE_LIFE days value will get half.
 # 0.693 is constant, where exp(0.693) ~ 0.5
-NHALF_LIFE=60
 def half_life(days)
-  if days < 7
+  if days < $options["half-life-ignore"]
     return 1.0
   else
-    Math::exp(-0.693/NHALF_LIFE*(days-7))
+    Math::exp(-0.693/$options["half-life"]*(days-$options["half-life-ignore"]))
   end
 end
 
@@ -634,8 +634,43 @@ def validate(yaml)
   return true
 end
 
+def usage(io)
+    io.puts <<EOF
+USAGE: #{$0} [options] DIR..
+  DIR                where CSA files are looked up recursively
+OPTOINS:
+  --half-life        n [days] (default 60)
+  --half-life-ignore m [days] (default  7)
+                     after m days, half-life effect works
+  --help             show this message
+EOF
+end
+
 def main
-  usage if ARGV.empty?
+  $options = Hash::new
+  parser = GetoptLong.new(
+    ["--half-life",          GetoptLong::REQUIRED_ARGUMENT],
+    ["--half-life-ignore",   GetoptLong::REQUIRED_ARGUMENT],
+    ["--help", "-h",         GetoptLong::NO_ARGUMENT])
+  parser.quiet = true
+  begin
+    parser.each_option do |name, arg|
+      name.sub!(/^--/, '')
+      $options[name] = arg.dup
+    end
+  rescue
+    usage($stderr)
+    raise parser.error_message
+  end
+  if $options["help"]
+    usage($stdout) 
+    exit 0
+  end
+  $options["half-life"] ||= 60
+  $options["half-life"] = $options["half-life"].to_i
+  $options["half-life-ignore"] ||= 7
+  $options["half-life-ignore"] = $options["half-life-ignore"].to_i
+
   while dir = ARGV.shift do
     Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
   end

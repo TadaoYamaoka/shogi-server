@@ -1,3 +1,9 @@
+2008-04-21 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - The half-life period is now configurable.
+	    ex $ ./mk_rate --half-life 14 --half-life-ignore 7 <records>
+
 2008-04-12 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
