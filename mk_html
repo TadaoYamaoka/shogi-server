@@ -158,9 +158,9 @@ def main
         <%= "%.3f" % [win_rate] %> </td>
     <td class="last_modified">
         <%= show_date(last_modified) %> </td>
-% if $wdoor & yss_rate
+% if $wdoor
     <td class="rate">
-        <%= rate != 0 ? "%5d"  % [ 2300 - yss_rate + rate ] : "N/A" %> </td>
+        <%= rate != 0 && yss_rate > 0 ? ("%5d"  % [2300 - yss_rate + rate]) : "N/A" %> </td>
 % end
   </tr>
 % end

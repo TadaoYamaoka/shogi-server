@@ -1,3 +1,10 @@
+2008-04-22 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	  - When YSS was not rated on the wdoor mode, wrong rate24 scores
+	    were displayed. This issue has been fixed. Now YSS absence 
+	    results in "N/A".
+
 2008-04-21 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
