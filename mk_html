@@ -118,9 +118,10 @@ def main
     
     player_decoration = "default"
 
-    case (Time.now - last_modified)/(60*60*24)
-    when (0..1) then player_decoration = "today"
-    when (0..7) then player_decoration = "this_week"
+    case (Time.now - last_modified)/60 # minutes
+    when (0..30)        then player_decoration = "current"
+    when (0..(1*60*24)) then player_decoration = "today"
+    when (0..(7*60*24)) then player_decoration = "this_week"
     end
     
     case key
@@ -204,8 +205,9 @@ __END__
     .rate, .ngames, .win_rate {text-align: right;}
     .last_modified {text-align: center;}
     .gps, .yowai_gps {background-color: lightgreen;}
-    .today     {background-color: #FFD700;}
-    .this_week {background-color: #FFDAB9;}
+    .current   {background-color: #FFFF00;}
+    .today     {background-color: #FFFF77;}
+    .this_week {background-color: #FFFFAA;}
 
     #bd {text-align: center;}
     #ft {text-align: right;}

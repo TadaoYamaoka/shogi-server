@@ -1,3 +1,9 @@
+2008-05-03 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	- Show players who have accessed in the last 30 minutes with 
+	  different colors.
+
 2008-04-22 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html]
