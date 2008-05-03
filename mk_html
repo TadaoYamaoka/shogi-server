@@ -42,7 +42,14 @@ require 'erb'
 include ERB::Util
 
 def show_date(time)
-  time.strftime("%Y-%m-%d")
+  if (Time.now - time < 30*60)
+    return "on line"
+  elsif (Time.now - time < 24*60*60)
+    return time.strftime("%Y-%m-%d")
+    # return "%d hours ago" % [(Time.now - time)/3600]
+  else
+    return time.strftime("%Y-%m-%d")
+  end
 end
 
 def usage
@@ -205,8 +212,8 @@ __END__
     .rate, .ngames, .win_rate {text-align: right;}
     .last_modified {text-align: center;}
     .gps, .yowai_gps {background-color: lightgreen;}
-    .current   {background-color: #FFFF00;}
-    .today     {background-color: #FFFF77;}
+    .current   {background-color: #FFD700;}
+    .today     {background-color: #FFFF00;}
     .this_week {background-color: #FFFFAA;}
 
     #bd {text-align: center;}
