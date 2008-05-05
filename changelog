@@ -1,3 +1,10 @@
+2008-05-05 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	- .csa files will be located in a sub directory such as
+	  "2008/05/05/*.csa". Thease days, we have many games in a day. 
+	  This change will help users browse a file list.
+
 2008-05-03 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html]

@@ -1620,7 +1620,14 @@ class Game
     @game_id = sprintf("%s+%s+%s+%s+%s", 
                   LEAGUE.event, @game_name, 
                   @sente.name, @gote.name, issue_current_time)
-    @logfile = File.join(LEAGUE.dir, @game_id + ".csa")
+    
+    now = Time.now
+    log_dir_name = File.join(LEAGUE.dir, 
+                             now.strftime("%Y"),
+                             now.strftime("%m"),
+                             now.strftime("%d"))
+    FileUtils.mkdir_p(log_dir_name) unless File.exist?(log_dir_name)
+    @logfile = File.join(log_dir_name, @game_id + ".csa")
 
     LEAGUE.games[@game_id] = self
 
