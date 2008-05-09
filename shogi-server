@@ -1731,7 +1731,7 @@ class Game
 
       move_status = @board.handle_one_move(str, @sente == @current_player)
 
-      if [:illegal, :uchifuzme, :oute_kaihimore].include?(move_status)
+      if [:illegal, :uchifuzume, :oute_kaihimore].include?(move_status)
         @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
       else
         if [:normal, :outori, :sennichite, :oute_sennichite_sente_lose, :oute_sennichite_gote_lose].include?(move_status)

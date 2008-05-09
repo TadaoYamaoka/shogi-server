@@ -1,3 +1,9 @@
+2008-05-10 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	- The server could not recognize uchifuzume as an illegal move.
+	  This bug has been fixed.
+
 2008-05-05 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
