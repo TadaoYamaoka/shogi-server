@@ -121,6 +121,74 @@ class League
     end
   end # class Floodgate
 
+  #
+  # This manages those players who have their player_id.
+  # Since mk_rate mainly updates the yaml file, basically,
+  # this only reads data. But this writes some properties.
+  # TODO Such data should be facoted out to another file
+  #
+  class Persistent
+    def initialize(filename)
+      @db = YAML::Store.new(filename)
+      @db.transaction do |pstore|
+        @db['players'] ||= Hash.new
+      end
+    end
+
+    def load_player(player)
+      return unless player.player_id
+
+      hash = nil
+      @db.transaction(true) do
+        @db["players"].each do |group, players|
+          hash = players[player.player_id]
+          break if hash
+        end
+      end
+      return unless hash
+
+      # a current user
+      player.name          = hash['name']
+      player.rate          = hash['rate'] || 0
+      player.modified_at   = hash['last_modified']
+      player.rating_group  = hash['rating_group']
+      player.win           = hash['win']  || 0
+      player.loss          = hash['loss'] || 0
+      player.last_game_win = hash['last_game_win'] || false
+    end
+
+    def save(player)
+      return unless player.player_id
+
+      @db.transaction do
+        @db["players"].each do |group, players|
+          hash = players[player.player_id]
+          if hash
+            # write only this property. 
+            # the others are updated by ./mk_rate
+            hash['last_game_win'] = player.last_game_win
+            break
+          end
+        end
+      end
+    end
+
+    def get_players
+      players = []
+      @db.transaction(true) do
+        @db["players"].each do |group, players_hash|
+          players << players_hash.keys
+        end
+      end
+      return players.flatten.collect do |player_id|
+        p = BasicPlayer.new
+        p.player_id = player_id
+        load_player(p)
+        p
+      end
+    end
+  end
+
   def initialize
     @mutex = Mutex.new # guard @players
     @games = Hash::new
@@ -134,33 +202,38 @@ class League
 
   def shutdown
     @mutex.synchronize do
-      @players.each {|a| save(a)}
+      @players.each do |name, player| 
+        @persistent.save(player)
+      end
     end
     @floodgate.shutdown
   end
 
   # this should be called just after instanciating a League object.
   def setup_players_database
-    @db = YAML::Store.new(File.join(@dir, "players.yaml"))
+    filename = File.join(@dir, "players.yaml")
+    @persistent = Persistent.new(filename)
   end
 
   def add(player)
-    self.load(player) if player.player_id
+    @persistent.load_player(player)
     @mutex.synchronize do
       @players[player.name] = player
     end
   end
   
   def delete(player)
+    @persistent.save(player)
     @mutex.synchronize do
-      save(player)
       @players.delete(player.name)
     end
   end
 
   def reload
     @mutex.synchronize do
-      @players.each {|player| load(player)}
+      @players.each do |name, player| 
+        @persistent.load_player(player)
+      end
     end
   end
 
@@ -197,59 +270,8 @@ class League
     return found ? found.last : nil
   end
   
-  def load(player)
-    hash = search(player.player_id)
-    return unless hash
-
-    # a current user
-    player.name          = hash['name']
-    player.rate          = hash['rate'] || 0
-    player.modified_at   = hash['last_modified']
-    player.rating_group  = hash['rating_group']
-    player.win           = hash['win']  || 0
-    player.loss          = hash['loss'] || 0
-    player.last_game_win = hash['last_game_win'] || false
-  end
-
-  def save(player)
-    @db.transaction do
-      break unless  @db["players"]
-      @db["players"].each do |group, players|
-        hash = players[player.player_id]
-        if hash
-          hash['last_game_win'] = player.last_game_win
-          break
-        end
-      end
-    end
-  end
-
-  def search(player_id)
-    hash = nil
-    @db.transaction(true) do
-      break unless  @db["players"]
-      @db["players"].each do |group, players|
-        hash = players[player_id]
-        break if hash
-      end
-    end
-    hash
-  end
-
   def rated_players
-    players = []
-    @db.transaction(true) do
-      break unless  @db["players"]
-      @db["players"].each do |group, players_hash|
-        players << players_hash.keys
-      end
-    end
-    return players.flatten.collect do |player_id|
-      p = BasicPlayer.new
-      p.player_id = player_id
-      self.load(p)
-      p
-    end
+    return @persistent.get_players
   end
 end
 

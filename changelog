@@ -1,21 +1,23 @@
 2008-05-10 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
-	- The server could not recognize uchifuzume as an illegal move.
-	  This bug has been fixed.
+	  - The server could not recognize uchifuzume as an illegal move.
+	    This bug has been fixed.
+	  - The server crashed by an undefined method error.
+	    This issue has been fixed.
 
 2008-05-05 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
-	- .csa files will be located in a sub directory such as
-	  "2008/05/05/*.csa". Thease days, we have many games in a day. 
-	  This change will help users browse a file list.
+	  - .csa files will be located in a sub directory such as
+	    "2008/05/05/*.csa". Thease days, we have many games in a day. 
+	    This change will help users browse a file list.
 
 2008-05-03 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html]
-	- Show players who have accessed in the last 30 minutes with 
-	  different colors.
+	  - Show players who have accessed in the last 30 minutes with 
+	    different colors.
 
 2008-04-22 Daigo Moriwaki <daigo at debian dot org>
 
