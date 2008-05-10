@@ -82,7 +82,7 @@ class League
             charge
           rescue Exception => ex 
             # ignore errors
-            log_error("[in Floodgate's thread] #{ex}")
+            log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
           end
         end
       end
