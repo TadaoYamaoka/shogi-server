@@ -94,11 +94,11 @@ module ShogiServer
       remains     = players - win_players
       if win_players.size >= 2
         if win_players.size % 2 == 1
-          if include_newbie?(win_players)
+#          if include_newbie?(win_players)
             remains << delete_player_at_random(win_players)
-          else
-            remains << delete_least_rate_player(win_players)
-          end
+#          else
+#            remains << delete_least_rate_player(win_players)
+#          end
         end         
         pairing_and_start_game(win_players)
       else
