@@ -1,3 +1,10 @@
+2008-05-13 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Floodgate's thread could cause an error when players.yaml was
+	    cleared by another program (mk_rate). This issue has been 
+	    fixed.
+
 2008-05-10 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -135,15 +135,25 @@ class League
       end
     end
 
+    #
+    # trancaction=true means read only
+    #
+    def each_group(transaction=false)
+      @db.transaction(transaction) do
+        groups = @db["players"] || Hash.new
+        groups.each do |group, players|
+          yield group,players
+        end
+      end
+    end
+
     def load_player(player)
       return unless player.player_id
 
       hash = nil
-      @db.transaction(true) do
-        @db["players"].each do |group, players|
-          hash = players[player.player_id]
-          break if hash
-        end
+      each_group(true) do |group, players|
+        hash = players[player.player_id]
+        break if hash
       end
       return unless hash
 
@@ -160,25 +170,21 @@ class League
     def save(player)
       return unless player.player_id
 
-      @db.transaction do
-        @db["players"].each do |group, players|
-          hash = players[player.player_id]
-          if hash
-            # write only this property. 
-            # the others are updated by ./mk_rate
-            hash['last_game_win'] = player.last_game_win
-            break
-          end
+      each_group do |group, players|
+        hash = players[player.player_id]
+        if hash
+          # write only this property. 
+          # the others are updated by ./mk_rate
+          hash['last_game_win'] = player.last_game_win
+          break
         end
       end
     end
 
     def get_players
       players = []
-      @db.transaction(true) do
-        @db["players"].each do |group, players_hash|
-          players << players_hash.keys
-        end
+      each_group(true) do |group, players_hash|
+        players << players_hash.keys
       end
       return players.flatten.collect do |player_id|
         p = BasicPlayer.new
@@ -187,7 +193,7 @@ class League
         p
       end
     end
-  end
+  end # class Persistent
 
   def initialize
     @mutex = Mutex.new # guard @players
