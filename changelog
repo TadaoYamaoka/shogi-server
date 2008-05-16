@@ -1,3 +1,8 @@
+2008-05-16 Daigo Moriwaki <daigo at debian dot org>
+
+	* [news]
+	  - The repository has been converted from CVS to Subversion.
+
 2008-05-13 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
