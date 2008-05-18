@@ -1,5 +1,6 @@
+$:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
-load '../shogi-server/shogi-server'
+load 'shogi-server'
 require 'fileutils'
 
 class TestPersistent < Test::Unit::TestCase
@@ -47,11 +48,11 @@ class TestPersistent < Test::Unit::TestCase
     persistent.load_player(p)
 
     assert_equal(p.name, "gps_normal")
-    assert_equal(p.rate, -1752.0)
+    assert_in_delta(p.rate, -1752.0, 0.1)
     assert_equal(p.modified_at.to_s, "Thu May 08 23:50:54 +0900 2008")
     assert_equal(p.rating_group, 0)
-    assert_equal(p.win, 3384.04877829976)
-    assert_equal(p.loss, 906.949084230512)
+    assert_in_delta(p.win, 3384.04877829976,  0.00001)
+    assert_in_delta(p.loss, 906.949084230512, 0.00001)
   end
 
   def test_get_players

@@ -1,4 +1,5 @@
-load '../shogi-server/mk_rate'
+$:.unshift File.join(File.dirname(__FILE__), "..")
+load 'mk_rate'
 require 'test/unit'
 
 class RatingTest < Test::Unit::TestCase

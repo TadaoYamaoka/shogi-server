@@ -1,6 +1,6 @@
 ## $Id$
 
-$:.unshift File.join(File.dirname(__FILE__), "..", "shogi-server")
+$:.unshift File.join(File.dirname(__FILE__), "..")
 load    'shogi-server'
 require 'test/unit'
 

@@ -1,6 +1,7 @@
+$:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
-load '../shogi-server/shogi-server'
-require '../shogi-server/pairing' 
+load 'shogi-server'
+require 'pairing' 
 
 class MockLogger
   def debug(str)
