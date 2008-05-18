@@ -52,7 +52,7 @@ Least_Time_Per_Move = 1
 Login_Time = 300                # time for LOGIN
 
 Release  = "$Id$"
-Revision = /Revision: (\d+)/.match("$Revision$")[1]
+Revision = (r = /Revision: (\d+)/.match("$Revision$") ? r[1] : 0)
 
 class League
 
@@ -232,6 +232,10 @@ class League
     @mutex.synchronize do
       @players.delete(player.name)
     end
+  end
+
+  def save(player)
+    @persistent.save(player)
   end
 
   def reload
@@ -543,14 +547,14 @@ class Player < BasicPlayer
   def to_s
     if ["game_waiting", "start_waiting", "agree_waiting", "game"].include?(status)
       if (@sente)
-        return sprintf("%s %s %s %s +", @name, @protocol, @status, @game_name)
+        return sprintf("%s %s %s %s +", rated? ? @player_id : @name, @protocol, @status, @game_name)
       elsif (@sente == false)
-        return sprintf("%s %s %s %s -", @name, @protocol, @status, @game_name)
+        return sprintf("%s %s %s %s -", rated? ? @player_id : @name, @protocol, @status, @game_name)
       elsif (@sente == nil)
-        return sprintf("%s %s %s %s *", @name, @protocol, @status, @game_name)
+        return sprintf("%s %s %s %s *", rated? ? @player_id : @name, @protocol, @status, @game_name)
       end
     else
-      return sprintf("%s %s %s", @name, @protocol, @status)
+      return sprintf("%s %s %s", rated? ? @player_id : @name, @protocol, @status)
     end
   end
 
@@ -596,14 +600,6 @@ class Player < BasicPlayer
           if (@status == "game")
             s = @game.handle_one_move(str, self)
             return if (s && @protocol == LoginCSA::PROTOCOL)
-          # else
-          #   begin
-          #     @socket.write("##[KEEPALIVE] #{Time.now}\n")
-          #   rescue Exception => ex
-          #     log_error("Failed to send a keepalive to #{@name}.")
-          #     log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
-          #     return
-          #   end
           end
         when :exception
           log_error("Failed to receive a message from #{@name}.")
@@ -1581,7 +1577,8 @@ end
 class GameResult
   attr_reader :players, :black, :white
 
-  def initialize(p1, p2)
+  def initialize(game, p1, p2)
+    @game = game
     @players = [p1, p2]
     if p1.sente && !p2.sente
       @black, @white = p1, p2
@@ -1590,31 +1587,189 @@ class GameResult
     else
       raise "Never reached!"
     end
+    @players.each do |player|
+      player.status = "connected"
+      LEAGUE.save(player)
+    end
+  end
+
+  def process
+    raise "Implement me!"
+  end
+
+  def log(str)
+    @game.log_game(str)
+  end
+
+  def log_board
+    log(@game.board.to_s.gsub(/^/, "\'"))
+  end
+
+  def log_rating
+    log("'rating:%s\n" % [self.to_s]) if @game.rated?
+  end
+
+  def to_s
+    black_name = @black.rated? ? @black.player_id : @black.name
+    white_name = @white.rated? ? @white.player_id : @white.name
+    return "%s:%s" % [black_name, white_name]
+  end
+
+  def notify_monitor(type)
+    @game.each_monitor do |monitor|
+      monitor.write_safe(sprintf("##[MONITOR][%s] %s\n", @game.game_id, type))
+    end
   end
 end
 
 class GameResultWin < GameResult
   attr_reader :winner, :loser
 
-  def initialize(winner, loser)
+  def initialize(game, winner, loser)
     super
     @winner, @loser = winner, loser
     @winner.last_game_win = true
     @loser.last_game_win  = false
   end
 
-  def to_s
-    black_name = @black.player_id || @black.name
-    white_name = @white.player_id || @white.name
-    "%s:%s" % [black_name, white_name]
+  def log_summary(type)
+    log_board
+
+    black_result = white_result = ""
+    if @black == @winner
+      black_result = "win"
+      white_result = "lose"
+    else
+      black_result = "lose"
+      white_result = "win"
+    end
+    log("'summary:%s:%s %s:%s %s\n" % [type, 
+                                       @black.name, black_result,
+                                       @white.name, white_result])
+
+    log_rating
+  end
+end
+
+class GameResultAbnormalWin < GameResultWin
+  def process
+    @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
+    @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
+    log("%%TORYO\n")
+    log_summary("abnormal")
+    notify_monitor("%%TORYO")
+  end
+end
+
+class GameResultTimeoutWin < GameResultWin
+  def process
+    @winner.write_safe("#TIME_UP\n#WIN\n")
+    @loser.write_safe( "#TIME_UP\n#LOSE\n")
+    log_summary("time up")
+    notify_monitor("#TIME_UP")
+  end
+end
+
+# A player declares (successful) Kachi
+class GameResultKachiWin < GameResultWin
+  def process
+    @winner.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
+    @loser.write_safe( "%KACHI\n#JISHOGI\n#LOSE\n")
+    log("%%KACHI\n")
+    log_summary("kachi")
+    notify_monitor("%%KACHI")
+  end
+end
+
+# A player declares wrong Kachi
+class GameResultIllegalKachiWin < GameResultWin
+  def process
+    @winner.write_safe("%KACHI\n#ILLEGAL_MOVE\n#WIN\n")
+    @loser.write_safe( "%KACHI\n#ILLEGAL_MOVE\n#LOSE\n")
+    log("%%KACHI\n")
+    log_summary("illegal kachi")
+    notify_monitor("%%KACHI")
+  end
+end
+
+class GameResultIllegalWin < GameResultWin
+  def initialize(game, winner, loser, cause)
+    super(game, winner, loser)
+    @cause = cause
+  end
+
+  def process
+    @winner.write_safe("#ILLEGAL_MOVE\n#WIN\n")
+    @loser.write_safe( "#ILLEGAL_MOVE\n#LOSE\n")
+    log_summary(@cause)
+    notify_monitor("#ILLEGAL_MOVE")
+  end
+end
+
+class GameResultIllegalMoveWin < GameResultIllegalWin
+  def initialize(game, winner, loser)
+    super(game, winner, loser, "illegal move")
+  end
+end
+
+class GameResultUchifuzumeWin < GameResultIllegalWin
+  def initialize(game, winner, loser)
+    super(game, winner, loser, "uchifuzume")
+  end
+end
+
+class GameResultOuteKaihiMoreWin < GameResultWin
+  def initialize(game, winner, loser)
+    super(game, winner, loser, "oute_kaihimore")
+  end
+end
+
+class GameResultOutoriWin < GameResultWin
+  def initialize(game, winner, loser)
+    super(game, winner, loser, "outori")
+  end
+end
+
+class GameReulstToryoWin < GameResultWin
+  def process
+    @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
+    @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
+    log("%%TORYO\n")
+    log_summary("toryo")
+    notify_monitor("%%TORYO")
+  end
+end
+
+class GameResultOuteSennichiteWin < GameResultWin
+  def process
+    @winner.write_safe("#OUTE_SENNICHITE\n#WIN\n")
+    @loser.write_safe( "#OUTE_SENNICHITE\n#LOSE\n")
+    log_summary("oute_sennichite")
+    notify_monitor("#OUTE_SENNICHITE")
   end
 end
 
 class GameResultDraw < GameResult
-  def initialize(p1, p2)
+  def initialize(game, p1, p2)
     super
     p1.last_game_win = false
     p2.last_game_win = false
+  end
+  
+  def log_summary(type)
+    log_board
+    log("'summary:%s:%s draw:%s draw\n", type, @black.name, @white.name)
+    log_rating
+  end
+end
+
+class GameResultSennichiteDraw < GameResultDraw
+  def process
+    @players.each do |player|
+      player.write_safe("#SENNICHITE\n#DRAW\n")
+    end
+    log_summary("sennichite")
+    notify_monitor("#SENNICHITE")
   end
 end
 
@@ -1666,7 +1821,8 @@ class Game
     @board = Board::new
     @board.initial
     @start_time = nil
-    @fh = nil
+    @fh = open(@logfile, "w")
+    @fh.sync = true
     @result = nil
 
     propose
@@ -1692,6 +1848,20 @@ class Game
     @monitors.delete(monitor)
   end
 
+  def each_monitor
+    @monitors.each do |monitor|
+      yield monitor
+    end
+  end
+
+  def log_game(str)
+    if @fh.closed?
+      log_error("Failed to write to Game[%s]'s log file: %s" %
+                [@game_id, str])
+    end
+    @fh.printf("%s\n", str)
+  end
+
   def reject(rejector)
     @sente.write_safe(sprintf("REJECT:%s by %s\n", @game_id, rejector))
     @gote.write_safe(sprintf("REJECT:%s by %s\n", @game_id, rejector))
@@ -1702,7 +1872,8 @@ class Game
     if ["agree_waiting", "start_waiting"].include?(@sente.status)
       reject(killer.name)
     elsif (@current_player == killer)
-      abnormal_lose()
+      result = GameResultAbnormalWin.new(self, @next_player, @current_player)
+      result.process
       finish
     end
   end
@@ -1780,214 +1951,43 @@ class Game
       end
     end
 
+    result = nil
     if (@next_player.status != "game") # rival is logout or disconnected
-      abnormal_win()
+      result = GameResultAbnormalWin.new(self, @current_player, @next_player)
     elsif (status == :timeout)
-      timeout_lose()
+      # current_player losed
+      result = GameResultTimeoutWin.new(self, @next_player, @current_player)
     elsif (move_status == :illegal)
-      illegal_lose()
+      result = GameResultIllegalMoveWin.new(self, @next_player, @current_player)
     elsif (move_status == :kachi_win)
-      kachi_win()
+      result = GameResultKachiWin.new(self, @current_player, @next_player)
     elsif (move_status == :kachi_lose)
-      kachi_lose()
+      result = GameResultIllegalKachiWin.new(self, @next_player, @current_player)
     elsif (move_status == :toryo)
-      toryo_lose()
+      result = GameReulstToryoWin.new(self, @next_player, @current_player)
     elsif (move_status == :outori)
-      outori_win()
+      # The current player captures the next player's king
+      result = GameResultOutoriWin.new(self, @current_player, @next_player)
     elsif (move_status == :oute_sennichite_sente_lose)
-      oute_sennichite_win_lose(@gote, @sente) # Sente is checking
+      result = GameResultOuteSennichiteWin.new(self, @gote, @sente) # Sente is checking
     elsif (move_status == :oute_sennichite_gote_lose)
-      oute_sennichite_win_lose(@sente, @gote) # Gote is checking
+      result = GameResultOuteSennichiteWin.new(self, @sente, @gote) # Gote is checking
     elsif (move_status == :sennichite)
-      sennichite_draw()
+      result = GameResultSennichiteDraw.new(self, @current_player, @next_player)
     elsif (move_status == :uchifuzume)
-      uchifuzume_lose()
+      # the current player losed
+      result = GameResultUchifuzumeWin.new(self, @next_player, @current_player)
     elsif (move_status == :oute_kaihimore)
-      oute_kaihimore_lose()
+      # the current player losed
+      result = GameResultOuteKaihiMoreWin.new(self, @next_player, @current_player)
     else
       finish_flag = false
     end
+    result.process if result
     finish() if finish_flag
     @current_player, @next_player = @next_player, @current_player
     @start_time = Time::new
     return finish_flag
-  end
-
-  def abnormal_win
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
-    @next_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
-    @fh.printf("%%TORYO\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:abnormal:%s win:%s lose\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@current_player, @next_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @game_id))
-    end
-  end
-
-  def abnormal_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
-    @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
-    @fh.printf("%%TORYO\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:abnormal:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @game_id))
-    end
-  end
-
-  def sennichite_draw
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("#SENNICHITE\n#DRAW\n")
-    @next_player.write_safe("#SENNICHITE\n#DRAW\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:sennichite:%s draw:%s draw\n", @current_player.name, @next_player.name)
-    @result = GameResultDraw.new(@current_player, @next_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #SENNICHITE\n", @game_id))
-    end
-  end
-
-  def oute_sennichite_win_lose(winner, loser)
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    loser.write_safe("#OUTE_SENNICHITE\n#LOSE\n")
-    winner.write_safe("#OUTE_SENNICHITE\n#WIN\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    if loser == @current_player
-      @fh.printf("'summary:oute_sennichite:%s lose:%s win\n", @current_player.name, @next_player.name)
-    else
-      @fh.printf("'summary:oute_sennichite:%s win:%s lose\n", @current_player.name, @next_player.name)
-    end
-    @result = GameResultWin.new(winner, loser)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #OUTE_SENNICHITE\n", @game_id))
-    end
-  end
-
-  def illegal_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
-    @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:illegal move:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
-    end
-  end
-
-  def uchifuzume_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
-    @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:uchifuzume:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
-    end
-  end
-
-  def oute_kaihimore_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
-    @next_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:oute_kaihimore:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
-    end
-  end
-
-  def timeout_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("#TIME_UP\n#LOSE\n")
-    @next_player.write_safe("#TIME_UP\n#WIN\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:time up:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #TIME_UP\n", @game_id))
-    end
-  end
-
-  def kachi_win
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
-    @next_player.write_safe("%KACHI\n#JISHOGI\n#LOSE\n")
-    @fh.printf("%%KACHI\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:kachi:%s win:%s lose\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@current_player, @next_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @game_id))
-    end
-  end
-
-  def kachi_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("%KACHI\n#ILLEGAL_MOVE\n#LOSE\n")
-    @next_player.write_safe("%KACHI\n#ILLEGAL_MOVE\n#WIN\n")
-    @fh.printf("%%KACHI\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:illegal kachi:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%KACHI\n", @game_id))
-    end
-  end
-
-  def toryo_lose
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("%TORYO\n#RESIGN\n#LOSE\n")
-    @next_player.write_safe("%TORYO\n#RESIGN\n#WIN\n")
-    @fh.printf("%%TORYO\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:toryo:%s lose:%s win\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@next_player, @current_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %%TORYO\n", @game_id))
-    end
-  end
-
-  def outori_win
-    @current_player.status = "connected"
-    @next_player.status = "connected"
-    @current_player.write_safe("#ILLEGAL_MOVE\n#WIN\n")
-    @next_player.write_safe("#ILLEGAL_MOVE\n#LOSE\n")
-    @fh.print(@board.to_s.gsub(/^/, "\'"))
-    @fh.printf("'summary:outori:%s win:%s lose\n", @current_player.name, @next_player.name)
-    @result = GameResultWin.new(@current_player, @next_player)
-    @fh.printf("'rating:#{@result.to_s}\n") if rated?
-    @monitors.each do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] #ILLEGAL_MOVE\n", @game_id))
-    end
   end
 
   def start
@@ -2000,9 +2000,6 @@ class Game
   end
 
   def propose
-    @fh = open(@logfile, "w")
-    @fh.sync = true
-
     @fh.puts("V2")
     @fh.puts("N+#{@sente.name}")
     @fh.puts("N-#{@gote.name}")

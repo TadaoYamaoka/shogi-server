@@ -1,3 +1,12 @@
+2008-05-18 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Last game results (win or lose) of x1 players were not
+	    available on the next game. This issue has been fixed.
+	    Thanks to Tomoyuki Kaneko for debugging.
+	  - For draw games, "'rating" line in a .csa file was 
+	    wrong (meaningless). This issue has been fixed.
+
 2008-05-16 Daigo Moriwaki <daigo at debian dot org>
 
 	* [news]
