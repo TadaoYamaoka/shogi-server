@@ -51,9 +51,8 @@ One_Time = 10
 Least_Time_Per_Move = 1
 Login_Time = 300                # time for LOGIN
 
-Release = "$Name$".split[1].sub(/\A[^\d]*/, '').gsub(/_/, '.')
-Release.concat("-") if (Release == "")
-Revision = "$Revision$".gsub(/[^\.\d]/, '')
+Release  = "$Id$"
+Revision = /Revision: (\d+)/.match("$Revision$")[1]
 
 class League
 
