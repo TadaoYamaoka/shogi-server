@@ -1,8 +1,10 @@
-## $Id$
-
 $:.unshift File.join(File.dirname(__FILE__), "..")
-load    'shogi-server'
+
 require 'test/unit'
+require 'shogi_server'
+require 'shogi_server/board'
+require 'shogi_server/piece_ky'
+require 'shogi_server/piece'
 
 module ShogiServer
 class Board

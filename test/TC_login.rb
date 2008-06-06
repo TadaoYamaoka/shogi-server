@@ -1,6 +1,8 @@
 $:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
-load 'shogi-server'
+require 'shogi_server'
+require 'shogi_server/player'
+require 'shogi_server/login'
 
 class ShogiServer::BasicPlayer
   attr_accessor :protocol

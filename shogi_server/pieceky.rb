@@ -1,5 +1,3 @@
-require 'shogi_server/piece'
-
 module ShogiServer
 
 class PieceKY  < Piece

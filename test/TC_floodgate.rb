@@ -1,7 +1,8 @@
 $:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
-load 'shogi-server'
-require 'pairing' 
+require 'shogi_server'
+require 'shogi_server/player'
+require 'shogi_server/pairing'
 
 class MockLogger
   def debug(str)
@@ -16,6 +17,9 @@ class MockLogger
 end
 
 $logger = MockLogger.new
+def log_message(msg)
+  $logger.info(msg)
+end
 
 class TestFloodgate < Test::Unit::TestCase
   def setup
