@@ -41,11 +41,6 @@ class Format
     @root = root
     @size = "1,1"
   end
-
-  def apply(plot)
-    plot.terminal @ext
-    plot.size     @size
-  end
 end
 
 class LargeFormat < Format
@@ -54,10 +49,13 @@ class LargeFormat < Format
   end
 
   def apply(plot)
-    super
+    plot.terminal @ext
+    plot.size     @size
     plot.format 'x "%y/%m/%d"'
     plot.ytics  "100"
     plot.mytics "5"
+    plot.xlabel  "Date"
+    plot.ylabel  "Rate"
   end
 end
 
@@ -76,7 +74,6 @@ class SmallPngFormat < Format
   def initialize(root)
     super
     @ext = "png"
-    @size = "0.4,0.4"
   end
 
   def to_image_file(name)
@@ -84,10 +81,10 @@ class SmallPngFormat < Format
   end
 
   def apply(plot)
-    super
-    plot.format 'x "%b"'
-    plot.ytics  "200"
-    plot.mytics "2"
+    plot.terminal "png size 320,200 crop"
+    plot.format   'x "%b"'
+    plot.ytics    "200"
+    plot.mytics   "2"
   end
 end
 
@@ -109,9 +106,7 @@ def plot(format, name, dates, rates, rdates, rrates)
       plot.title   name
       plot.output format.to_image_file(name)
       
-      plot.size    "ratio #{1/1.618}"
-      plot.xlabel  "Date"
-      plot.ylabel  "Rate"
+      #plot.size    "ratio #{1/1.618}"
       plot.xdata   "time"
       plot.timefmt '"%Y-%m-%d"'
       plot.xrange  "[\"%s\":\"%s\"]" % 

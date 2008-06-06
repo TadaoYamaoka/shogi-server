@@ -1,3 +1,12 @@
+2008-06-06 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - The source has been splited to multiple sub files.
+	  - The program now depends on rubygems and activesupport.
+	  - The program can reload the source files on the flight, by
+	    sending a HUP signal to the server.
+	  - The server log will be rotated daily.
+
 2008-05-18 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
