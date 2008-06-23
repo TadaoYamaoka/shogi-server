@@ -707,7 +707,16 @@ def main
       rating.integer!
 
       if $options["fixed-rate-player"]
+        # first, try exact match
         index = win_loss_matrix.keys.index($options["fixed-rate-player"])
+        # second, try regular match
+        unless index
+          win_loss_matrix.keys.each_with_index do |p, i|
+            if %r!#{$options["fixed-rate-player"]}! =~ p
+              index = i
+            end
+          end
+        end
         if index
           the_rate = rating.rate[index]
           rating.translate!($options["fixed-rate"] - the_rate)
