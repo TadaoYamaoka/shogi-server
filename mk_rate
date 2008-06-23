@@ -337,6 +337,13 @@ class Rating
   end
 
   ##
+  # Translate by value
+  #
+  def translate!(value)
+    @rate += value
+  end
+
+  ##
   # Make the values of @rate integer.
   #
   def integer!
@@ -639,24 +646,34 @@ def usage(io)
 USAGE: #{$0} [options] DIR..
   DIR                where CSA files are looked up recursively
 OPTOINS:
-  --half-life        n [days] (default 60)
-  --half-life-ignore m [days] (default  7)
-                     after m days, half-life effect works
-  --help             show this message
+  --half-life         n [days] (default 60)
+  --half-life-ignore  m [days] (default  7)
+                      after m days, half-life effect works
+  --fixed-rate-player player whose rate is fixed at the rate
+  --fixed-rate        rate 
+  --help              show this message
 EOF
 end
 
 def main
   $options = Hash::new
   parser = GetoptLong.new(
-    ["--half-life",          GetoptLong::REQUIRED_ARGUMENT],
-    ["--half-life-ignore",   GetoptLong::REQUIRED_ARGUMENT],
-    ["--help", "-h",         GetoptLong::NO_ARGUMENT])
+    ["--half-life",         GetoptLong::REQUIRED_ARGUMENT],
+    ["--half-life-ignore",  GetoptLong::REQUIRED_ARGUMENT],
+    ["--help", "-h",        GetoptLong::NO_ARGUMENT],
+    ["--fixed-rate-player", GetoptLong::REQUIRED_ARGUMENT],
+    ["--fixed-rate",        GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
       name.sub!(/^--/, '')
       $options[name] = arg.dup
+    end
+    if ( $options["fixed-rate-player"] && !$options["fixed-rate"]) ||
+       (!$options["fixed-rate-player"] &&  $options["fixed-rate"]) ||
+       ( $options["fixed-rate-player"] &&  $options["fixed-rate"].to_i <= 0) 
+      usage($stderr)
+      exit 1
     end
   rescue
     usage($stderr)
@@ -670,6 +687,7 @@ def main
   $options["half-life"] = $options["half-life"].to_i
   $options["half-life-ignore"] ||= 7
   $options["half-life-ignore"] = $options["half-life-ignore"].to_i
+  $options["fixed-rate"] = $options["fixed-rate"].to_i if $options["fixed-rate"]
 
   while dir = ARGV.shift do
     Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
@@ -687,6 +705,14 @@ def main
       rating.rating
       rating.average!(Rating::AVERAGE_RATE)
       rating.integer!
+
+      if $options["fixed-rate-player"]
+        index = win_loss_matrix.keys.index($options["fixed-rate-player"])
+        if index
+          the_rate = rating.rate[index]
+          rating.translate!($options["fixed-rate"] - the_rate)
+        end
+      end
 
       win_loss_matrix.keys.each_with_index do |p, i| # player_id, index#
         win  = win_loss_matrix.matrix.row(i).sum

@@ -1,3 +1,9 @@
+2008-06-23 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Added a new option: --fixed-rate and --fixed-rate-player
+	    whose rate always results in that rate. (Closes: #12800)
+
 2008-06-06 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
