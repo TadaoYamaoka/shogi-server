@@ -2,7 +2,9 @@
 #    This generates graphs of evaluation values from comments in CSA files.
 #    Ruby libraries that are required: 
 #      - RubyGems: http://rubyforge.org/projects/rubygems/
-#      - rgplot:   http://rubyforge.org/projects/rgplot/
+#                  On Debian, $ sudo install rubygems1.8
+#      - gnuplot:  http://rubyforge.org/projects/rgplot/
+#                  On Debian, $ sudo gem install gnuplot
 #    OS librariles that is required:
 #      - Gnuplot:  http://www.gnuplot.info/
 #                  On Debian, $ sudo apt-get install gnuplot
@@ -30,9 +32,12 @@ require 'getoptlong'
 require 'yaml'
 require 'date'
 require 'set'
+require 'logger'
 require 'rubygems'
 require 'gnuplot'
 
+$log = Logger.new(STDERR)
+$log.level = Logger::WARN
 $players = {}
 
 class Format
@@ -103,7 +108,7 @@ def plot(format, name, dates, rates, rdates, rrates)
   Gnuplot.open do |gp|
     Gnuplot::Plot.new( gp ) do |plot|
       format.apply(plot)
-      plot.title   name
+      plot.title  name
       plot.output format.to_image_file(name)
       
       #plot.size    "ratio #{1/1.618}"
@@ -138,19 +143,36 @@ def load_file(file_name)
   if /^.*-(\d{8}).yaml$/ =~ file_name
     date = Date::parse($1)
   else
+    $log.error("Invalid file name: %s" % [file_name])
     return
   end
   db = YAML::load_file(file_name)
-  return unless db['players'][0]
+  unless db['players'] && db['players'][0]
+    $log.error("Invalid file format: %s" % [file_name])
+    return
+  end
   db['players'][0].each do |name, hash|
     $players[name] ||= {}
     $players[name][date] = hash['rate'].to_i
   end
 end
 
+def empty_file?(file)
+  if !FileTest.exists?(file)
+    $log.error("Could not find the file: %s" % [file])
+    return true
+  end
+  if FileTest.zero?(file)
+    $log.error("Empty file: %s" % [file])
+    return true
+  end
+
+  return false
+end
+
 if $0 == __FILE__
   def usage
-    puts "Usage: #{$0} [--output-dir dir] <players_yaml_files>..."
+    puts "Usage: #{$0} --output-dir dir <players_yaml_file> <players_yaml_file>..."
     puts "Options:"
     puts "  --output-dir dir  Images will be located in the dir."
     exit 1
@@ -167,9 +189,15 @@ if $0 == __FILE__
   rescue
     usage
   end
+  usage if !$OPT_OUTPUT_DIR || ARGV.size < 2
   
   while file = ARGV.shift
+    next if empty_file?(file)
     load_file(file)
+  end
+
+  if !$players || $players.empty?
+    exit 0 
   end
   
   formats = [LargePngFormat.new($OPT_OUTPUT_DIR),

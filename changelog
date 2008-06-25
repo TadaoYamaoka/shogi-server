@@ -1,3 +1,8 @@
+2008-06-25 Daigo Moriwaki <daigo at debian dot org>
+
+	* [players_graph.rb]
+	  - Check invalid arguments. (Closes: #12856)
+
 2008-06-23 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
