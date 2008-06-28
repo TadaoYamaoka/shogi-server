@@ -21,7 +21,7 @@ module ShogiServer
 
   # Generate a random number such as i<=n<max
   def random(i, max)
-    raise if i >= max
+    return i if i >= max
     return rand(max-i)+i
   end
   module_function :random
