@@ -1,6 +1,14 @@
 2008-06-28 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
+	  - A rating comment line is now written before the first move in a
+	    record file instead of after the last move, which allows other
+	    applications watching a game to recognize players in the middle 
+	    of the game.
+
+2008-06-27 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
 	  -  Pairing players might not have shuffled players because of
 	     poor shuffling algorithm. This issue has been fixed.
 	     (Closes: #12661)

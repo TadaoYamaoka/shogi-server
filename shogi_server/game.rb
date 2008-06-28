@@ -50,16 +50,6 @@ class GameResult
     log(@game.board.to_s.gsub(/^/, "\'"))
   end
 
-  def log_rating
-    log("'rating:%s\n" % [self.to_s]) if @game.rated?
-  end
-
-  def to_s
-    black_name = @black.rated? ? @black.player_id : @black.name
-    white_name = @white.rated? ? @white.player_id : @white.name
-    return "%s:%s" % [black_name, white_name]
-  end
-
   def notify_monitor(type)
     @game.each_monitor do |monitor|
       monitor.write_safe(sprintf("##[MONITOR][%s] %s\n", @game.game_id, type))
@@ -92,7 +82,6 @@ class GameResultWin < GameResult
                                        @black.name, black_result,
                                        @white.name, white_result])
 
-    log_rating
   end
 end
 
@@ -204,7 +193,6 @@ class GameResultDraw < GameResult
   def log_summary(type)
     log_board
     log("'summary:%s:%s draw:%s draw\n", type, @black.name, @white.name)
-    log_rating
   end
 end
 
@@ -467,6 +455,11 @@ P8 * +KA *  *  *  *  * +HI *
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOM
+    if rated?
+      black_name = @sente.rated? ? @sente.player_id : @sente.name
+      white_name = @gote.rated?  ? @gote.player_id  : @gote.name
+      @fh.puts("'rating:%s:%s" % [black_name, white_name])
+    end
   end
 
   def show()
