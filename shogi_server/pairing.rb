@@ -17,6 +17,8 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'shogi_server/util'
+
 module ShogiServer
 
   class Pairing
@@ -76,14 +78,15 @@ module ShogiServer
         log_warning("#Players should be even: %d" % [players.size])
         return
       end
-      sorted = players.sort{ rand < 0.5 ? 1 : -1 }
 
-      pairs = [[sorted.shift]]
-      while !sorted.empty? do
+      ShogiServer.shuffle(players)
+
+      pairs = [[players.shift]]
+      while !players.empty? do
         if pairs.last.size < 2
-          pairs.last << sorted.shift
+          pairs.last << players.shift
         else
-          pairs << [sorted.shift]
+          pairs << [players.shift]
         end 
       end
       pairs.each do |pair|
