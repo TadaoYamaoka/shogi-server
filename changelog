@@ -5,6 +5,10 @@
 	    record file instead of after the last move, which allows other
 	    applications watching a game to recognize players in the middle 
 	    of the game. (Closes #12821)
+	  - If a player, including a monitor, stuck at the time of sending
+	    messages to the wire, which means that the giant lock was locked,
+	    it might have prevented other players from processing until
+	    timeout occurred. This issue has been fixed. (Closes #12555)
 
 2008-06-27 Daigo Moriwaki <daigo at debian dot org>
 

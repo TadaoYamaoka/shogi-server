@@ -110,7 +110,8 @@ class Player < BasicPlayer
     @sente = nil
     @socket_buffer = []
     @main_thread = Thread::current
-    @mutex_write_guard = Mutex.new
+    @write_queue = Queue.new
+    start_write_thread
   end
 
   attr_accessor :socket, :status
@@ -124,7 +125,8 @@ class Player < BasicPlayer
       @game.kill(self)
     end
     finish
-    Thread::kill(@main_thread) if @main_thread
+    Thread::kill(@main_thread)  if @main_thread
+    Thread::kill(@write_thread) if @write_thread
   end
 
   def finish
@@ -133,28 +135,50 @@ class Player < BasicPlayer
       log_message(sprintf("user %s finish", @name))    
       begin
 #        @socket.close if (! @socket.closed?)
+        write_safe(nil)
+        @write_thread.join
       rescue
         log_message(sprintf("user %s finish failed", @name))    
       end
     end
   end
 
+  def start_write_thread
+    @write_thread = Thread.start do
+      Thread.pass
+      while !@socket.closed?
+        str = ""
+        begin
+          begin
+            timeout(5) do
+              str = @write_queue.deq
+            end
+            if str == nil
+              break
+            end
+          rescue TimeoutError
+            next
+          end
+          if r = select(nil, [@socket], nil, 20)
+            r[1].first.write(str)
+          else
+            log_error("Sending a message to #{@name} timed up.")
+          end
+        rescue Exception => ex
+          log_error("Failed to send a message to #{@name}. #{ex.class}: #{ex.message}\t#{ex.backtrace[0]}")
+        end
+      end # while loop
+      log_message("terminated %s's write thread" % [@name])
+    end # thread
+  rescue
+
+  end
+
+  #
+  # Note that sending a message is included in the giant lock.
+  #
   def write_safe(str)
-    @mutex_write_guard.synchronize do
-      begin
-        if @socket.closed?
-          log_warning("%s's socket has been closed." % [@name])
-          return
-        end
-        if r = select(nil, [@socket], nil, 20)
-          r[1].first.write(str)
-        else
-          log_error("Sending a message to #{@name} timed up.")
-        end
-      rescue Exception => ex
-        log_error("Failed to send a message to #{@name}. #{ex.class}: #{ex.message}\t#{ex.backtrace[0]}")
-      end
-    end
+    @write_queue.enq str
   end
 
   def to_s
@@ -176,6 +200,10 @@ class Player < BasicPlayer
             str = gets_safe(@socket, (@socket_buffer.empty? ? Default_Timeout : 1)) )
       $mutex.lock
       begin
+        if !@write_thread.alive?
+          log_error("%s's write thread is dead. Aborting..." % [@name])
+          return
+        end
         if (@game && @game.turn?(self))
           @socket_buffer << str
           str = @socket_buffer.shift
