@@ -4,7 +4,7 @@
 	  - A rating comment line is now written before the first move in a
 	    record file instead of after the last move, which allows other
 	    applications watching a game to recognize players in the middle 
-	    of the game.
+	    of the game. (Closes #12821)
 
 2008-06-27 Daigo Moriwaki <daigo at debian dot org>
 
