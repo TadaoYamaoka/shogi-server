@@ -111,6 +111,7 @@ class Player < BasicPlayer
     @socket_buffer = []
     @main_thread = Thread::current
     @write_queue = Queue.new
+    @player_logger = nil
     start_write_thread
   end
 
@@ -119,6 +120,41 @@ class Player < BasicPlayer
   attr_accessor :main_thread
   attr_reader :socket_buffer
   
+  def setup_logger(dir)
+    log_file = File.join(dir, "%s.log" % [simple_player_id])
+    @player_logger = Logger.new(log_file, 'daily')
+    @player_logger.formatter = ShogiServer::Formatter.new
+    @player_logger.level = $DEBUG ? Logger::DEBUG : Logger::INFO  
+    @player_logger.datetime_format = "%Y-%m-%d %H:%M:%S"
+  end
+
+  def log(level, direction, message)
+    return unless @player_logger
+    str = message.chomp
+    case direction
+      when :in
+        str = "IN: %s" % [str]
+      when :out
+        str = "OUT: %s" % [str]
+      else
+        str = "UNKNOWN DIRECTION: %s %s" % [direction, str]
+    end
+    case level
+      when :debug
+        @player_logger.debug(str)
+      when :info
+        @player_logger.info(str)
+      when :warn
+        @player_logger.warn(str)
+      when :error
+        @player_logger.error(str)
+      else
+        @player_logger.debug("UNKNOWN LEVEL: %s %s" % [level, str])
+    end
+  rescue Exception => ex
+    log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+  end
+
   def kill
     log_message(sprintf("user %s killed", @name))
     if (@game)
@@ -137,6 +173,7 @@ class Player < BasicPlayer
 #        @socket.close if (! @socket.closed?)
         write_safe(nil)
         @write_thread.join
+        @player_logger.close
       rescue
         log_message(sprintf("user %s finish failed", @name))    
       end
@@ -161,6 +198,7 @@ class Player < BasicPlayer
           end
           if r = select(nil, [@socket], nil, 20)
             r[1].first.write(str)
+            log(:info, :out, str)
           else
             log_error("Sending a message to #{@name} timed up.")
           end
@@ -198,6 +236,7 @@ class Player < BasicPlayer
   def run(csa_1st_str=nil)
     while ( csa_1st_str || 
             str = gets_safe(@socket, (@socket_buffer.empty? ? Default_Timeout : 1)) )
+      log(:info, :in, str) if str && str.instance_of?(String) 
       $mutex.lock
       begin
         if !@write_thread.alive?

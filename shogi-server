@@ -52,6 +52,9 @@ OPTIONS
 		specify filename for logging process ID
         --daemon dir
                 run as a daemon. Log files will be put in dir.
+        --player-log-dir dir
+                log network messages for each player. Log files
+                will be put in the dir.
 
 LICENSE
 	GPL versoin 2 or later
@@ -88,7 +91,8 @@ def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
     ["--daemon",   GetoptLong::REQUIRED_ARGUMENT],
-    ["--pid-file", GetoptLong::REQUIRED_ARGUMENT])
+    ["--pid-file", GetoptLong::REQUIRED_ARGUMENT],
+    ["--player-log-dir", GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -165,7 +169,7 @@ end
 def setup_logger(log_file)
   logger = Logger.new(log_file, 'daily')
   logger.formatter = ShogiServer::Formatter.new
-  logger.level = Logger::INFO  
+  logger.level = $DEBUG ? Logger::DEBUG : Logger::INFO  
   logger.datetime_format = "%Y-%m-%d %H:%M:%S"
   return logger
 end
@@ -186,6 +190,14 @@ def main
   if (ARGV.length != 2)
     usage
     exit 2
+  end
+  if $options["player-log-dir"] && 
+     !File.exists?($options["player-log-dir"])
+    usage
+    exit 3
+  end
+  if $options["player-log-dir"]
+    $options["player-log-dir"] = File.expand_path($options["player-log-dir"])
   end
 
   LEAGUE.event = ARGV.shift
@@ -241,6 +253,7 @@ def main
 
       log_message(sprintf("user %s login", player.name))
       login.process
+      player.setup_logger($options["player-log-dir"]) if $options["player-log-dir"]
       player.run(login.csa_1st_str) # loop
       $mutex.lock
       begin
@@ -254,6 +267,7 @@ def main
         $mutex.unlock
       end
   end
+  $logger.close
 end
 
 

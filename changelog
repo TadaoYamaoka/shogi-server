@@ -1,3 +1,9 @@
+2008-06-30 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added a new option --player-log-dir, which allows users to log
+	    messages that are received or sent to the wire.
+
 2008-06-28 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
