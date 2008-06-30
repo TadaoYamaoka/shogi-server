@@ -173,7 +173,7 @@ class Player < BasicPlayer
 #        @socket.close if (! @socket.closed?)
         write_safe(nil)
         @write_thread.join
-        @player_logger.close
+        @player_logger.close if @player_logger
       rescue
         log_message(sprintf("user %s finish failed", @name))    
       end

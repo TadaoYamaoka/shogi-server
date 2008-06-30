@@ -267,7 +267,6 @@ def main
         $mutex.unlock
       end
   end
-  $logger.close
 end
 
 
