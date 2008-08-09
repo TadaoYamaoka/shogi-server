@@ -191,13 +191,13 @@ def main
     usage
     exit 2
   end
-  if $options["player-log-dir"] && 
-     !File.exists?($options["player-log-dir"])
-    usage
-    exit 3
-  end
   if $options["player-log-dir"]
     $options["player-log-dir"] = File.expand_path($options["player-log-dir"])
+  end
+  if $options["player-log-dir"] && 
+     !File.directory?($options["player-log-dir"])
+    usage
+    exit 3
   end
 
   LEAGUE.event = ARGV.shift
