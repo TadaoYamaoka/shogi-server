@@ -30,7 +30,7 @@ class Board
     @move_count = 0
     @teban = nil # black => true, white => false
   end
-  attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history
+  attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history, :teban
   attr_reader :move_count
 
   def initial
