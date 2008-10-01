@@ -17,9 +17,6 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#require 'shogi_server/league/floodgate'
-#require 'shogi_server/league/persistent'
-
 module ShogiServer # for a namespace
 
 ######################################################
@@ -33,8 +30,6 @@ class League
     @players = Hash::new
     @event = nil
     @dir = File.dirname(__FILE__)
-    @floodgate = Floodgate.new(self)
-    #@floodgate.run
   end
   attr_accessor :players, :games, :event, :dir
 
@@ -44,12 +39,6 @@ class League
         @persistent.save(player)
       end
     end
-    @floodgate.shutdown
-  end
-
-  def restart
-    @floodgate = Floodgate.new(self)
-    #@floodgate.run
   end
 
   # this should be called just after instanciating a League object.

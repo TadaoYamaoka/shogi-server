@@ -20,6 +20,9 @@
 
 $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
+require 'shogi_server/board' # not autoloaded
+require 'shogi_server/player'
+require 'shogi_server/game'
 
 #################################################
 # MAIN
@@ -32,7 +35,7 @@ def gets_safe(socket, timeout=nil)
     return :timeout
   end
 rescue Exception => ex
-  log_error("#{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+  log_error("gets_safe: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
   return :exception
 end
 
@@ -113,20 +116,21 @@ def write_pid_file(file)
 end
 
 def mutex_watchdog(mutex, sec)
+  sec = 1 if sec < 1
+  queue = []
   while true
-    begin
-      timeout(sec) do
-        begin
-          mutex.lock
-        ensure
-          mutex.unlock
-        end
+    if mutex.try_lock
+      queue.clear
+      mutex.unlock
+    else
+      queue.push(Object.new)
+      if queue.size > sec
+        # timeout
+        log_error("mutex watchdog timeout: %d sec" % [sec])
+        queue.clear
       end
-      sleep(sec)
-    rescue TimeoutError
-      log_error("mutex watchdog timeout")
-      exit(1)
     end
+    sleep(1)
   end
 end
 
@@ -182,7 +186,40 @@ def setup_watchdog_for_giant_lock
   end
 end
 
+def setup_floodgate
+  Thread.start do 
+    Thread.pass
+    floodgate = ShogiServer::League::Floodgate.new(LEAGUE)
+    log_message("Flooddgate reloaded. The next match will start at %s." % 
+                [floodgate.next_time])
+
+    while (true)
+      begin
+        sleep(10)
+        next if Time.now < floodgate.next_time
+        LEAGUE.reload
+        floodgate.match_game
+        floodgate.charge
+        next_time = floodgate.next_time
+        $mutex.synchronize do
+          Dependencies.clear
+        end
+        floodgate = ShogiServer::League::Floodgate.new(LEAGUE, next_time)
+        log_message("Flooddgate reloaded. The next match will start at %s." % 
+                [floodgate.next_time])
+      rescue Exception => ex 
+        # ignore errors
+        log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
+      end
+    end
+  end
+end
+
 def main
+  
+  [ShogiServer::League::Floodgate, ShogiServer::Pairing].each do |klass|
+    Dependencies.unloadable klass
+  end
 
   setup_watchdog_for_giant_lock
 
@@ -219,12 +256,16 @@ def main
   config[:Port]       = port
   config[:ServerType] = WEBrick::Daemon if $options["daemon"]
   config[:Logger]     = $logger
-  if $options["pid-file"]
-    pid_file = File.expand_path($options["pid-file"])
-    config[:StartCallback] = Proc.new do
-      write_pid_file(pid_file)
+
+  config[:StartCallback] = Proc.new do
+    if $options["pid-file"]
+      write_pid_file($options["pid-file"])
     end
-    config[:StopCallback] = Proc.new do
+    setup_floodgate
+  end
+
+  config[:StopCallback] = Proc.new do
+    if $options["pid-file"]
       FileUtils.rm(pid_file, :force => true)
     end
   end
@@ -234,12 +275,13 @@ def main
     trap(signal) do
       LEAGUE.shutdown
       server.shutdown
+      # TODO Shutdown Floodgate's thread
     end
   end
   trap("HUP") do
     LEAGUE.shutdown
     Dependencies.clear
-    LEAGUE.restart
+    # TODO Restart Floodgate's thread
   end
   $stderr.puts("server started as a deamon [Revision: #{ShogiServer::Revision}]") if $options["daemon"] 
   log_message("server started [Revision: #{ShogiServer::Revision}]")
@@ -276,6 +318,10 @@ if ($0 == __FILE__)
   TCPSocket.do_not_reverse_lookup = true
   Thread.abort_on_exception = $DEBUG ? true : false
 
+  begin
   LEAGUE = ShogiServer::League::new
-  main
+    main
+  rescue Exception => ex
+    log_error("main: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+  end
 end

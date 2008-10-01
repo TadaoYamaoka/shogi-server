@@ -20,18 +20,35 @@
 module ShogiServer # for a namespace
 
 class Board
-  def initialize
+  def initialize(move_count=0)
     @sente_hands = Array::new
     @gote_hands  = Array::new
     @history       = Hash::new(0)
     @sente_history = Hash::new(0)
     @gote_history  = Hash::new(0)
     @array = [[], [], [], [], [], [], [], [], [], []]
-    @move_count = 0
+    @move_count = move_count
     @teban = nil # black => true, white => false
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history, :teban
   attr_reader :move_count
+
+  def deep_copy
+    # return Marshal.load(Marshal.dump(self))
+    board = Board.new(self.move_count)
+    board.sente_hands   = self.sente_hands.clone
+    board.gote_hands    = self.gote_hands.clone
+    board.history       = self.history.clone
+    board.history.default = 0
+    board.sente_history = self.sente_history.clone
+    board.sente_history.default = 0
+    board.gote_history  = self.gote_history.clone
+    board.gote_history.default = 0
+    board.array = []
+    self.array.each {|a| board.array.push(a.clone)}
+    board.teban         = self.teban
+    return board
+  end
 
   def initial
     PieceKY::new(self, 1, 1, false)
@@ -82,10 +99,12 @@ class Board
 
     if ((x0 == 0) || (y0 == 0))
       piece = have_piece?(hands, name)
-      return :illegal if (! piece.move_to?(x1, y1, name)) # TODO null check for the piece?
+      return :illegal if (piece == nil || ! piece.move_to?(x1, y1, name))
       piece.move_to(x1, y1)
     else
-      return :illegal if (! @array[x0][y0].move_to?(x1, y1, name))  # TODO null check?
+      if (@array[x0][y0] == nil || !@array[x0][y0].move_to?(x1, y1, name))
+        return :illegal
+      end
       if (@array[x0][y0].name != name) # promoted ?
         @array[x0][y0].promoted = true
       end
@@ -169,7 +188,7 @@ class Board
 
     ## case: rival_ou is moving
     rival_ou.movable_grids.each do |(cand_x, cand_y)|
-      tmp_board = Marshal.load(Marshal.dump(self))
+      tmp_board = deep_copy
       s = tmp_board.move_to(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU", ! sente)
       raise "internal error" if (s != true)
       if (! tmp_board.checkmated?(! sente)) # good move
@@ -197,7 +216,7 @@ class Board
             end
           end
           names.map! do |name|
-            tmp_board = Marshal.load(Marshal.dump(self))
+            tmp_board = deep_copy
             s = tmp_board.move_to(x, y, fu_x, fu_y, name, ! sente)
             if s == :illegal
               s # result
@@ -380,7 +399,7 @@ class Board
       return :illegal           # can't put on existing piece
     end
 
-    tmp_board = Marshal.load(Marshal.dump(self))
+    tmp_board = deep_copy
     return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name, sente) == :illegal)
     return :oute_kaihimore if (tmp_board.checkmated?(sente))
     tmp_board.update_sennichite(sente)

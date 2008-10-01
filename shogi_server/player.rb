@@ -17,6 +17,8 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'monitor'
+
 module ShogiServer # for a namespace
 
 class BasicPlayer
@@ -110,7 +112,9 @@ class Player < BasicPlayer
     @sente = nil
     @socket_buffer = []
     @main_thread = Thread::current
-    @write_queue = Queue.new
+    @write_queue = []
+    @wq_mon  = Monitor.new
+    @wq_cond = @wq_mon.new_cond
     @player_logger = nil
     start_write_thread
   end
@@ -186,16 +190,23 @@ class Player < BasicPlayer
       while !@socket.closed?
         str = ""
         begin
-          begin
-            timeout(5) do
-              str = @write_queue.deq
+          timeout_flg = false
+          @wq_mon.synchronize do
+            if @write_queue.empty?
+              if @wq_cond.wait(15)
+                #timeout
+                timeout_flg = true
+                # log_debug("write_queue health check timeout")
+              end
             end
-            if str == nil
-              break
+            if !timeout_flg && !@write_queue.empty?
+              str = @write_queue.shift
+              # log_debug("Dequeued %s from %s's write_queue." % [str, @name])
             end
-          rescue TimeoutError
-            next
-          end
+          end # synchronize
+          next if timeout_flg
+          break if str == nil # exit
+
           if r = select(nil, [@socket], nil, 20)
             r[1].first.write(str)
             log(:info, :out, str)
@@ -216,7 +227,12 @@ class Player < BasicPlayer
   # Note that sending a message is included in the giant lock.
   #
   def write_safe(str)
-    @write_queue.enq str
+    @wq_mon.synchronize do
+      # log_debug("Enqueuing %s..." % [str])
+      @write_queue.push(str)
+      # log_debug("Enqueued %s into %s's write_queue." % [str, @name])
+      @wq_cond.broadcast
+    end
   end
 
   def to_s

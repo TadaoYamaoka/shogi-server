@@ -8,48 +8,30 @@ class League
       end
     end
 
-    def initialize(league)
+    attr_reader :next_time, :league
+
+    def initialize(league, next_time=nil)
       @league = league
-      @next_time = nil
+      @next_time = next_time
       charge
     end
 
-    def run
-      @thread = Thread.new do
-        Thread.pass
-        while (true)
-          begin
-            sleep(10)
-            next if Time.now < @next_time
-            @league.reload
-            match_game
-            charge
-          rescue Exception => ex 
-            # ignore errors
-            log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
-          end
-        end
-      end
-    end
-
-    def shutdown
-      @thread.kill if @thread
-    end
-
-    # private
-
     def charge
       now = Time.now
-      # if now.min < 30
-      #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour, 30)
-      # else
-      #   @next_time = Time.mktime(now.year, now.month, now.day, now.hour) + 3600
-      # end
-      # for test
-      if now.sec < 30
-        @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
+      unless $DEBUG
+        # each 30 minutes
+        if now.min < 30
+          @next_time = Time.mktime(now.year, now.month, now.day, now.hour, 30)
+        else
+          @next_time = Time.mktime(now.year, now.month, now.day, now.hour) + 3600
+        end
       else
-        @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min) + 60
+        # for test, each 30 seconds
+        if now.sec < 30
+          @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
+        else
+          @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min) + 60
+        end
       end
     end
 

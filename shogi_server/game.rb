@@ -364,6 +364,7 @@ class Game
       end
 
       move_status = @board.handle_one_move(str, @sente == @current_player)
+      # log_debug("move_status: %s for %s's %s" % [move_status, @sente == @current_player ? "BLACK" : "WHITE", str])
 
       if [:illegal, :uchifuzume, :oute_kaihimore].include?(move_status)
         @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
