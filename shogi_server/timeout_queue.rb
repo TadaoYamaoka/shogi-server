@@ -52,14 +52,12 @@ class TimeoutQueue
   #
   def deq
     timeout_flg = false
-    ret = nil
-
+    ret = :timeout
     @mon.synchronize do
       if @queue.empty?
-        if @cond.wait(15)
+        unless @cond.wait(15)
           #timeout
           timeout_flg = true
-          ret = :timeout
         end
       end
       if !timeout_flg && !@queue.empty?

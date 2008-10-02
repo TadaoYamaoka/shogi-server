@@ -20,13 +20,12 @@
 
 $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
-require 'shogi_server/board' # not autoloaded
-require 'shogi_server/player'
-require 'shogi_server/game'
 
 #################################################
 # MAIN
 #
+
+ShogiServer.reload
 
 def gets_safe(socket, timeout=nil)
   if r = select([socket], nil, nil, timeout)
@@ -187,7 +186,7 @@ def setup_watchdog_for_giant_lock
 end
 
 def setup_floodgate
-  Thread.start do 
+  return Thread.start do 
     Thread.pass
     floodgate = ShogiServer::League::Floodgate.new(LEAGUE)
     log_message("Flooddgate reloaded. The next match will start at %s." % 
@@ -195,18 +194,22 @@ def setup_floodgate
 
     while (true)
       begin
-        sleep(10)
-        next if Time.now < floodgate.next_time
+        diff = floodgate.next_time - Time.now
+        if diff > 0
+          sleep(diff/2)
+          next
+        end
         LEAGUE.reload
         floodgate.match_game
         floodgate.charge
         next_time = floodgate.next_time
         $mutex.synchronize do
-          Dependencies.clear
+          log_message("Reloading source...")
+          ShogiServer.reload
         end
         floodgate = ShogiServer::League::Floodgate.new(LEAGUE, next_time)
-        log_message("Flooddgate reloaded. The next match will start at %s." % 
-                [floodgate.next_time])
+        log_message("Floodgate will start the next match at %s." % 
+                    [floodgate.next_time])
       rescue Exception => ex 
         # ignore errors
         log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
@@ -217,9 +220,9 @@ end
 
 def main
   
-  [ShogiServer::League::Floodgate, ShogiServer::Pairing].each do |klass|
-    Dependencies.unloadable klass
-  end
+  #[ShogiServer::League::Floodgate, ShogiServer::Pairing].each do |klass|
+  #  Dependencies.unloadable klass
+  #end
 
   setup_watchdog_for_giant_lock
 
@@ -257,11 +260,12 @@ def main
   config[:ServerType] = WEBrick::Daemon if $options["daemon"]
   config[:Logger]     = $logger
 
+  fg_thread = nil
   config[:StartCallback] = Proc.new do
     if $options["pid-file"]
       write_pid_file($options["pid-file"])
     end
-    setup_floodgate
+    fg_thread = setup_floodgate
   end
 
   config[:StopCallback] = Proc.new do
@@ -275,13 +279,12 @@ def main
     trap(signal) do
       LEAGUE.shutdown
       server.shutdown
-      # TODO Shutdown Floodgate's thread
+      fg_thread.kill if fg_thread
     end
   end
   trap("HUP") do
     LEAGUE.shutdown
     Dependencies.clear
-    # TODO Restart Floodgate's thread
   end
   $stderr.puts("server started as a deamon [Revision: #{ShogiServer::Revision}]") if $options["daemon"] 
   log_message("server started [Revision: #{ShogiServer::Revision}]")

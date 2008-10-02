@@ -97,6 +97,7 @@ end
 
 
 class Player < BasicPlayer
+  WRITE_THREAD_WATCH_INTERVAL = 20 # sec
   def initialize(str, socket, eol=nil)
     super()
     @socket = socket
@@ -110,7 +111,7 @@ class Player < BasicPlayer
     @sente = nil
     @socket_buffer = []
     @main_thread = Thread::current
-    @write_queue = ShogiServer::TimeoutQueue.new(20)
+    @write_queue = ShogiServer::TimeoutQueue.new(WRITE_THREAD_WATCH_INTERVAL)
     @player_logger = nil
     start_write_thread
   end
@@ -170,7 +171,7 @@ class Player < BasicPlayer
       @status = "finished"
       log_message(sprintf("user %s finish", @name))    
       begin
-#        @socket.close if (! @socket.closed?)
+        log_debug("Terminating %s's write thread..." % [@name])
         write_safe(nil)
         @write_thread.join
         @player_logger.close if @player_logger
@@ -186,8 +187,14 @@ class Player < BasicPlayer
       while !@socket.closed?
         begin
           str = @write_queue.deq
-          break if (str == nil)
-          next  if (str == :timeout)
+          if (str == nil)
+            log_debug("%s's write thread terminated" % [@name])
+            break
+          end
+          if (str == :timeout)
+            log_debug("%s's write queue timed out. Try again..." % [@name])
+            next
+          end
 
           if r = select(nil, [@socket], nil, 20)
             r[1].first.write(str)
@@ -199,10 +206,8 @@ class Player < BasicPlayer
           log_error("Failed to send a message to #{@name}. #{ex.class}: #{ex.message}\t#{ex.backtrace[0]}")
         end
       end # while loop
-      log_message("terminated %s's write thread" % [@name])
+      log_error("%s's socket closed." % [@name]) if @socket.closed?
     end # thread
-  rescue
-
   end
 
   #
@@ -240,7 +245,7 @@ class Player < BasicPlayer
           @socket_buffer << str
           str = @socket_buffer.shift
         end
-        log_message("%s (%s)" % [str, @socket_buffer.map {|a| String === a ? a.strip : a }.join(",")]) if $DEBUG
+        log_debug("%s (%s)" % [str, @socket_buffer.map {|a| String === a ? a.strip : a }.join(",")])
 
         if (csa_1st_str)
           str = csa_1st_str

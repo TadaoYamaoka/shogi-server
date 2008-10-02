@@ -29,11 +29,18 @@ require 'webrick'
 require 'fileutils'
 require 'logger'
 
+require 'shogi_server/board'
+require 'shogi_server/game'
+require 'shogi_server/league'
+require 'shogi_server/login'
+require 'shogi_server/piece'
+require 'shogi_server/pieceky'
+require 'shogi_server/player'
+require 'shogi_server/timeout_queue'
+require 'shogi_server/usi'
+require 'shogi_server/util'
+
 require 'rubygems'
-require 'active_support'
-Dependencies.log_activity = true
-Dependencies.load_paths << File.dirname(__FILE__)
-RAILS_DEFAULT_LOGGER = Logger.new($stdout) if $DEBUG
 
 module ShogiServer # for a namespace
 
@@ -45,6 +52,18 @@ Least_Time_Per_Move = 1
 Login_Time = 300                # time for LOGIN
 Release  = "$Id$"
 Revision = (r = /Revision: (\d+)/.match("$Revision$") ? r[1] : 0)
+
+RELOAD_FILES = ["shogi_server/league/floodgate.rb",
+                "shogi_server/league/persistent.rb",
+                "shogi_server/pairing.rb"]
+
+def reload
+  here = File.dirname(__FILE__)
+  RELOAD_FILES.each do |f|
+    load File.join(here, f)
+  end
+end
+module_function :reload
 
 class Formatter < ::Logger::Formatter
   def call(severity, time, progname, msg)
