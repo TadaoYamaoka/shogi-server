@@ -1,3 +1,22 @@
+## $Id$
+
+## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
+## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 #   queue = Queue.new
 #   timeout(5) do
 #     queue.deq
@@ -9,75 +28,45 @@
 # See: http://www.ruby-forum.com/topic/107864
 #
 
-require 'thread'
 require 'monitor'
 
 module ShogiServer
 
 class TimeoutQueue
-  def initialize
-    @lock = Mutex.new
-    @messages = []
-    @readers  = []
+  def initialize(timeout=20)
+    @timeout = 20 # sec
+    @queue = []
+    @mon  = Monitor.new
+    @cond = @mon.new_cond
   end
 
   def enq(msg)
-    @lock.synchronize do
-      unless @readers.empty?
-        @readers.pop << msg
-      else
-        @messages.push msg
-      end
+    @mon.synchronize do
+      @queue.push(msg)
+      @cond.broadcast
     end
   end
 
   #
-  # @param timeout
-  # @return nil if timeout
+  # @return :timeout if timeout
   #
-  def deq(timeout=5)
-    timeout_thread = nil
-    mon = nil
-    empty_cond = nil
+  def deq
+    timeout_flg = false
+    ret = nil
 
-    begin
-      reader = nil
-      @lock.synchronize do
-        unless @messages.empty?
-          # fast path
-          return @messages.shift
-        else
-          reader = Queue.new
-          @readers.push reader
-          if timeout
-            mon = Monitor.new
-            empty_cond = mon.new_cond
-
-            timeout_thread = Thread.new do
-              mon.synchronize do
-                if empty_cond.wait(timeout)
-                  # timeout
-                  @lock.synchronize do
-                    @readers.delete reader
-                    reader << nil
-                  end
-                else
-                  # timeout_thread was waked up before timeout
-                end
-              end
-            end # thread
-          end
+    @mon.synchronize do
+      if @queue.empty?
+        if @cond.wait(15)
+          #timeout
+          timeout_flg = true
+          ret = :timeout
         end
       end
-      # either timeout or writer will send to us
-      return reader.shift
-    ensure
-      # (try to) clean up timeout thread
-      if timeout_thread
-        mon.synchronize { empty_cond.signal }
-        Thread.pass
+      if !timeout_flg && !@queue.empty?
+        ret = @queue.shift
       end
-    end
+    end # synchronize
+    return ret
   end
 end
 
