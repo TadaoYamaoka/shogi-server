@@ -168,6 +168,40 @@ class TestDeleteMostPlayingPlayer < Test::Unit::TestCase
   end
 end
 
+class TestMakeEven < Test::Unit::TestCase  
+  def setup
+    srand(10)
+    @pairing= ShogiServer::MakeEven.new
+    @a = ShogiServer::BasicPlayer.new
+    @a.name = "a"
+    @a.win  = 1
+    @a.loss = 2
+    @a.rate = 0
+    @b = ShogiServer::BasicPlayer.new
+    @b.name = "b"
+    @b.win  = 10
+    @b.loss = 20
+    @b.rate = 1500
+    @c = ShogiServer::BasicPlayer.new
+    @c.name = "c"
+    @c.win  = 100
+    @c.loss = 200
+    @c.rate = 1000
+  end
+
+ def test_match_even
+    players = [@a, @b]
+    @pairing.match(players)
+    assert_equal([@a,@b], players)
+ end
+
+ def test_match_odd
+    players = [@a, @b, @c]
+    @pairing.match(players)
+    assert_equal([@a, @b], players)
+  end
+end
+
 class TestLeastRatePlayer < Test::Unit::TestCase  
   def setup
     @pairing= ShogiServer::DeleteLeastRatePlayer.new

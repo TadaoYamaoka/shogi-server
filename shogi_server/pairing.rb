@@ -38,7 +38,7 @@ module ShogiServer
       def random_pairing
         return [ExcludeSacrificeGps500.new,
                 MakeEven.new,
-                RandomPairing.new,
+                Randomize.new,
                 StartGame.new]
       end
 
@@ -61,10 +61,10 @@ module ShogiServer
 
     def less_than_one?(players)
       if players.size < 1
-        log_warning("Floodgate: At least one player is required")
+        log_warning("Floodgate: There should be at least one player.")
         return true
       else
-        return true
+        return false
       end
     end
 
@@ -76,7 +76,11 @@ module ShogiServer
           one.name
         end
       end
-      log_message("Floodgate: [Players] %s" % [str_array.join(", ")])
+      if str_array.empty?
+        log_message("Floodgate: [Players] None is here.")
+      else
+        log_message("Floodgate: [Players] %s." % [str_array.join(", ")])
+      end
     end
   end # Pairing
 
@@ -84,11 +88,12 @@ module ShogiServer
     def match(players)
       super
       if players.size < 2
-        log_warning("There should be more than one player: %d" % [players.size])
+        log_warning("Floodgate: There should be more than one player: %d" % [players.size])
         return
       end
       if players.size.odd?
-        log_warning("There are odd players: %d" % [players.size])
+        log_warning("Floodgate: There are odd players: %d. %s will not be matched." % 
+                    [players.size, players.last.name])
       end
 
       log_players(players)
@@ -220,7 +225,7 @@ module ShogiServer
   class MakeEven < Pairing
     def match(players)
       super
-      return if players.even?
+      return if players.size.even?
       log_message("Floodgate: there are odd players: %d. Deleting one..." % 
                   [players.size])
       DeletePlayerAtRandom.new.match(players)

@@ -41,8 +41,6 @@ class League
         Floodgate.game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      #log_warning("DEBUG: %s" % [File.join(File.dirname(__FILE__), "pairing.rb")])
-      #load File.join(File.dirname(__FILE__), "pairing.rb")
       Pairing.default_pairing.match(players)
     end
   end # class Floodgate
