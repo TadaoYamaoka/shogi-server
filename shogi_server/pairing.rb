@@ -24,178 +24,207 @@ module ShogiServer
   class Pairing
 
     class << self
-      def default_pairing
-        #return SwissPairing.new
-        #return ExcludeSacrifice.new(SwissPairing.new)
-        #return RandomPairing.new
-        return ExcludeSacrifice.new(RandomPairing.new)
+      def default_factory
+        return sort_by_rate_with_randomness
       end
-    end
+
+      def sort_by_rate_with_randomness
+        return [ExcludeSacrificeGps500.new,
+                MakeEven.new,
+                SortByRateWithRandomness.new(1200, 2400),
+                StartGame.new]
+      end
+
+      def random_pairing
+        return [ExcludeSacrificeGps500.new,
+                MakeEven.new,
+                RandomPairing.new,
+                StartGame.new]
+      end
+
+      def match(players)
+        logics = default_factory
+        logics.inject(players) do |result, item|
+          item.match(result)
+        end
+      end
+    end # class << self
+
 
     def match(players)
-      if players.size < 2
-        log_message("Floodgate[%s]: too few players [%d]" % 
-                    [self.class, players.size])
-      else
-        log_message("Floodgate[%s]: found %d players. Pairing them..." % 
-                    [self.class, players.size])
-      end
-    end
-
-    def start_game(p1, p2)
-      p1.sente = true
-      p2.sente = false
-      Game.new(p1.game_name, p1, p2)
+      # to be implemented
     end
 
     def include_newbie?(players)
       return players.find{|a| a.rate == 0} == nil ? false : true
     end
 
-    def delete_player_at_random(players)
-      return players.delete_at(rand(players.size))
+    def less_than_one?(players)
+      if players.size < 1
+        log_warning("Floodgate: At least one player is required")
+        return true
+      else
+        return true
+      end
     end
 
-    def delete_player_at_random_except(players, a_player)
-      candidates = players - [a_player]
-      return delete_player_at_random(candidates)
+    def log_players(players)
+      str_array = players.map do |one|
+        if block_given?
+          yield one
+        else
+          one.name
+        end
+      end
+      log_message("Floodgate: [Players] %s" % [str_array.join(", ")])
     end
-    
-    def delete_most_playing_player(players)
-      # TODO ??? undefined method `<=>' for nil:NilClass
-      max_player = players.max {|a,b| a.win + a.loss <=> b.win + b.loss}
-      return players.delete(max_player)
-    end
+  end # Pairing
 
-    def delete_least_rate_player(players)
-      min_player = players.min {|a,b| a.rate <=> b.rate}
-      return players.delete(min_player)
-    end
-
-    def pairing_and_start_game(players)
-      return if players.size < 2
-      if players.size.odd?
-        log_warning("#Players should be even: %d" % [players.size])
+  class StartGame < Pairing
+    def match(players)
+      super
+      if players.size < 2
+        log_warning("There should be more than one player: %d" % [players.size])
         return
       end
-
-      sorted = players.shuffle
-      pairs = []
-      while !sorted.empty? do
-        pairs << sorted.shift(2)
+      if players.size.odd?
+        log_warning("There are odd players: %d" % [players.size])
       end
-      pairs.each do |pair|
+
+      log_players(players)
+      while (players.size >= 2) do
+        pair = players.shift(2)
+        pair.shuffle!
         start_game(pair.first, pair.last)
       end
     end
 
-    def pairing_and_start_game_by_rate(players, randomness1, randomness2)
-      return if players.size < 2
-      if players.size % 2 == 1
-        log_warning("#Players should be even: %d" % [players.size])
-        return
-      end
-      cur_rate = Hash.new
-      players.each{ |a| cur_rate[a] = a.rate ? a.rate+rand(randomness1) : rand(randomness2) }
-      sorted = players.sort{ |a,b| cur_rate[a] <=> cur_rate[b] }
-      log_message("Floodgate[%s]: %s (randomness %d)" % [self.class, sorted.map{|a| a.name}.join(","), randomness1])
-
-      pairs = [[sorted.shift]]
-      while !sorted.empty? do
-        if pairs.last.size < 2
-          pairs.last << sorted.shift
-        else
-          pairs << [sorted.shift]
-        end 
-      end
-      pairs.each do |pair|
-        start_game(pair.choice, pair.choice)
-        if (rand(2) == 0)
-          start_game(pair.first, pair.last)
-        else
-          start_game(pair.last, pair.first)
-        end
-      end
+    def start_game
+      log_message("Floodgate: BLACK %s; WHITE %s" % [p1.name, p2.name])
+      p1.sente = true
+      p2.sente = false
+      Game.new(p1.game_name, p1, p2)
     end
-  end # Pairing
+  end
 
-  class RandomPairing < Pairing
+  class Randomize < Pairing
     def match(players)
       super
-      return if players.size < 2
-
-      if players.size % 2 == 1
-        delete_player_at_random(players)
-      end
-      pairing_and_start_game(players)
+      log_message("Floodgate: Randomize... before")
+      log_players(players)
+      players.shuffle!
+      log_message("Floodgate: Randomized after")
+      log_players(players)
     end
   end # RadomPairing
 
-  class SwissPairing < Pairing
+  class SortByRate < Pairing
     def match(players)
       super
-      return if players.size < 2
-
-      win_players = players.find_all {|a| a.last_game_win? }
-      log_message("Floodgate[%s]: win_players %s" % [self.class, win_players.map{|a| a.name}.join(",")])
-      if (win_players.size < players.size / 2)
-        x1_players = players.find_all {|a| a.rate > 0 && !a.last_game_win? && a.protocol != LoginCSA::PROTOCOL }
-        x1_players = x1_players.sort{ rand < 0.5 ? 1 : -1 }
-        while (win_players.size < players.size / 2) && !x1_players.empty? do
-          win_players << x1_players.shift
-        end
-        log_message("Floodgate[%s]: win_players (adhoc x1 collection) %s" % [self.class, win_players.map{|a| a.name}.join(",")])
-      end
-      remains     = players - win_players
-#      split_winners = (win_players.size >= (2+rand(2)))
-      split_winners = false
-      if split_winners
-        if win_players.size % 2 == 1
-#          if include_newbie?(win_players)
-            remains << delete_player_at_random(win_players)
-#          else
-#            remains << delete_least_rate_player(win_players)
-#          end
-        end         
-        pairing_and_start_game_by_rate(win_players, 800, 2500)
-      else
-        remains.concat(win_players)
-      end
-      return if remains.size < 2
-      if remains.size % 2 == 1
-        delete_player_at_random(remains)
-        # delete_most_playing_player(remains)
-      end
-      if split_winners
-        pairing_and_start_game_by_rate(remains, 200, 400)
-      else
-        # pairing_and_start_game_by_rate(remains, 800, 2400)
-        pairing_and_start_game_by_rate(remains, 1200, 2400)
-      end
+      log_message("Floodgate: Ordered by rate")
+      players.sort! {|a,b| a.rate <=> b.rate} # decendent order
+      log_players(players)
     end
-  end # SwissPairing
+  end
 
-  class ExcludeSacrifice
-    attr_accessor :sacrifice
-
-    def initialize(pairing)
-      @pairing  = pairing
-      @sacrifice = "gps500+e293220e3f8a3e59f79f6b0efffaa931"
+  class SortByRateWithRandomness < Pairing
+    def initialize(rand1, rand2)
+      super()
+      @rand1, @rand2 = rand1, rand2
     end
 
     def match(players)
-      if @sacrifice && 
-         players.size % 2 == 1 && 
-         players.find{|a| a.player_id == @sacrifice}
-        log_message("Floodgate: first, exclude %s" % [@sacrifice])
-        players.delete_if{|a| a.player_id == @sacrifice}
+      super
+      cur_rate = Hash.new
+      players.each{|a| cur_rate[a] = a.rate ? a.rate + rand(@rand1) : rand(@rand2)}
+      players.sort!{|a,b| cur_rate[a] <=> cur_rate[b]}
+      log_players(players) do |one|
+        "%s %d (randomness %d)" % [one.name, one.rate, cur_rate[one] - one.rate]
       end
-      @pairing.match(players)
+    end
+  end
+
+  class DeletePlayerAtRandom < Pairing
+    def match(players)
+      super
+      return if less_than_one?(players)
+      one = players.choice
+      log_message("Floodgate: Deleted %s at random" % [one.name])
+      players.delete(one)
+      log_players(players)
+    end
+  end
+
+  class DeletePlayerAtRandomExcept < Pairing
+    def initialize(except)
+      super()
+      @except = except
     end
 
-    # Delegate to @pairing
-    def method_missing(message, *arg)
-      @pairing.send(message, *arg)
+    def match(players)
+      super
+      log_message("Floodgate: Deleting a player at rondom except %s" % [@except.name])
+      players.delete(@except)
+      DeletePlayerAtRandom.new.match(players)
+      players.push(@except)
+    end
+  end
+  
+  class DeleteMostPlayingPlayer < Pairing
+    def match(players)
+      super
+      one = players.max_by {|a| a.win + a.loss}
+      log_message("Floodgate: Deleted the most playing player: %s (%d)" % [one.name, one.win + one.loss])
+      players.delete(one)
+      log_players(players)
+    end
+  end
+
+  class DeleteLeastRatePlayer < Pairing
+    def match(players)
+      super
+      one = players.min_by {|a| a.rate}
+      log_message("Floodgate: Deleted the least rate player %s (%d)" % [one.name, one.rate])
+      players.delete(one)
+      log_players(players)
+    end
+  end
+
+  class ExcludeSacrifice < Pairing
+    attr_reader :sacrifice
+
+    # @sacrifice a player id to be eliminated
+    def initialize(sacrifice)
+      super()
+      @sacrifice = sacrifice
+    end
+
+    def match(players)
+      super
+      if @sacrifice && 
+         players.size.odd? && 
+         players.find{|a| a.player_id == @sacrifice}
+         log_message("Floodgate: Deleting the sacrifice %s" % [@sacrifice])
+         players.delete_if{|a| a.player_id == @sacrifice}
+         log_players(players)
+      end
     end
   end # class ExcludeSacrifice
+
+  class ExcludeSacrificeGps500 < ExcludeSacrifice
+    def initialize
+      super("gps500+e293220e3f8a3e59f79f6b0efffaa931")
+    end
+  end
+
+  class MakeEven < Pairing
+    def match(players)
+      super
+      return if players.even?
+      log_message("Floodgate: there are odd players: %d. Deleting one..." % 
+                  [players.size])
+      DeletePlayerAtRandom.new.match(players)
+    end
+  end
+
 end # ShogiServer

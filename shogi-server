@@ -220,11 +220,7 @@ end
 
 def main
   
-  #[ShogiServer::League::Floodgate, ShogiServer::Pairing].each do |klass|
-  #  Dependencies.unloadable klass
-  #end
-
-  setup_watchdog_for_giant_lock
+ setup_watchdog_for_giant_lock
 
   $options = parse_command_line
   if (ARGV.length != 2)
