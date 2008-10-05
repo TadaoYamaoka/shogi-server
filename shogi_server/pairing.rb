@@ -26,9 +26,9 @@ module ShogiServer
     class << self
       def default_pairing
         #return SwissPairing.new
-        return ExcludeSacrifice.new(SwissPairing.new)
+        #return ExcludeSacrifice.new(SwissPairing.new)
         #return RandomPairing.new
-        #return ExcludeSacrifice.new(RandomPairing.new)
+        return ExcludeSacrifice.new(RandomPairing.new)
       end
     end
 
@@ -74,23 +74,47 @@ module ShogiServer
 
     def pairing_and_start_game(players)
       return if players.size < 2
-      if players.size % 2 == 1
+      if players.size.odd?
         log_warning("#Players should be even: %d" % [players.size])
         return
       end
 
-      ShogiServer.shuffle(players)
-
-      pairs = [[players.shift]]
-      while !players.empty? do
-        if pairs.last.size < 2
-          pairs.last << players.shift
-        else
-          pairs << [players.shift]
-        end 
+      sorted = players.shuffle
+      pairs = []
+      while !sorted.empty? do
+        pairs << sorted.shift(2)
       end
       pairs.each do |pair|
         start_game(pair.first, pair.last)
+      end
+    end
+
+    def pairing_and_start_game_by_rate(players, randomness1, randomness2)
+      return if players.size < 2
+      if players.size % 2 == 1
+        log_warning("#Players should be even: %d" % [players.size])
+        return
+      end
+      cur_rate = Hash.new
+      players.each{ |a| cur_rate[a] = a.rate ? a.rate+rand(randomness1) : rand(randomness2) }
+      sorted = players.sort{ |a,b| cur_rate[a] <=> cur_rate[b] }
+      log_message("Floodgate[%s]: %s (randomness %d)" % [self.class, sorted.map{|a| a.name}.join(","), randomness1])
+
+      pairs = [[sorted.shift]]
+      while !sorted.empty? do
+        if pairs.last.size < 2
+          pairs.last << sorted.shift
+        else
+          pairs << [sorted.shift]
+        end 
+      end
+      pairs.each do |pair|
+        start_game(pair.choice, pair.choice)
+        if (rand(2) == 0)
+          start_game(pair.first, pair.last)
+        else
+          start_game(pair.last, pair.first)
+        end
       end
     end
   end # Pairing
@@ -112,9 +136,20 @@ module ShogiServer
       super
       return if players.size < 2
 
-      win_players = players.find_all {|a| a.last_game_win?}
+      win_players = players.find_all {|a| a.last_game_win? }
+      log_message("Floodgate[%s]: win_players %s" % [self.class, win_players.map{|a| a.name}.join(",")])
+      if (win_players.size < players.size / 2)
+        x1_players = players.find_all {|a| a.rate > 0 && !a.last_game_win? && a.protocol != LoginCSA::PROTOCOL }
+        x1_players = x1_players.sort{ rand < 0.5 ? 1 : -1 }
+        while (win_players.size < players.size / 2) && !x1_players.empty? do
+          win_players << x1_players.shift
+        end
+        log_message("Floodgate[%s]: win_players (adhoc x1 collection) %s" % [self.class, win_players.map{|a| a.name}.join(",")])
+      end
       remains     = players - win_players
-      if win_players.size >= 2
+#      split_winners = (win_players.size >= (2+rand(2)))
+      split_winners = false
+      if split_winners
         if win_players.size % 2 == 1
 #          if include_newbie?(win_players)
             remains << delete_player_at_random(win_players)
@@ -122,7 +157,7 @@ module ShogiServer
 #            remains << delete_least_rate_player(win_players)
 #          end
         end         
-        pairing_and_start_game(win_players)
+        pairing_and_start_game_by_rate(win_players, 800, 2500)
       else
         remains.concat(win_players)
       end
@@ -131,7 +166,12 @@ module ShogiServer
         delete_player_at_random(remains)
         # delete_most_playing_player(remains)
       end
-      pairing_and_start_game(remains)
+      if split_winners
+        pairing_and_start_game_by_rate(remains, 200, 400)
+      else
+        # pairing_and_start_game_by_rate(remains, 800, 2400)
+        pairing_and_start_game_by_rate(remains, 1200, 2400)
+      end
     end
   end # SwissPairing
 
