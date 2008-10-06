@@ -41,7 +41,7 @@ class League
         Floodgate.game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      Pairing.default_pairing.match(players)
+      Pairing.match(players)
     end
   end # class Floodgate
 

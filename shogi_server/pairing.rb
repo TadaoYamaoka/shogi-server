@@ -29,14 +29,16 @@ module ShogiServer
       end
 
       def sort_by_rate_with_randomness
-        return [ExcludeSacrificeGps500.new,
+        return [LogPlayers.new,
+                ExcludeSacrificeGps500.new,
                 MakeEven.new,
                 SortByRateWithRandomness.new(1200, 2400),
                 StartGame.new]
       end
 
       def random_pairing
-        return [ExcludeSacrificeGps500.new,
+        return [LogPlayers.new,
+                ExcludeSacrificeGps500.new,
                 MakeEven.new,
                 Randomize.new,
                 StartGame.new]
@@ -46,6 +48,7 @@ module ShogiServer
         logics = default_factory
         logics.inject(players) do |result, item|
           item.match(result)
+          result
         end
       end
     end # class << self
@@ -84,6 +87,13 @@ module ShogiServer
     end
   end # Pairing
 
+
+  class LogPlayers < Pairing
+    def match(players)
+      log_players(players)
+    end
+  end
+
   class StartGame < Pairing
     def match(players)
       super
@@ -104,7 +114,7 @@ module ShogiServer
       end
     end
 
-    def start_game
+    def start_game(p1, p2)
       log_message("Floodgate: BLACK %s; WHITE %s" % [p1.name, p2.name])
       p1.sente = true
       p2.sente = false
