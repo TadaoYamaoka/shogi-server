@@ -35,14 +35,6 @@ class League
   end
   attr_accessor :players, :games, :event, :dir
 
-  def shutdown
-    @mutex.synchronize do
-      @players.each do |name, player| 
-        @persistent.save(player)
-      end
-    end
-  end
-
   # this should be called just after instanciating a League object.
   def setup_players_database
     filename = File.join(@dir, "players.yaml")
@@ -57,14 +49,9 @@ class League
   end
   
   def delete(player)
-    @persistent.save(player)
     @mutex.synchronize do
       @players.delete(player.name)
     end
-  end
-
-  def save(player)
-    @persistent.save(player)
   end
 
   def reload

@@ -1,6 +1,26 @@
+## $Id$
+
+## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
+## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 module ShogiServer
 
 class League
+
   #
   # This manages those players who have their player_id.
   # Since mk_rate mainly updates the yaml file, basically,
@@ -44,21 +64,6 @@ class League
       player.rating_group  = hash['rating_group']
       player.win           = hash['win']  || 0
       player.loss          = hash['loss'] || 0
-      player.last_game_win = hash['last_game_win'] || false
-    end
-
-    def save(player)
-      return unless player.player_id
-
-      each_group do |group, players|
-        hash = players[player.player_id]
-        if hash
-          # write only this property. 
-          # the others are updated by ./mk_rate
-          hash['last_game_win'] = player.last_game_win
-          break
-        end
-      end
     end
 
     def get_players

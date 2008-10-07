@@ -273,13 +273,11 @@ def main
   server = WEBrick::GenericServer.new(config)
   ["INT", "TERM"].each do |signal| 
     trap(signal) do
-      LEAGUE.shutdown
       server.shutdown
       fg_thread.kill if fg_thread
     end
   end
   trap("HUP") do
-    LEAGUE.shutdown
     Dependencies.clear
   end
   $stderr.puts("server started as a deamon [Revision: #{ShogiServer::Revision}]") if $options["daemon"] 
