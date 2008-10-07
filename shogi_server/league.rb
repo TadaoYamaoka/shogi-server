@@ -26,12 +26,12 @@ module ShogiServer # for a namespace
 #
 class League
 
-  def initialize
+  def initialize(dir=File.dirname(__FILE__))
     @mutex = Monitor.new # guard @players
     @games = Hash::new
     @players = Hash::new
     @event = nil
-    @dir = File.dirname(__FILE__)
+    @dir = dir
   end
   attr_accessor :players, :games, :event, :dir
 

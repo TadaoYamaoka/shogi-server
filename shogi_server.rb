@@ -58,7 +58,7 @@ RELOAD_FILES = ["shogi_server/league/floodgate.rb",
                 "shogi_server/pairing.rb"]
 
 def reload
-  here = File.dirname(__FILE__)
+  here = TOP_DIR || File.dirname(__FILE__)
   RELOAD_FILES.each do |f|
     load File.join(here, f)
   end

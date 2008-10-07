@@ -18,6 +18,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+TOP_DIR = File.expand_path(File.dirname(__FILE__))
 $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
 
@@ -220,8 +221,6 @@ end
 
 def main
   
- setup_watchdog_for_giant_lock
-
   $options = parse_command_line
   if (ARGV.length != 2)
     usage
@@ -234,6 +233,9 @@ def main
      !File.directory?($options["player-log-dir"])
     usage
     exit 3
+  end
+  if $options["pid-file"] 
+    $options["pid-file"] = File.expand_path($options["pid-file"])
   end
 
   LEAGUE.event = ARGV.shift
@@ -248,8 +250,7 @@ def main
   log_file = dir ? File.join(dir, "shogi-server.log") : STDOUT
   $logger = setup_logger(log_file)
 
-  LEAGUE.dir = dir || File.dirname(__FILE__)
-  LEAGUE.setup_players_database
+  LEAGUE.dir = dir || TOP_DIR
 
   config = {}
   config[:Port]       = port
@@ -257,16 +258,19 @@ def main
   config[:Logger]     = $logger
 
   fg_thread = nil
+
   config[:StartCallback] = Proc.new do
     if $options["pid-file"]
       write_pid_file($options["pid-file"])
     end
+    setup_watchdog_for_giant_lock
+    LEAGUE.setup_players_database
     fg_thread = setup_floodgate
   end
 
   config[:StopCallback] = Proc.new do
     if $options["pid-file"]
-      FileUtils.rm(pid_file, :force => true)
+      FileUtils.rm($options["pid-file"], :force => true)
     end
   end
 
@@ -316,7 +320,7 @@ if ($0 == __FILE__)
   Thread.abort_on_exception = $DEBUG ? true : false
 
   begin
-  LEAGUE = ShogiServer::League::new
+    LEAGUE = ShogiServer::League.new(TOP_DIR)
     main
   rescue Exception => ex
     log_error("main: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
