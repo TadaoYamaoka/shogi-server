@@ -34,20 +34,7 @@ class Board
   attr_reader :move_count
 
   def deep_copy
-    # return Marshal.load(Marshal.dump(self))
-    board = Board.new(self.move_count)
-    board.sente_hands   = self.sente_hands.clone
-    board.gote_hands    = self.gote_hands.clone
-    board.history       = self.history.clone
-    board.history.default = 0
-    board.sente_history = self.sente_history.clone
-    board.sente_history.default = 0
-    board.gote_history  = self.gote_history.clone
-    board.gote_history.default = 0
-    board.array = []
-    self.array.each {|a| board.array.push(a.clone)}
-    board.teban         = self.teban
-    return board
+    return Marshal.load(Marshal.dump(self))
   end
 
   def initial
