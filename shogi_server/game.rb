@@ -34,7 +34,6 @@ class GameResult
     end
     @players.each do |player|
       player.status = "connected"
-      LEAGUE.save(player)
     end
   end
 
