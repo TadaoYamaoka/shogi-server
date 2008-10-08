@@ -1,3 +1,12 @@
+2008-10-08 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Ruby 1.8.7 (or later) must be used. Ruby 1.8.6 is not supported.
+	  - Daemon mode is available.
+	  - shogi_server/piece_ky.rb is again merged with
+	    shogi_server/piece.rb, then has been removed.  
+	  - Added a test case, TC_usi.rb.
+
 2008-06-30 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

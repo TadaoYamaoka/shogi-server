@@ -6,7 +6,6 @@
 # this will force the controller to be mounted on: /otherurl
 
 require File.join(__DIR__, "..", "..", "shogi_server", "piece")
-require File.join(__DIR__, "..", "..", "shogi_server", "piece_ky")
 require File.join(__DIR__, "..", "..", "shogi_server", "board")
 require File.join(__DIR__, "..", "..", "shogi_server", "usi")
 

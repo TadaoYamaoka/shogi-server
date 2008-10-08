@@ -3,7 +3,6 @@ $:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
 require 'shogi_server'
 require 'shogi_server/board'
-require 'shogi_server/piece_ky'
 require 'shogi_server/piece'
 
 class TestUsi < Test::Unit::TestCase
