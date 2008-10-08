@@ -15,17 +15,6 @@ class TestPersistent < Test::Unit::TestCase
     @p = ShogiServer::BasicPlayer.new
     @p.name = "gps_normal"
     @p.player_id = "gps_normal_dummy_id"
-    @p.last_game_win = true
-  end
-
-  def test_save_player
-    @persistent.save(@p)
-
-    p2 = ShogiServer::BasicPlayer.new
-    p2.player_id = @p.player_id
-
-    @persistent.load_player(p2)
-    assert_equal(p2.last_game_win, false)
   end
 
   def test_empty_yaml
@@ -77,7 +66,6 @@ class TestLeague < Test::Unit::TestCase
   end
 
   def teardown
-    @league.shutdown
   end
 
   def test_add_player
