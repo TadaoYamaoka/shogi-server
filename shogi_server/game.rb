@@ -191,7 +191,7 @@ class GameResultDraw < GameResult
   
   def log_summary(type)
     log_board
-    log("'summary:%s:%s draw:%s draw\n", type, @black.name, @white.name)
+    log("'summary:%s:%s draw:%s draw\n" % [type, @black.name, @white.name])
   end
 end
 
