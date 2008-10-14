@@ -4,5 +4,5 @@ require 'ramaze'
 acquire __DIR__/:controller/'*'
 acquire __DIR__/:model/'*'
 
-Ramaze.start :adapter => :webrick, :port => 7000,
-             :urls => ["/images"], :root => "public"
+Ramaze.start :adapter => :webrick, :port => 7000 #,
+             #:urls => ["/images"], :root => "public"

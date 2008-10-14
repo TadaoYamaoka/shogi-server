@@ -9,7 +9,10 @@ require File.join(__DIR__, "..", "..", "shogi_server", "piece")
 require File.join(__DIR__, "..", "..", "shogi_server", "board")
 require File.join(__DIR__, "..", "..", "shogi_server", "usi")
 
-$pos2img = "/home/daigo/cprojects/gpsshogi/gps/sample/graphic/pos2img"
+require File.join(__DIR__, "..", "gen-rb", "ShogiGraphic")
+require 'thrift/transport/socket'
+require 'thrift/protocol/tbinaryprotocol'
+
 $pos2img_out_dir = File.join(".", "public", "images")
 
 class MainController < Ramaze::Controller
@@ -48,9 +51,21 @@ class MainController < Ramaze::Controller
   def sfen(str)
     sfen = "sfen %s" % [ShogiServer::Usi.unescape(str)]
     Ramaze::Log.warn(sfen)
-    result = system($pos2img, "--dir", $pos2img_out_dir, sfen)
+
+    transport = Thrift::BufferedTransport.new(Thrift::Socket.new('localhost', 9090))
+    client    = ShogiGraphic::Client.new(Thrift::BinaryProtocol.new(transport))
+
+    transport.open
+    result = client.usi2png(sfen)
+    transport.close
+
     Ramaze::Log.warn("result fail") unless result
-    @img = "/images/%s.png" % [str]
+    @img = "/images/%s" % [result]
+  end
+
+  def images(str)
+    file = File.join($pos2img_out_dir, str)
+    send_file(file, mime_type = Ramaze::Tool::MIME.type_for(file))
   end
 
   # the string returned at the end of the function is used as the html body
