@@ -207,6 +207,8 @@ class Player < BasicPlayer
         end
       end # while loop
       log_error("%s's socket closed." % [@name]) if @socket.closed?
+      log_message("There remain messages that are not yet sent to the client: %s" %
+                  [@write_queue.get_messages.join(", ")])
     end # thread
   end
 

@@ -66,6 +66,23 @@ class TimeoutQueue
     end # synchronize
     return ret
   end
+
+  def empty?
+    ret = true
+    @mon.synchronize do
+      ret = @queue.empty?
+    end
+    return ret
+  end
+
+  def get_messages
+    ret = nil
+    @mon.synchronize do
+      ret = @queue.dup
+    end
+    return ret
+  end
+
 end
 
 end
