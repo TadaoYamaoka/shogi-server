@@ -260,6 +260,7 @@ def main
   fg_thread = nil
 
   config[:StartCallback] = Proc.new do
+    srand
     if $options["pid-file"]
       write_pid_file($options["pid-file"])
     end
