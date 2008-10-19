@@ -1,29 +1,32 @@
-#!/usr/bin/env ruby
-#    This generates graphs of evaluation values from comments in CSA files.
-#    Ruby libraries that are required: 
-#      - RubyGems: http://rubyforge.org/projects/rubygems/
-#      - rgplot:   http://rubyforge.org/projects/rgplot/
-#    OS librariles that is required:
-#      - Gnuplot:  http://www.gnuplot.info/
-#                  On Debian, $ sudo apt-get install gnuplot
-#    
-#    Copyright (C) 2006  Daigo Moriwaki <daigo@debian.org>
+#!/usr/bin/ruby
+# This generates graphs of evaluation values from comments in CSA files.
+# Ruby libraries that are required: 
+# * RubyGems: http://rubyforge.org/projects/rubygems/
+# * rgplot:   http://rubyforge.org/projects/rgplot/
+# OS librariles that is required:
+# * Gnuplot:  http://www.gnuplot.info/
+#   * On Debian, $ sudo apt-get install gnuplot
 #
-#    Version: $Id$
+# Author::    Daigo Moriwaki <daigo at debian dot org>
+# Copyright:: Copyright (C) 2006-2008  Daigo Moriwaki <daigo at debian dot org>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# $Id$
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+#--
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+#++
 
 require 'pathname'
 require 'getoptlong'
@@ -38,6 +41,16 @@ def reformat_svg(str)
   str.gsub(%r!<svg.*?>!m, <<-END) 
 <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 END
+end
+
+# Parse play time from the game_name, then return it. If the game_name is
+# not valid, return 0.
+#
+def play_time(game_name)
+  if /.*?\+.*?\-(\d*?)\-/ =~ game_name
+    return $1.to_i
+  end
+  return 0  
 end
 
 module EvalGraph
@@ -62,9 +75,10 @@ module EvalGraph
       @comments = []
       @times = []
       @type = type
-      @regexp_move = Regexp.new("^\\#{@type}\\d{4}\\w{2}")
-      @regexp_name = Regexp.new("^N\\#{@type}(.*)")
-      @regexp_time = Regexp.new(/^T(\d+)/)
+      @regexp_move    = Regexp.new("^\\#{@type}\\d{4}\\w{2}")
+      @regexp_name    = Regexp.new("^N\\#{@type}(.*)")
+      @regexp_time    = Regexp.new(/^T(\d+)/)
+      @regexp_comment = Regexp.new(/^'\*\*(.*)/)
       @flag = false
       @name = nil
     end
@@ -85,7 +99,7 @@ module EvalGraph
         if @flag
           @times << $1.to_i
         end
-      when /^'\*\*(.*)/
+      when @regexp_comment
         if @flag
           @comments << EvalGraph::parse_comment($1)
           @flag = false
@@ -97,10 +111,13 @@ module EvalGraph
       end
     end
 
-    def time_values(y_max, full_time)
-      consume = full_time
+    # Return times for each move which the player played. 
+    # return[0] is the initial play_time.
+    #
+    def time_values(y_max, play_time)
+      consume = play_time
       values = []
-      values << 1.0*y_max/full_time*consume
+      values << 1.0*y_max/play_time*consume
       @times.each do |t|
         if consume == 0
           break
@@ -109,12 +126,11 @@ module EvalGraph
         if consume < 0
           consume = 0
         end
-        values << 1.0*y_max/full_time*consume
+        values << 1.0*y_max/play_time*consume
       end
       return values
     end
-
-  end
+  end # Player
 
   class Black < Player
     def name
@@ -132,7 +148,8 @@ module EvalGraph
       [moves, comments.compact.unshift(0)]
     end
 
-    def time_values(y_max, full_time)
+    # Return moves and times. For example, [[0,1,3], [900, 899, 898]]
+    def time_values(y_max, play_time)
       values = super
       moves = [0]
       return [moves, values] if values.size <= 1
@@ -144,7 +161,7 @@ module EvalGraph
       end
       return [moves, values]
     end
-  end
+  end # Black
 
   class White < Player
     def name
@@ -160,7 +177,7 @@ module EvalGraph
       [moves, comments.compact.unshift(0)]
     end
 
-    def time_values(y_max, full_time)
+    def time_values(y_max, play_time)
       values = super
       moves = [0]
       return [moves, values] if values.size <= 1
@@ -171,8 +188,8 @@ module EvalGraph
         i += 2
       end
       return [moves, values]
-   end
-  end
+    end
+  end # White
 
   
   def create_players
@@ -183,14 +200,8 @@ module EvalGraph
     return black,white
   end
   module_function :create_players
-end
+end # module EvalGraph
 
-def max_time(game_name)
-  if /.*?\+.*?\-(\d*?)\-/ =~ game_name
-    return $1.to_i
-  end
-  return 0  
-end
 
 def plot(csa_file, title, black, white)
   width = [black.comments.size, white.comments.size].max * 2 + 1
@@ -214,7 +225,7 @@ def plot(csa_file, title, black, white)
       plot.key "left"
      
       plot.style "line 1 linewidth 5 linetype 0 linecolor rgbcolor \"red\"" 
-      plot.style "line 2 linewidth 5 linetype 0 linecolor rgbcolor \"blue\"" 
+      plot.style "line 2 linewidth 4 linetype 0 linecolor rgbcolor \"blue\"" 
 
       plot.data << Gnuplot::DataSet.new( black.eval_values ) do |ds|
         ds.with  = "lines ls 1"
@@ -226,20 +237,21 @@ def plot(csa_file, title, black, white)
         ds.title = white.name
       end
 
-      full_time = max_time(csa_file)
-      if full_time > 0
+      a_play_time = play_time(csa_file)
+      if a_play_time > 0
         plot.style "line 5 linewidth 1 linetype 0 linecolor rgbcolor \"red\"" 
         plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"blue\"" 
         plot.style "fill solid 0.25 noborder"
 
-        plot.data << Gnuplot::DataSet.new( black.time_values(2000, full_time) ) do |ds|
+        plot.data << Gnuplot::DataSet.new( black.time_values(2000, a_play_time) ) do |ds|
           ds.with  = "boxes notitle ls 5"
         end
         
-        plot.data << Gnuplot::DataSet.new( white.time_values(-2000, full_time) ) do |ds|
+        plot.data << Gnuplot::DataSet.new( white.time_values(-2000, a_play_time) ) do |ds|
           ds.with  = "boxes notitle ls 6"
         end
-      end
+      end # if
+
     end
   end  
 end
