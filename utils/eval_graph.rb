@@ -102,7 +102,13 @@ module EvalGraph
       values = []
       values << 1.0*y_max/full_time*consume
       @times.each do |t|
+        if consume == 0
+          break
+        end
         consume -= t
+        if consume < 0
+          consume = 0
+        end
         values << 1.0*y_max/full_time*consume
       end
       return values
@@ -221,20 +227,19 @@ def plot(csa_file, title, black, white)
       end
 
       full_time = max_time(csa_file)
-      return if full_time == 0
+      if full_time > 0
+        plot.style "line 5 linewidth 1 linetype 0 linecolor rgbcolor \"red\"" 
+        plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"blue\"" 
+        plot.style "fill solid 0.25 noborder"
 
-      plot.style "line 5 linewidth 1 linetype 0 linecolor rgbcolor \"red\"" 
-      plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"blue\"" 
-      plot.style "fill solid 0.25 noborder"
-
-      plot.data << Gnuplot::DataSet.new( black.time_values(2000, full_time) ) do |ds|
-        ds.with  = "boxes notitle ls 5"
+        plot.data << Gnuplot::DataSet.new( black.time_values(2000, full_time) ) do |ds|
+          ds.with  = "boxes notitle ls 5"
+        end
+        
+        plot.data << Gnuplot::DataSet.new( white.time_values(-2000, full_time) ) do |ds|
+          ds.with  = "boxes notitle ls 6"
+        end
       end
-      
-      plot.data << Gnuplot::DataSet.new( white.time_values(-2000, full_time) ) do |ds|
-        ds.with  = "boxes notitle ls 6"
-      end
-
     end
   end  
 end
