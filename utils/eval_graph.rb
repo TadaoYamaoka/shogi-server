@@ -36,10 +36,8 @@ end
 
 def reformat_svg(str)
   str.gsub(%r!<svg.*?>!m, <<-END) 
-	         <svg viewBox="0 0 800 600" 
-					      xmlns="http://www.w3.org/2000/svg" 
-								xmlns:xlink="http://www.w3.org/1999/xlink">
-	         END
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+END
 end
 
 module EvalGraph
@@ -59,11 +57,14 @@ module EvalGraph
     attr_accessor :theOther
     attr_reader   :name, :comments, :start_time
     
+    # type is '+' or '-'
     def initialize(type)
-			@comments = []
+      @comments = []
+      @times = []
       @type = type
       @regexp_move = Regexp.new("^\\#{@type}\\d{4}\\w{2}")
       @regexp_name = Regexp.new("^N\\#{@type}(.*)")
+      @regexp_time = Regexp.new(/^T(\d+)/)
       @flag = false
       @name = nil
     end
@@ -80,6 +81,10 @@ module EvalGraph
       when @regexp_move
         @flag = true
         @theOther.reset
+      when @regexp_time
+        if @flag
+          @times << $1.to_i
+        end
       when /^'\*\*(.*)/
         if @flag
           @comments << EvalGraph::parse_comment($1)
@@ -90,6 +95,17 @@ module EvalGraph
       when /\$START_TIME:(.*)/
         @start_time = $1
       end
+    end
+
+    def time_values(y_max, full_time)
+      consume = full_time
+      values = []
+      values << 1.0*y_max/full_time*consume
+      @times.each do |t|
+        consume -= t
+        values << 1.0*y_max/full_time*consume
+      end
+      return values
     end
 
   end
@@ -109,6 +125,19 @@ module EvalGraph
       moves.unshift 0
       [moves, comments.compact.unshift(0)]
     end
+
+    def time_values(y_max, full_time)
+      values = super
+      moves = [0]
+      return [moves, values] if values.size <= 1
+
+      i = 1
+      values[1, values.size-1].each do |v|
+        moves << i
+        i += 2
+      end
+      return [moves, values]
+    end
   end
 
   class White < Player
@@ -124,6 +153,19 @@ module EvalGraph
       moves.unshift 0
       [moves, comments.compact.unshift(0)]
     end
+
+    def time_values(y_max, full_time)
+      values = super
+      moves = [0]
+      return [moves, values] if values.size <= 1
+
+      i = 2
+      values[1, values.size-1].each do |v|
+        moves << i
+        i += 2
+      end
+      return [moves, values]
+   end
   end
 
   
@@ -137,6 +179,12 @@ module EvalGraph
   module_function :create_players
 end
 
+def max_time(game_name)
+  if /.*?\+.*?\-(\d*?)\-/ =~ game_name
+    return $1.to_i
+  end
+  return 0  
+end
 
 def plot(csa_file, title, black, white)
   width = [black.comments.size, white.comments.size].max * 2 + 1
@@ -159,16 +207,34 @@ def plot(csa_file, title, black, white)
       plot.size   "0.9,0.9"
       plot.key "left"
      
+      plot.style "line 1 linewidth 5 linetype 0 linecolor rgbcolor \"red\"" 
+      plot.style "line 2 linewidth 5 linetype 0 linecolor rgbcolor \"blue\"" 
+
       plot.data << Gnuplot::DataSet.new( black.eval_values ) do |ds|
-        ds.with  = "lines"
+        ds.with  = "lines ls 1"
         ds.title = black.name
       end
       
       plot.data << Gnuplot::DataSet.new( white.eval_values ) do |ds|
-        ds.with  = "lines"
+        ds.with  = "lines ls 2"
         ds.title = white.name
       end
+
+      full_time = max_time(csa_file)
+      return if full_time == 0
+
+      plot.style "line 5 linewidth 1 linetype 0 linecolor rgbcolor \"red\"" 
+      plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"blue\"" 
+      plot.style "fill solid 0.25 noborder"
+
+      plot.data << Gnuplot::DataSet.new( black.time_values(2000, full_time) ) do |ds|
+        ds.with  = "boxes notitle ls 5"
+      end
       
+      plot.data << Gnuplot::DataSet.new( white.time_values(-2000, full_time) ) do |ds|
+        ds.with  = "boxes notitle ls 6"
+      end
+
     end
   end  
 end
