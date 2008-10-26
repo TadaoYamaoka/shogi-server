@@ -203,7 +203,7 @@ module EvalGraph
 end # module EvalGraph
 
 
-def plot(csa_file, title, black, white)
+def plot(csa_file, title, black, white, a_play_time)
   width = [black.comments.size, white.comments.size].max * 2 + 1
   Gnuplot.open do |gp|
     Gnuplot::Plot.new( gp ) do |plot|
@@ -225,7 +225,7 @@ def plot(csa_file, title, black, white)
       plot.key "left"
      
       plot.style "line 1 linewidth 5 linetype 0 linecolor rgbcolor \"red\"" 
-      plot.style "line 2 linewidth 4 linetype 0 linecolor rgbcolor \"blue\"" 
+      plot.style "line 2 linewidth 4 linetype 0 linecolor rgbcolor \"dark-green\"" 
 
       plot.data << Gnuplot::DataSet.new( black.eval_values ) do |ds|
         ds.with  = "lines ls 1"
@@ -237,17 +237,16 @@ def plot(csa_file, title, black, white)
         ds.title = white.name
       end
 
-      a_play_time = play_time(csa_file)
       if a_play_time > 0
         plot.style "line 5 linewidth 1 linetype 0 linecolor rgbcolor \"red\"" 
-        plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"blue\"" 
+        plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"green\"" 
         plot.style "fill solid 0.25 noborder"
 
-        plot.data << Gnuplot::DataSet.new( black.time_values(2000, a_play_time) ) do |ds|
+        plot.data << Gnuplot::DataSet.new( black.time_values(3000, a_play_time) ) do |ds|
           ds.with  = "boxes notitle ls 5"
         end
         
-        plot.data << Gnuplot::DataSet.new( white.time_values(-2000, a_play_time) ) do |ds|
+        plot.data << Gnuplot::DataSet.new( white.time_values(-3000, a_play_time) ) do |ds|
           ds.with  = "boxes notitle ls 6"
         end
       end # if
@@ -257,9 +256,14 @@ def plot(csa_file, title, black, white)
 end
 
 
-
-def read(lines, file_name)
+# Read kifu, a record of moves, to generate a graph file. 
+# lines are contents of the kifu.
+# file is a file name of a genrating image file.
+# original_file_name is a file name of the csa file.
+#
+def read(lines, file_name, original_file_name=nil)
   lines.map! {|l| l.strip}
+  original_file_name ||=  file_name 
   
   black,white = EvalGraph.create_players
   while l = lines.shift do
@@ -268,7 +272,8 @@ def read(lines, file_name)
   end
   
   title = "#{file_name}" 
-  plot(file_name, title, black, white)
+  a_play_time = play_time(original_file_name)
+  plot(file_name, title, black, white, a_play_time)
 end
 
 
