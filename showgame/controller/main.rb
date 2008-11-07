@@ -49,14 +49,11 @@ class MainController < Ramaze::Controller
   end
 
   def sfen(str)
-    sfen = "sfen %s" % [ShogiServer::Usi.unescape(str)]
-    Ramaze::Log.warn(sfen)
-
     transport = Thrift::BufferedTransport.new(Thrift::Socket.new('localhost', 9090))
     client    = ShogiGraphic::Client.new(Thrift::BinaryProtocol.new(transport))
 
     transport.open
-    result = client.usi2png(sfen)
+    result = client.usi2png(str)
     transport.close
 
     Ramaze::Log.warn("result fail") unless result

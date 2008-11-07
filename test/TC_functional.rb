@@ -240,3 +240,12 @@ class TestDuplicatedMoves < BaseClient
   end
 end
 
+class TestChatCommand < BaseClient
+  def test_chat
+    cmd "%%CHAT Hello"
+    sleep 1
+    str = read(@socket2)
+    puts str   
+    assert("", str)
+  end
+end

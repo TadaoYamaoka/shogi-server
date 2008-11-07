@@ -363,3 +363,22 @@ class TestExcludeSacrifice < Test::Unit::TestCase
   end
 end
 
+
+class TestFloodgateHistory < Test::Unit::TestCase
+  def setup
+    @file = Pathname.new(File.join(File.dirname(__FILE__), "floodgate_history.yaml"))
+    @history = ShogiServer::League::Floodgate::History.new @file
+  end
+
+  def teaup
+    @file.delete if @file.exist?
+  end
+
+  def test_new
+    file = Pathname.new(File.join(File.dirname(__FILE__), "hoge.yaml"))
+    history = ShogiServer::League::Floodgate::History.new file
+    history.save
+    assert file.exist?
+    file.delete if file.exist?
+  end
+end

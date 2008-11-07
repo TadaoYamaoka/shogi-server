@@ -17,10 +17,37 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'shogi_server/league/floodgate'
+require 'observer'
+
 module ShogiServer # for a namespace
 
+# MonitorObserver obserers GameResult to send messages to the monotors
+# watching the game
+#
+class MonitorObserver
+  def update(game_result)
+    game_result.game.each_monitor do |monitor|
+      monitor.write_safe("##[MONITOR][%s] %s\n" % [game_result.game.game_id, game_result.type])
+    end
+  end
+end
+
+# Base class for a game result
+#
 class GameResult
-  attr_reader :players, :black, :white
+  include Observable
+
+  # Game object
+  attr_reader :game
+  # Array of players
+  attr_reader :players
+  # Black player object
+  attr_reader :black
+  # White plyer object
+  attr_reader :white
+  # Command to send monitors such as '%%TORYO' etc...
+  attr_reader :result_type
 
   def initialize(game, p1, p2)
     @game = game
@@ -35,10 +62,29 @@ class GameResult
     @players.each do |player|
       player.status = "connected"
     end
+    @result_type = ""
+
+    regist_observers
+  end
+
+  def regist_observers
+    add_observer MonitorObserver.new
+
+    if League::Floodgate.game_name?(@game.game_id) &&
+       @game.sente.player_id &&
+       @game.gote.player_id &&
+       $options["floodgate-history"]
+      add_observer History.factory
+    end
   end
 
   def process
     raise "Implement me!"
+  end
+
+  def notify
+    changed
+    notify_observers(self)
   end
 
   def log(str)
@@ -49,11 +95,6 @@ class GameResult
     log(@game.board.to_s.gsub(/^/, "\'"))
   end
 
-  def notify_monitor(type)
-    @game.each_monitor do |monitor|
-      monitor.write_safe(sprintf("##[MONITOR][%s] %s\n", @game.game_id, type))
-    end
-  end
 end
 
 class GameResultWin < GameResult
@@ -90,7 +131,8 @@ class GameResultAbnormalWin < GameResultWin
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
     log("%%TORYO\n")
     log_summary("abnormal")
-    notify_monitor("%%TORYO")
+    @result_type = "%%TORYO"
+    notify
   end
 end
 
@@ -99,7 +141,8 @@ class GameResultTimeoutWin < GameResultWin
     @winner.write_safe("#TIME_UP\n#WIN\n")
     @loser.write_safe( "#TIME_UP\n#LOSE\n")
     log_summary("time up")
-    notify_monitor("#TIME_UP")
+    @result_type = "#TIME_UP"
+    notify
   end
 end
 
@@ -110,7 +153,8 @@ class GameResultKachiWin < GameResultWin
     @loser.write_safe( "%KACHI\n#JISHOGI\n#LOSE\n")
     log("%%KACHI\n")
     log_summary("kachi")
-    notify_monitor("%%KACHI")
+    @result_type = "%%KACHI"
+    notify
   end
 end
 
@@ -121,7 +165,8 @@ class GameResultIllegalKachiWin < GameResultWin
     @loser.write_safe( "%KACHI\n#ILLEGAL_MOVE\n#LOSE\n")
     log("%%KACHI\n")
     log_summary("illegal kachi")
-    notify_monitor("%%KACHI")
+    @result_type = "%%KACHI"
+    notify
   end
 end
 
@@ -135,7 +180,8 @@ class GameResultIllegalWin < GameResultWin
     @winner.write_safe("#ILLEGAL_MOVE\n#WIN\n")
     @loser.write_safe( "#ILLEGAL_MOVE\n#LOSE\n")
     log_summary(@cause)
-    notify_monitor("#ILLEGAL_MOVE")
+    @result_type = "#ILLEGAL_MOVE"
+    notify
   end
 end
 
@@ -169,7 +215,8 @@ class GameReulstToryoWin < GameResultWin
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
     log("%%TORYO\n")
     log_summary("toryo")
-    notify_monitor("%%TORYO")
+    @result_type = "%%TORYO"
+    notify
   end
 end
 
@@ -178,7 +225,8 @@ class GameResultOuteSennichiteWin < GameResultWin
     @winner.write_safe("#OUTE_SENNICHITE\n#WIN\n")
     @loser.write_safe( "#OUTE_SENNICHITE\n#LOSE\n")
     log_summary("oute_sennichite")
-    notify_monitor("#OUTE_SENNICHITE")
+    @result_type = "#OUTE_SENNICHITE"
+    notify
   end
 end
 
@@ -201,7 +249,8 @@ class GameResultSennichiteDraw < GameResultDraw
       player.write_safe("#SENNICHITE\n#DRAW\n")
     end
     log_summary("sennichite")
-    notify_monitor("#SENNICHITE")
+    @result_type = "#SENNICHITE"
+    notify
   end
 end
 
