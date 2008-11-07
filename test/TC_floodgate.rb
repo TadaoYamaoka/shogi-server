@@ -363,6 +363,74 @@ class TestExcludeSacrifice < Test::Unit::TestCase
   end
 end
 
+class TestSwissPairing < Test::Unit::TestCase
+  def setup
+    srand(10)
+    @a = ShogiServer::BasicPlayer.new
+    @a.player_id = "a"
+    @a.rate = 0
+    @b = ShogiServer::BasicPlayer.new
+    @b.player_id = "b"
+    @b.rate = 1000
+    @c = ShogiServer::BasicPlayer.new
+    @c.player_id = "c"
+    @c.rate = 1500
+    @d = ShogiServer::BasicPlayer.new
+    @d.player_id = "d"
+    @d.rate = 2000
+
+    @players = [@a, @b, @c, @d]
+
+    @file = Pathname.new(File.join(File.dirname(__FILE__), "floodgate_history.yaml"))
+    @history = ShogiServer::League::Floodgate::History.new @file
+
+    @swiss = ShogiServer::Swiss.new @history
+  end
+
+  def teardown
+    @file.delete if @file.exist?
+  end
+
+  def test_all_win
+    def @history.last_win?(player_id)
+      true
+    end
+    @swiss.match @players
+    assert_equal([@d, @c, @b, @a], @players)
+  end
+
+  def test_all_lose
+    def @history.last_win?(player_id)
+      false
+    end
+    @swiss.match @players
+    assert_equal([@d, @c, @b, @a], @players)
+  end
+
+  def test_one_win
+    def @history.last_win?(player_id)
+      if player_id == "a"
+        true
+      else
+        false
+      end
+    end
+    @swiss.match @players
+    assert_equal([@a, @d, @c, @b], @players)
+  end
+
+  def test_two_win
+    def @history.last_win?(player_id)
+      if player_id == "a" || player_id == "d"
+        true
+      else
+        false
+      end
+    end
+    @swiss.match @players
+    assert_equal([@d, @a, @c, @b], @players)
+  end
+end
 
 class TestFloodgateHistory < Test::Unit::TestCase
   def setup

@@ -25,7 +25,7 @@ module ShogiServer
 
     class << self
       def default_factory
-        return sort_by_rate_with_randomness
+        return swiss_pairing
       end
 
       def sort_by_rate_with_randomness
@@ -41,6 +41,15 @@ module ShogiServer
                 ExcludeSacrificeGps500.new,
                 MakeEven.new,
                 Randomize.new,
+                StartGame.new]
+      end
+
+      def swiss_pairing
+        history = ShogiServer::League::Floodgate::History.factory
+        return [LogPlayers.new,
+                ExcludeSacrificeGps500.new,
+                MakeEven.new,
+                Swiss.new(history),
                 StartGame.new]
       end
 
@@ -148,13 +157,42 @@ module ShogiServer
       @rand1, @rand2 = rand1, rand2
     end
 
-    def match(players)
-      super
+    def match(players, desc=false)
+      super(players)
       cur_rate = Hash.new
       players.each{|a| cur_rate[a] = a.rate ? a.rate + rand(@rand1) : rand(@rand2)}
       players.sort!{|a,b| cur_rate[a] <=> cur_rate[b]}
+      players.reverse! if desc
       log_players(players) do |one|
-        "%s %d (randomness %d)" % [one.name, one.rate, cur_rate[one] - one.rate]
+        "%s %d (+ randomness %d)" % [one.name, one.rate, cur_rate[one] - one.rate]
+      end
+    end
+  end
+
+  class Swiss < Pairing
+    def initialize(history)
+      super()
+      @history = history
+    end
+
+    def match(players)
+      super
+      winners = players.find_all {|pl| @history.last_win?(pl.player_id)}
+      rest    = players - winners
+
+      log_message("Floodgate: %d winners" % [winners.size])
+      sbrwr_winners = SortByRateWithRandomness.new(800, 2500)
+      sbrwr_winners.match(winners, true)
+      log_players(winners)
+
+      log_message("Floodgate: and the rest: %d" % [rest.size])
+      sbrwr_losers = SortByRateWithRandomness.new(200, 400)
+      sbrwr_losers.match(rest, true)
+      log_players(rest)
+
+      players.clear
+      [winners, rest].each do |group|
+        group.each {|pl| players << pl}
       end
     end
   end
