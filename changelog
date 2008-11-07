@@ -3,6 +3,7 @@
 	* [utils/eval_graph.rb]
 	  - Display time control graphs as well.
 	    Thanks to Nishimura-san for this idea.
+	    (Closes: #13678)
 
 2008-10-08 Daigo Moriwaki <daigo at debian dot org>
 
