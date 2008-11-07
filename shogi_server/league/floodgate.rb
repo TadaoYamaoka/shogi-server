@@ -61,6 +61,8 @@ class League
         end
       end
 
+      attr_reader :records
+
       # file_path_name is a Pathname object for this storage
       #
       def initialize(file_path_name)
@@ -122,26 +124,26 @@ class League
       end
       
       def last_win?(player_id)
-        rc = last_valid_record(player_id)
+        rc = last_valid_game(player_id)
         return false unless rc
         return rc[:winner] == player_id
       end
       
       def last_lose?(player_id)
-        rc = last_valid_record(player_id)
+        rc = last_valid_game(player_id)
         return false unless rc
         return rc[:loser] == player_id
       end
 
-      def last_valid_record(player_id)
+      def last_valid_game(player_id)
         records = nil
-        @mutex.synchronize do
+        @@mutex.synchronize do
           records = @records.reverse
         end
         rc = records.find do |rc|
           rc[:winner] && 
           rc[:loser]  && 
-          (rc[:black] == player_id || rc[:while] == player_id)
+          (rc[:black] == player_id || rc[:white] == player_id)
         end
         return rc
       end

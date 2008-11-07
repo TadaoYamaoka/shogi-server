@@ -370,7 +370,7 @@ class TestFloodgateHistory < Test::Unit::TestCase
     @history = ShogiServer::League::Floodgate::History.new @file
   end
 
-  def teaup
+  def teardown
     @file.delete if @file.exist?
   end
 
@@ -381,4 +381,45 @@ class TestFloodgateHistory < Test::Unit::TestCase
     assert file.exist?
     file.delete if file.exist?
   end
+
+  def test_update
+    dummy = nil
+    def @history.make_record(game_result)
+      {:game_id => "wdoor+floodgate-900-0-hoge-foo-1", 
+       :black => "hoge",  :white => "foo",
+       :winner => "foo", :loser => "hoge"}
+    end
+    @history.update(dummy)
+
+    def @history.make_record(game_result)
+      {:game_id => "wdoor+floodgate-900-0-hoge-foo-2", 
+       :black => "hoge",  :white => "foo",
+       :winner => "hoge", :loser => "foo"}
+    end
+    @history.update(dummy)
+
+    def @history.make_record(game_result)
+      {:game_id => "wdoor+floodgate-900-0-hoge-foo-3", 
+       :black => "hoge",  :white => "foo",
+       :winner => nil, :loser => nil}
+    end
+    @history.update(dummy)
+
+    @history.load
+    assert_equal 3, @history.records.size
+    assert_equal "wdoor+floodgate-900-0-hoge-foo-1", @history.records[0][:game_id]
+    assert_equal "wdoor+floodgate-900-0-hoge-foo-2", @history.records[1][:game_id]
+    assert_equal "wdoor+floodgate-900-0-hoge-foo-3", @history.records[2][:game_id]
+    assert_equal "hoge", @history.records[1][:black]
+    assert_equal "foo",  @history.records[1][:white]
+    assert_equal "hoge", @history.records[1][:winner]
+    assert_equal "foo",  @history.records[1][:loser]
+
+    assert @history.last_win? "hoge"
+    assert !@history.last_win?("foo")
+    assert !@history.last_lose?("hoge")
+    assert @history.last_lose?("foo")
+  end
 end
+
+
