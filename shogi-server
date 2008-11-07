@@ -58,6 +58,9 @@ OPTIONS
         --player-log-dir dir
                 log network messages for each player. Log files
                 will be put in the dir.
+        --floodgate_history
+                file name to record Floodgate game history
+                default: './floodgate_history.yaml'
 
 LICENSE
 	GPL versoin 2 or later
@@ -237,6 +240,8 @@ def main
   if $options["pid-file"] 
     $options["pid-file"] = File.expand_path($options["pid-file"])
   end
+  $options["floodgate-history"] ||= File.join(File.dirname(__FILE__), "floodgate_history.yaml")
+  $options["floodgate-history"] = File.expand_path($options["floodgate-history"])
 
   LEAGUE.event = ARGV.shift
   port = ARGV.shift
