@@ -1,3 +1,10 @@
+2008-11-24 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added a new option --floodgate-history, which allows users to
+	    specify a file name that stores the records of games. The
+	    records are taken care of when games are matched.
+
 2008-10-18 Daigo Moriwaki <daigo at debian dot org>
 
 	* [utils/eval_graph.rb]
