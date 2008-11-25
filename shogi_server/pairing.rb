@@ -65,6 +65,7 @@ module ShogiServer
 
     def match(players)
       # to be implemented
+      log_message("Floodgate: %s" % [self.class.to_s])
     end
 
     def include_newbie?(players)
@@ -89,7 +90,7 @@ module ShogiServer
         end
       end
       if str_array.empty?
-        log_message("Floodgate: [Players] None is here.")
+        log_message("Floodgate: [Players] Nobody found.")
       else
         log_message("Floodgate: [Players] %s." % [str_array.join(", ")])
       end
@@ -99,6 +100,7 @@ module ShogiServer
 
   class LogPlayers < Pairing
     def match(players)
+      super
       log_players(players)
     end
   end
@@ -107,11 +109,11 @@ module ShogiServer
     def match(players)
       super
       if players.size < 2
-        log_warning("Floodgate: There should be more than one player: %d" % [players.size])
+        log_warning("Floodgate: There should be more than one player (%d)." % [players.size])
         return
       end
       if players.size.odd?
-        log_warning("Floodgate: There are odd players: %d. %s will not be matched." % 
+        log_warning("Floodgate: There are odd players (%d). %s will not be matched." % 
                     [players.size, players.last.name])
       end
 
@@ -124,7 +126,7 @@ module ShogiServer
     end
 
     def start_game(p1, p2)
-      log_message("Floodgate: BLACK %s; WHITE %s" % [p1.name, p2.name])
+      log_message("Floodgate: Starting a game: BLACK %s vs WHITE %s" % [p1.name, p2.name])
       p1.sente = true
       p2.sente = false
       Game.new(p1.game_name, p1, p2)
@@ -180,12 +182,12 @@ module ShogiServer
       winners = players.find_all {|pl| @history.last_win?(pl.player_id)}
       rest    = players - winners
 
-      log_message("Floodgate: %d winners" % [winners.size])
+      log_message("Floodgate: Ordering %d winners..." % [winners.size])
       sbrwr_winners = SortByRateWithRandomness.new(800, 2500)
       sbrwr_winners.match(winners, true)
       log_players(winners)
 
-      log_message("Floodgate: and the rest: %d" % [rest.size])
+      log_message("Floodgate: Ordering the rest (%d)..." % [rest.size])
       sbrwr_losers = SortByRateWithRandomness.new(200, 400)
       sbrwr_losers.match(rest, true)
       log_players(rest)
@@ -274,7 +276,7 @@ module ShogiServer
     def match(players)
       super
       return if players.size.even?
-      log_message("Floodgate: there are odd players: %d. Deleting one..." % 
+      log_message("Floodgate: There are odd players (%d). Deleting one of them..." % 
                   [players.size])
       DeletePlayerAtRandom.new.match(players)
     end
