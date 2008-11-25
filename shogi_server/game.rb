@@ -70,11 +70,11 @@ class GameResult
   def regist_observers
     add_observer MonitorObserver.new
 
-    if League::Floodgate.game_name?(@game.game_id) &&
+    if League::Floodgate.game_name?(@game.game_name) &&
        @game.sente.player_id &&
        @game.gote.player_id &&
        $options["floodgate-history"]
-      add_observer History.factory
+      add_observer League::Floodgate::History.factory
     end
   end
 

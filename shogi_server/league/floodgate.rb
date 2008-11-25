@@ -7,8 +7,10 @@ module ShogiServer
 class League
   class Floodgate
     class << self
+      # "floodgate-900-0"
+      #
       def game_name?(str)
-        return /^floodgate-\d+-\d+$/.match(str) ? true : false
+        return /^floodgate\-\d+\-\d$/.match(str) ? true : false
       end
     end
 
@@ -57,7 +59,9 @@ class League
       class << self
         def factory
           file = Pathname.new $options["floodgate-history"]
-          return History.new file
+          history = History.new file
+          history.load
+          return history
         end
       end
 

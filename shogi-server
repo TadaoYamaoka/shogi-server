@@ -83,6 +83,9 @@ end
 def log_message(str)
   $logger.info(str)
 end
+def log_info(str)
+  log_message(str)
+end
 
 def log_warning(str)
   $logger.warn(str)
@@ -96,9 +99,10 @@ end
 def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
-    ["--daemon",   GetoptLong::REQUIRED_ARGUMENT],
-    ["--pid-file", GetoptLong::REQUIRED_ARGUMENT],
-    ["--player-log-dir", GetoptLong::REQUIRED_ARGUMENT])
+    ["--daemon",            GetoptLong::REQUIRED_ARGUMENT],
+    ["--pid-file",          GetoptLong::REQUIRED_ARGUMENT],
+    ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT],
+    ["--floodgate-history", GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -212,7 +216,7 @@ def setup_floodgate
           ShogiServer.reload
         end
         floodgate = ShogiServer::League::Floodgate.new(LEAGUE, next_time)
-        log_message("Floodgate will start the next match at %s." % 
+        log_message("Floodgate: The next match will start at %s." % 
                     [floodgate.next_time])
       rescue Exception => ex 
         # ignore errors
@@ -280,6 +284,7 @@ def main
     end
   end
 
+  srand
   server = WEBrick::GenericServer.new(config)
   ["INT", "TERM"].each do |signal| 
     trap(signal) do
@@ -329,6 +334,10 @@ if ($0 == __FILE__)
     LEAGUE = ShogiServer::League.new(TOP_DIR)
     main
   rescue Exception => ex
-    log_error("main: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+    if $logger
+      log_error("main: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+    else
+      $stderr.puts "main: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}"
+    end
   end
 end
