@@ -185,12 +185,10 @@ module ShogiServer
       log_message("Floodgate: Ordering %d winners..." % [winners.size])
       sbrwr_winners = SortByRateWithRandomness.new(800, 2500)
       sbrwr_winners.match(winners, true)
-      log_players(winners)
 
       log_message("Floodgate: Ordering the rest (%d)..." % [rest.size])
       sbrwr_losers = SortByRateWithRandomness.new(200, 400)
       sbrwr_losers.match(rest, true)
-      log_players(rest)
 
       players.clear
       [winners, rest].each do |group|
