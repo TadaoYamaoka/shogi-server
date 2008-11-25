@@ -58,7 +58,7 @@ OPTIONS
         --player-log-dir dir
                 log network messages for each player. Log files
                 will be put in the dir.
-        --floodgate_history
+        --floodgate-history
                 file name to record Floodgate game history
                 default: './floodgate_history.yaml'
 
