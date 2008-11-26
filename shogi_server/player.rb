@@ -172,9 +172,12 @@ class Player < BasicPlayer
       log_message(sprintf("user %s finish", @name))    
       begin
         log_debug("Terminating %s's write thread..." % [@name])
-        write_safe(nil)
-        @write_thread.join
+        if @write_thread && @write_thread.alive?
+          write_safe(nil)
+          @write_thread.join
+        end
         @player_logger.close if @player_logger
+        log_debug("done.")
       rescue
         log_message(sprintf("user %s finish failed", @name))    
       end
@@ -200,10 +203,12 @@ class Player < BasicPlayer
             r[1].first.write(str)
             log(:info, :out, str)
           else
-            log_error("Sending a message to #{@name} timed up.")
+            log_error("Gave a try to send a message to #{@name}, but it timed out.")
+            break
           end
         rescue Exception => ex
           log_error("Failed to send a message to #{@name}. #{ex.class}: #{ex.message}\t#{ex.backtrace[0]}")
+          break
         end
       end # while loop
       log_error("%s's socket closed." % [@name]) if @socket.closed?
