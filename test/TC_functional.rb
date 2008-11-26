@@ -244,7 +244,7 @@ class TestChatCommand < BaseClient
   def test_chat
     cmd "%%CHAT Hello"
     sleep 1
-    str = read(@socket2)
+    str = read_nonblock(@socket2)
     puts str   
     assert("", str)
   end
