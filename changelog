@@ -1,3 +1,8 @@
+2008-11-27 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added sample/*.sh for command line samples.
+
 2008-11-24 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
