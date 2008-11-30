@@ -5,11 +5,14 @@
 #  map '/otherurl'
 # this will force the controller to be mounted on: /otherurl
 
-require File.join(__DIR__, "..", "..", "shogi_server", "piece")
-require File.join(__DIR__, "..", "..", "shogi_server", "board")
-require File.join(__DIR__, "..", "..", "shogi_server", "usi")
+$:.unshift File.join(__DIR__, "..", "..")
+$:.unshift File.join(__DIR__, "..", "gen-rb")
 
-require File.join(__DIR__, "..", "gen-rb", "ShogiGraphic")
+require "shogi_server/piece"
+require "shogi_server/board"
+require "shogi_server/usi"
+
+require "ShogiGraphic"
 require 'thrift/transport/socket'
 require 'thrift/protocol/tbinaryprotocol'
 
@@ -56,7 +59,7 @@ class MainController < Ramaze::Controller
     result = client.usi2png(str)
     transport.close
 
-    Ramaze::Log.warn("result fail") unless result
+    Ramaze::Log.error("Failed to get an image of %s from the Thrift server" % [str]) if !result || result.empty?
     @img = "/images/%s" % [result]
   end
 
