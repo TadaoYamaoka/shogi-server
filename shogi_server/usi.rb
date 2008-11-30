@@ -106,25 +106,28 @@ module ShogiServer # for a namespace
       return "" if hands.empty?
       s = ""
 
-      mapping = [[ShogiServer::PieceHi, R],
-                 [ShogiServer::PieceKA, B],
-                 [ShogiServer::PieceKI, G],
-                 [ShogiServer::PieceGI, S],
-                 [ShogiServer::PieceKE, N],
-                 [ShogiServer::PieceKY, L],
-                 [ShogiServer::PieceFU, P]]
+      mapping = [[ShogiServer::PieceHI, "R"],
+                 [ShogiServer::PieceKA, "B"],
+                 [ShogiServer::PieceKI, "G"],
+                 [ShogiServer::PieceGI, "S"],
+                 [ShogiServer::PieceKE, "N"],
+                 [ShogiServer::PieceKY, "L"],
+                 [ShogiServer::PieceFU, "P"]]
 
       mapping.each do |klass, str|
-        pieces = hands.find_all {|piece| piece === klass}
+        pieces = hands.find_all {|piece| piece.class == klass}
         unless pieces.empty?
           if pieces.size > 1 
-            s += "%d" [pieces.size]
+            s += "%d" % [pieces.size]
           end
           s += str
         end
       end
+      return s
     end
 
+    # "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -"
+    #
     def board2usi(board, turn)
       s = ""
       for y in 1..9
@@ -159,6 +162,7 @@ module ShogiServer # for a namespace
       end
       s += hands2usi(board.sente_hands).upcase
       s += hands2usi(board.gote_hands).downcase
+      return s
     end
   end # class
 
