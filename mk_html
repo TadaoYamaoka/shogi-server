@@ -1,8 +1,10 @@
 #!/usr/bin/ruby
 # $Id$
 #
-# = Copyright
+# Author:: Daigo Moriwaki
+# Homepage:: http://sourceforge.jp/projects/shogi-server/
 #
+#--
 # Copyright (C) 2006-2008 Daigo Moriwaki <daigo at debian dot org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,20 +20,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#++
 #
-# = Synopsis
+# == Synopsis
 #
-# mk_html generates an html page from players.yaml.
+# mk_html generates an html page from a players.yaml.
 #
-# = Usage
+# == Usage
 #
-#   ./mk_html [OPTION] < players.yaml > rating.html
+# ./mk_html [OPTION] < players.yaml > rating.html
 #
 # -h, --help::
 #    show help
 #
 # -w,--wdoor::
 #    adpot wdoor style
+#
+# == PREREQUIRE
+#
+# * Ruby 1.8.7 and RDoc
+#
+#   $ sudo aptitude install ruby1.8 rdoc1.8
 #
 
 require 'optparse'

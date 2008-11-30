@@ -1,52 +1,90 @@
 #!/usr/bin/ruby
-## $Id$
-
-## Copyright (C) 2006-2008 Daigo Moriwaki <daigo at debian dot org>
-##
-## This program is free software; you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2 of the License, or
-## (at your option) any later version.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program; if not, write to the Free Software
-## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
+# $Id$
 #
-# This calculates rating scores of every players from CSA files, and outputs a
-# yaml file (players.yaml) that Shogi Server can read.
+# Author:: Daigo Moriwaki
+# Homepage:: http://sourceforge.jp/projects/shogi-server/
 #
-# Sample:
-#   $ ./mk_rate . > players.yaml
-#   $ ./mk_rate . && ./mk_rate . > players.yaml
+#--
+# Copyright (C) 2006-2008 Daigo Moriwaki <daigo at debian dot org>
 #
-# The conditions that games and players are rated as following:
-#   * Rated games, which were played by both rated players.
-#   * Rated players, who logged in the server with a name followed by a trip:
-#     "name,trip".
-#   * (Rated) players, who played more than $GAMES_LIMIT [15] (rated) games. 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# PREREQUIRE
-# ==========
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#++
 #
-# Sample Commands to isntall prerequires will work for Debian.
+# == Synopsis
+#
+# mk_rate reads CSA files, calculates rating scores of each player, and then
+# outputs a yaml file (players.yaml) that Shogi-server can recognize.
+#
+# == Usage
+#
+# ./mk_rate [options] DIR..
+# 
+# DIR::
+#   CSA files are recursively looked up the directories.
+#
+# --half-life::
+#   n [days] (default 60)
+#   
+# --half-life-ignore::
+#   m [days] (default  7)
+#   after m days, the half-life effect works
+#
+# --fixed-rate-player::
+#   player whose rate is fixed at the rate
+#
+# --fixed-rate::
+#   rate 
+#
+# --help::
+#   show this message
+#
+# == PREREQUIRE
+#
+# Sample Command lines that isntall prerequires will work on Debian.
+#
+# * Ruby 1.8.7
+#
+#   $ sudo aptitude install ruby1.8
 #
 # * Rubygems
+#
 #   $ sudo aptitude install rubygems
 #
-# * Ruby bindings for the GNU Scientific Library (GSL)
-#   $ sudo aptitude install libgsl-ruby1.8
-#   Or, download it from  http://rb-gsl.rubyforge.org/ .
+# * Ruby bindings for the GNU Scientific Library (GSL[http://rb-gsl.rubyforge.org/])
 #
-# * RGL: Ruby Graph Library
+#   $ sudo aptitude install libgsl-ruby1.8
+#
+# * RGL: {Ruby Graph Library}[http://rubyforge.org/projects/rgl/]
+#
 #   $ sudo gem install rgl
-#   Or, download it from http://rubyforge.org/projects/rgl/ .
+#
+# == Run
+#
+#   $ ./mk_rate . > players.yaml
+#
+# or, if you do not want the file to be update in case of errors, 
+#
+#   $ ./mk_rate . && ./mk_rate . > players.yaml
+#
+# == How players are rated
+#
+# The conditions that games and players are rated as following:
+#
+# * Rated games, which were played by both rated players.
+# * Rated players, who logged in the server with a name followed by a trip: "name,trip".
+# * (Rated) players, who played more than $GAMES_LIMIT [15] (rated) games. 
 #
 
 require 'yaml'

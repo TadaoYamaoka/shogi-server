@@ -1,0 +1,47 @@
+$Id$
+
+= Shogi-server project
+
+2008-11-30 Daigo Moriwaki <daigo at debian dot org>
+
+The Shogi-server project develops Shogi-server, a rating tool and so on.
+
+== Shogi-server
+
+Shogi-server is a server that implements the Server Protocol Ver 1.1 defined
+by Computer Shogi Association (CSA[http://www.computer-shogi.org/index_e.html]) 
+in order for computer shogi players to play games.   
+
+=== Pre-requires
+
+Ruby 1.8.7:: Ruby 1.8.6 or earlier are not supported.
+
+For Debian,
+ $ sudo aptitude install ruby1.8
+
+=== Install
+
+ $ svn checkout \ 
+     http://svn.sourceforge.jp/svnroot/shogi-server/shogi-server/trunk shogi-server
+
+The following files are required to run Shogi-server:
+
+- shogi-server
+- shogi_server.rb
+- shogi_server/**/*.rb
+
+=== Run
+
+ $ ruby ./shogi-server --pid-file shogi-server.pid \
+                       --daemon . \
+                       --player-log-dir player-log-dir \
+                       --floodgate-history floodgate_history.yaml \
+                       floodgatetest 4000
+
+== Other tools
+
+See documents at the head of each source file.
+
+* mk_rate
+* mk_html
+* showgame

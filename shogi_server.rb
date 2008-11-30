@@ -39,8 +39,6 @@ require 'shogi_server/timeout_queue'
 require 'shogi_server/usi'
 require 'shogi_server/util'
 
-require 'rubygems'
-
 module ShogiServer # for a namespace
 
 Max_Identifier_Length = 32
