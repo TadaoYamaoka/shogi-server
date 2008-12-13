@@ -25,9 +25,12 @@
 #
 #
 
-TOP_DIR = File.expand_path(File.dirname(__FILE__))
+$topdir = nil
+$league = nil
+$logger = nil
 $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
+require 'tempfile'
 
 #################################################
 # MAIN
@@ -79,6 +82,7 @@ RELEASE
 
 REVISION
 	#{ShogiServer::Revision}
+
 EOM
 end
 
@@ -103,6 +107,10 @@ def log_error(str)
 end
 
 
+# Parse command line options. Return a hash containing the option strings
+# where a key is the option name without the first two slashes. For example,
+# {"pid-file" => "foo.pid"}.
+#
 def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
@@ -121,6 +129,90 @@ def parse_command_line
     raise parser.error_message
   end
   return options
+end
+
+# Check command line options.
+# If any of them is invalid, exit the process.
+#
+def check_command_line
+  if (ARGV.length != 2)
+    usage
+    exit 2
+  end
+
+  if $options["daemon"]
+    $options["daemon"] = File.expand_path($options["daemon"], File.dirname(__FILE__))
+    unless is_writable_dir? $options["daemon"]
+      usage
+      $stderr.puts "Can not create a file in the daemon directory: %s" % [$options["daemon"]]
+      exit 5
+    end
+  end
+
+  $topdir = $options["daemon"] || File.expand_path(File.dirname(__FILE__))
+
+  if $options["player-log-dir"]
+    $options["player-log-dir"] = File.expand_path($options["player-log-dir"], $topdir)
+    unless is_writable_dir?($options["player-log-dir"])
+      usage
+      $stderr.puts "Can not write a file in the player log dir: %s" % [$options["player-log-dir"]]
+      exit 3
+    end 
+  end
+
+  if $options["pid-file"] 
+    $options["pid-file"] = File.expand_path($options["pid-file"], $topdir)
+    unless is_writable_file? $options["pid-file"]
+      usage
+      $stderr.puts "Can not create the pid file: %s" % [$options["pid-file"]]
+      exit 4
+    end
+  end
+
+  $options["floodgate-history"] ||= File.join($topdir, "floodgate_history.yaml")
+  $options["floodgate-history"] = File.expand_path($options["floodgate-history"], $topdir)
+  unless is_writable_file? $options["floodgate-history"]
+    usage
+    $stderr.puts "Can not create the floodgate history file: %s" % [$options["floodgate-history"]]
+    exit 6
+  end
+end
+
+# See if the file is writable. The file will be created if it does not exist
+# yet.
+# Return true if the file is writable, otherwise false.
+#
+def is_writable_file?(file)
+  begin
+    open(file, "w") {|fh| } 
+  rescue
+    return false
+  end
+  unless FileTest.file? file
+    return false
+  end
+
+  return true
+end
+
+# See if a file can be created in the directory.
+# Return true if a file is writable in the directory, otherwise false.
+#
+def is_writable_dir?(dir)
+  unless File.directory? dir
+    return false
+  end
+
+  result = true
+
+  begin
+    temp_file = Tempfile.new("dummy-shogi-server", dir)
+    temp_file.close true
+  rescue
+    result = false
+  end
+
+  return result
 end
 
 def write_pid_file(file)
@@ -153,14 +245,14 @@ def login_loop(client)
  
   while r = select([client], nil, nil, ShogiServer::Login_Time) do
     break unless str = r[0].first.gets
-    $mutex.lock # guards LEAGUE
+    $mutex.lock # guards $league
     begin
       str =~ /([\r\n]*)$/
       eol = $1
       if (ShogiServer::Login::good_login?(str))
         player = ShogiServer::Player::new(str, client, eol)
         login  = ShogiServer::Login::factory(str, player)
-        if (current_player = LEAGUE.find(player.name))
+        if (current_player = $league.find(player.name))
           if (current_player.password == player.password &&
               current_player.status != "game")
             log_message(sprintf("user %s login forcely", player.name))
@@ -171,7 +263,7 @@ def login_loop(client)
             break
           end
         end
-        LEAGUE.add(player)
+        $league.add(player)
         break
       else
         client.write("LOGIN:incorrect" + eol)
@@ -203,7 +295,7 @@ end
 def setup_floodgate
   return Thread.start do 
     Thread.pass
-    floodgate = ShogiServer::League::Floodgate.new(LEAGUE)
+    floodgate = ShogiServer::League::Floodgate.new($league)
     log_message("Flooddgate reloaded. The next match will start at %s." % 
                 [floodgate.next_time])
 
@@ -214,7 +306,7 @@ def setup_floodgate
           sleep(diff/2)
           next
         end
-        LEAGUE.reload
+        $league.reload
         floodgate.match_game
         floodgate.charge
         next_time = floodgate.next_time
@@ -222,7 +314,7 @@ def setup_floodgate
           log_message("Reloading source...")
           ShogiServer.reload
         end
-        floodgate = ShogiServer::League::Floodgate.new(LEAGUE, next_time)
+        floodgate = ShogiServer::League::Floodgate.new($league, next_time)
         log_message("Floodgate: The next match will start at %s." % 
                     [floodgate.next_time])
       rescue Exception => ex 
@@ -236,37 +328,17 @@ end
 def main
   
   $options = parse_command_line
-  if (ARGV.length != 2)
-    usage
-    exit 2
-  end
-  if $options["player-log-dir"]
-    $options["player-log-dir"] = File.expand_path($options["player-log-dir"])
-  end
-  if $options["player-log-dir"] && 
-     !File.directory?($options["player-log-dir"])
-    usage
-    exit 3
-  end
-  if $options["pid-file"] 
-    $options["pid-file"] = File.expand_path($options["pid-file"])
-  end
-  $options["floodgate-history"] ||= File.join(File.dirname(__FILE__), "floodgate_history.yaml")
-  $options["floodgate-history"] = File.expand_path($options["floodgate-history"])
+  check_command_line
 
-  LEAGUE.event = ARGV.shift
+  $league = ShogiServer::League.new($topdir)
+
+  $league.event = ARGV.shift
   port = ARGV.shift
 
-  dir = $options["daemon"]
-  dir = File.expand_path(dir) if dir
-  if dir && ! File.exist?(dir)
-    FileUtils.mkdir(dir)
-  end
-
-  log_file = dir ? File.join(dir, "shogi-server.log") : STDOUT
+  log_file = $options["daemon"] ? File.join($options["daemon"], "shogi-server.log") : STDOUT
   $logger = setup_logger(log_file)
 
-  LEAGUE.dir = dir || TOP_DIR
+  $league.dir = $topdir
 
   config = {}
   config[:Port]       = port
@@ -281,7 +353,7 @@ def main
       write_pid_file($options["pid-file"])
     end
     setup_watchdog_for_giant_lock
-    LEAGUE.setup_players_database
+    $league.setup_players_database
     fg_thread = setup_floodgate
   end
 
@@ -322,7 +394,7 @@ def main
           player.game.kill(player)
         end
         player.finish # socket has been closed
-        LEAGUE.delete(player)
+        $league.delete(player)
         log_message(sprintf("user %s logout", player.name))
       ensure
         $mutex.unlock
@@ -338,7 +410,6 @@ if ($0 == __FILE__)
   Thread.abort_on_exception = $DEBUG ? true : false
 
   begin
-    LEAGUE = ShogiServer::League.new(TOP_DIR)
     main
   rescue Exception => ex
     if $logger

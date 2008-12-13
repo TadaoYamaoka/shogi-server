@@ -1,3 +1,10 @@
+2008-12-13 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Improved an existance check and etc. of directories specified
+	    by command line options, expecially in case of the daemon mode. 
+	    (Closes: #14244)
+
 2008-11-27 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

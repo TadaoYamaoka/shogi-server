@@ -284,18 +284,18 @@ class Game
     @gote.status  = "agree_waiting"
 
     @game_id = sprintf("%s+%s+%s+%s+%s", 
-                  LEAGUE.event, @game_name, 
+                  $league.event, @game_name, 
                   @sente.name, @gote.name, issue_current_time)
     
     now = Time.now
-    log_dir_name = File.join(LEAGUE.dir, 
+    log_dir_name = File.join($league.dir, 
                              now.strftime("%Y"),
                              now.strftime("%m"),
                              now.strftime("%d"))
     FileUtils.mkdir_p(log_dir_name) unless File.exist?(log_dir_name)
     @logfile = File.join(log_dir_name, @game_id + ".csa")
 
-    LEAGUE.games[@game_id] = self
+    $league.games[@game_id] = self
 
     log_message(sprintf("game created %s", @game_id))
 
@@ -380,7 +380,7 @@ class Game
     @gote = nil
     @current_player = nil
     @next_player = nil
-    LEAGUE.games.delete(@game_id)
+    $league.games.delete(@game_id)
   end
 
   # class Game

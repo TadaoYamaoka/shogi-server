@@ -53,11 +53,11 @@ Revision = (r = /Revision: (\d+)/.match("$Revision$") ? r[1] : 0)
 RELOAD_FILES = ["shogi_server/league/floodgate.rb",
                 "shogi_server/league/persistent.rb",
                 "shogi_server/pairing.rb"]
+BASE_DIR = File.expand_path(File.dirname(__FILE__))
 
 def reload
-  here = TOP_DIR || File.dirname(__FILE__)
   RELOAD_FILES.each do |f|
-    load File.join(here, f)
+    load File.join(BASE_DIR, f)
   end
 end
 module_function :reload

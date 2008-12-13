@@ -310,27 +310,27 @@ class Player < BasicPlayer
           end
         when /^%%SHOW\s+(\S+)/
           game_id = $1
-          if (LEAGUE.games[game_id])
-            write_safe(LEAGUE.games[game_id].show.gsub(/^/, '##[SHOW] '))
+          if ($league.games[game_id])
+            write_safe($league.games[game_id].show.gsub(/^/, '##[SHOW] '))
           end
           write_safe("##[SHOW] +OK\n")
         when /^%%MONITORON\s+(\S+)/
           game_id = $1
-          if (LEAGUE.games[game_id])
-            LEAGUE.games[game_id].monitoron(self)
-            write_safe(LEAGUE.games[game_id].show.gsub(/^/, "##[MONITOR][#{game_id}] "))
+          if ($league.games[game_id])
+            $league.games[game_id].monitoron(self)
+            write_safe($league.games[game_id].show.gsub(/^/, "##[MONITOR][#{game_id}] "))
             write_safe("##[MONITOR][#{game_id}] +OK\n")
           end
         when /^%%MONITOROFF\s+(\S+)/
           game_id = $1
-          if (LEAGUE.games[game_id])
-            LEAGUE.games[game_id].monitoroff(self)
+          if ($league.games[game_id])
+            $league.games[game_id].monitoroff(self)
           end
         when /^%%HELP/
           write_safe(
             %!##[HELP] available commands "%%WHO", "%%CHAT str", "%%GAME game_name +", "%%GAME game_name -"\n!)
         when /^%%RATING/
-          players = LEAGUE.rated_players
+          players = $league.rated_players
           players.sort {|a,b| b.rate <=> a.rate}.each do |p|
             write_safe("##[RATING] %s \t %4d @%s\n" % 
                        [p.simple_player_id, p.rate, p.modified_at.strftime("%Y-%m-%d")])
@@ -369,11 +369,11 @@ class Player < BasicPlayer
             @sente = nil
           else
             if (my_sente_str == "*")
-              rival = LEAGUE.get_player("game_waiting", game_name, nil, self) # no preference
+              rival = $league.get_player("game_waiting", game_name, nil, self) # no preference
             elsif (my_sente_str == "+")
-              rival = LEAGUE.get_player("game_waiting", game_name, false, self) # rival must be gote
+              rival = $league.get_player("game_waiting", game_name, false, self) # rival must be gote
             elsif (my_sente_str == "-")
-              rival = LEAGUE.get_player("game_waiting", game_name, true, self) # rival must be sente
+              rival = $league.get_player("game_waiting", game_name, true, self) # rival must be sente
             else
               ## never reached
               write_safe(sprintf("##[ERROR] bad game option\n"))
@@ -425,21 +425,21 @@ class Player < BasicPlayer
           end
         when /^%%CHAT\s+(.+)/
           message = $1
-          LEAGUE.players.each do |name, player|
+          $league.players.each do |name, player|
             if (player.protocol != LoginCSA::PROTOCOL)
               player.write_safe(sprintf("##[CHAT][%s] %s\n", @name, message)) 
             end
           end
         when /^%%LIST/
           buf = Array::new
-          LEAGUE.games.each do |id, game|
+          $league.games.each do |id, game|
             buf.push(sprintf("##[LIST] %s\n", id))
           end
           buf.push("##[LIST] +OK\n")
           write_safe(buf.join)
         when /^%%WHO/
           buf = Array::new
-          LEAGUE.players.each do |name, player|
+          $league.players.each do |name, player|
             buf.push(sprintf("##[WHO] %s\n", player.to_s))
           end
           buf.push("##[WHO] +OK\n")
