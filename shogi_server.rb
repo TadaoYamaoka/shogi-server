@@ -62,6 +62,37 @@ def reload
 end
 module_function :reload
 
+class Logger < ::Logger
+  def initialize(logdev, shift_age = 0, shift_size = 1048576)
+    super
+    class << @logdev
+      def shift_log_period(now)
+        postfix = previous_period_end(now).strftime("%Y%m%d")	# YYYYMMDD
+        age_file = File.join(
+                     File.dirname(@filename),
+                     postfix[0..3], # YYYY
+                     postfix[4..5], # MM
+                     postfix[6..7], # DD
+                     File.basename(@filename))
+        if FileTest.exist?(age_file)
+          raise RuntimeError.new("'#{ age_file }' already exists.")
+        end
+        unless FileTest.directory?(File.dirname(age_file))
+          begin
+            FileUtils.mkdir_p File.dirname(age_file)
+          rescue
+            raise RuntimeError.new("Could not create a directory: %s" % [File.dirname(age_file)])
+          end
+        end
+        @dev.close
+        File.rename("#{@filename}", age_file)
+        @dev = create_logfile(@filename)
+        return true
+      end
+    end
+  end
+end
+
 class Formatter < ::Logger::Formatter
   def initialize
     super

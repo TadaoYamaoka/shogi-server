@@ -4,6 +4,8 @@
 	  - Improved an existance check and etc. of directories specified
 	    by command line options, expecially in case of the daemon mode. 
 	    (Closes: #14244)
+	  - A lotated log file is moved to $topdir/YYYY/MM/DD.
+	    (Closes: #14245)
 
 2008-11-27 Daigo Moriwaki <daigo at debian dot org>
 

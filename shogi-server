@@ -277,7 +277,7 @@ def login_loop(client)
 end
 
 def setup_logger(log_file)
-  logger = Logger.new(log_file, 'daily')
+  logger = ShogiServer::Logger.new(log_file, 'daily')
   logger.formatter = ShogiServer::Formatter.new
   logger.level = $DEBUG ? Logger::DEBUG : Logger::INFO  
   logger.datetime_format = "%Y-%m-%d %H:%M:%S"
