@@ -183,12 +183,18 @@ end
 # Return true if the file is writable, otherwise false.
 #
 def is_writable_file?(file)
+  if File.exist?(file)
+    if FileTest.file?(file)
+      return FileTest.writable_real?(file)
+    else
+      return false
+    end
+  end
+  
   begin
     open(file, "w") {|fh| } 
+    FileUtils.rm file
   rescue
-    return false
-  end
-  unless FileTest.file? file
     return false
   end
 

@@ -101,13 +101,16 @@ class League
       def load
         return unless @file.exist?
 
-        yaml = @file.open("r") {|f| f.read}
-        @records = YAML.load(yaml)
+        @records = YAML.load_file(@file)
+        unless @records && @records.instance_of?(Array)
+          $logger.error "%s is not a valid yaml file. Instead, an empty array will be used and updated." % [@file]
+          @records = [].to_yaml
+        end
       end
 
       def save
         begin
-          @file.open("w+") do |f| 
+          @file.open("w") do |f| 
             f << YAML.dump(@records)
           end
         rescue Errno::ENOSPC
