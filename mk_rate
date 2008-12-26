@@ -653,7 +653,8 @@ def grep(file)
     black_id, white_id = $1.split(":").map {|a| a.strip}
     black_id = identify_id(black_id)
     white_id = identify_id(white_id)
-    if black_id && white_id && (black_id != white_id)
+    if black_id && white_id && (black_id != white_id) &&
+       black_mark && white_mark
       add(black_mark, black_id, white_id, white_mark, time)
     end
   end
