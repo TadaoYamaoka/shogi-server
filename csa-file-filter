@@ -1,0 +1,151 @@
+#!/usr/bin/ruby
+# $Id$
+#
+# Author:: Daigo Moriwaki
+# Homepage:: http://sourceforge.jp/projects/shogi-server/
+#
+#--
+# Copyright (C) 2008 Daigo Moriwaki <daigo at debian dot org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#++
+#
+# == Synopsis
+# 
+# mk_rate reads CSA files, calculates rating scores of each player, and then
+# outputs a yaml file (players.yaml) that Shogi-server can recognize.
+# 
+# == Usage
+# 
+# (1) csa-file-filter.rb [options] DIR...
+# 
+# [<tt>DIR</tt>]
+#   where CSA files are looked for recursively
+# 
+# (2) csa-file-filter.rb [options]
+# 
+# CSA file names are put into STDIN.
+# 
+# OPTOINS:
+# 
+# [<tt>--within</tt> <i>n</i> [days]]
+#   find records that were played last n days
+# 
+# [<tt>--help</tt>]
+#   show this message
+# 
+# == Prerequire
+# 
+# Sample Command lines that isntall prerequires will work on Debian.
+# 
+# * Ruby 1.8.7 including RDoc
+# 
+#   $ sudo aptitude install ruby ruby1.8
+# 
+# == Example
+#
+# If you want kifu files that were played last 14 days to be rated,
+#
+#   $ find /path/to/dir -name "wdoor+floodgate*.csa" | \
+#     ./csa-file-filter --within 14 | \
+#     ./mk_rate --half-life-ignore 14
+#
+
+require 'date'
+require 'getoptlong'
+
+#
+# Filter the filename. If the file passes the criteria, it goes to STDOUT; 
+# otherwise, it is ignored.
+#
+def filter(filename)
+  # a within filter
+  if $options["within"]
+    return unless /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.csa$/ =~ filename
+
+    file_date = Date.new($1.to_i, $2.to_i, $3.to_i)
+    now       = Time.now
+    now_date  = Date.new(now.year, now.month, now.day)
+
+    return if now_date - file_date > $options["within"]
+  end
+    
+  puts filename
+end
+
+#
+# Show an usage of this command
+#
+def usage(io)
+    io.puts <<EOF
+USAGE: 
+#{$0} [options] DIR...
+  DIR                where CSA files are looked for recursively
+#{$0} [options]
+  CSA file names are put into STDIN.
+
+OPTOINS:
+  --within n [days]  find records that were played last n days
+  --help             show this message
+EOF
+end
+
+#
+# Main procedure
+#
+def main
+  # Parse command options
+  $options = Hash::new
+  parser = GetoptLong.new(
+    ["--within",            GetoptLong::REQUIRED_ARGUMENT],
+    ["--help", "-h",        GetoptLong::NO_ARGUMENT]
+  )
+  parser.quiet = true
+  begin
+    parser.each_option do |name, arg|
+      name.sub!(/^--/, '')
+      $options[name] = arg.dup
+    end
+    if $options["within"]
+      $options["within"] = $options["within"].to_i
+    end
+  rescue
+    usage($stderr)
+    raise parser.error_message
+  end
+  if $options["help"]
+    usage($stdout)
+    exit 0
+  end
+
+  # main procedure
+  if ARGV.empty?
+    while line = $stdin.gets do
+      filter line
+      next unless %r!.*\.csa$! =~ line
+      filter line.strip
+    end
+  else
+    while dir = ARGV.shift do
+      Dir.glob( File.join(dir, "**", "*.csa") ) {|f| filter(f)}
+    end
+  end
+end
+
+if __FILE__ == $0
+  main
+end
+
+# vim: ts=2 sw=2 sts=0
