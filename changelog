@@ -3,8 +3,13 @@
 	* [mk_rate]
 	  - Check kifu files more carefully so that files that contain
 	    incomplete records are skipped.
-	  -  mk_rate might have failed to alloc due to out of memory. Now it
-	     consumes less memory (about 200MB instead of 2GB).
+	  - mk_rate might have failed to alloc due to out of memory. Now it
+	    consumes less memory (about 200MB instead of 2GB).
+	  - File names can be put into STDIN instead of specifying directory
+	    names in command line arguments.
+	* [csa-file-filter]
+	  - New file. It filters kifu files and is of use for a pre-filter
+	    of mk_rate.
 
 2008-12-13 Daigo Moriwaki <daigo at debian dot org>
 

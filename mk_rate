@@ -726,8 +726,15 @@ def main
   $options["half-life-ignore"] = $options["half-life-ignore"].to_i
   $options["fixed-rate"] = $options["fixed-rate"].to_i if $options["fixed-rate"]
 
-  while dir = ARGV.shift do
-    Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
+  if ARGV.empty?
+    while line = $stdin.gets do
+      next unless %r!.*\.csa$! =~ line
+      grep line.strip
+    end
+  else
+    while dir = ARGV.shift do
+      Dir.glob( File.join(dir, "**", "*.csa") ) {|f| grep(f)}
+    end
   end
 
   yaml = {} 
