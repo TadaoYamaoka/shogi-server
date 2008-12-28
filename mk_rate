@@ -466,14 +466,19 @@ class WinLossMatrix
   end
 
   ##
-  # Removes a delete_index'th player and returns a new object.
+  # Removes players in a rows such as [1,3,5], and then returns a new
+  # object.
   #
-  def delete_row(delete_index)
+  def delete_rows(rows)
+    rows = rows.sort.reverse
+
     copied_cols = []
     (0...size).each do |i|
-      next if i == delete_index
+      next if rows.include?(i)
       row = @matrix.row(i).clone
-      row.delete_at(delete_index)
+      rows.each do |j|
+        row.delete_at(j)
+      end
       copied_cols << row
     end
     if copied_cols.size == 0
@@ -481,20 +486,13 @@ class WinLossMatrix
     else
       new_matrix = GSL::Matrix[*copied_cols]
     end
-    new_keys = @keys.clone
-    new_keys.delete_at(delete_index)
-    return WinLossMatrix.new(new_keys, new_matrix)
-  end
 
-  ##
-  # Removes players in a rows; [1,3,5]
-  #
-  def delete_rows(rows)
-    obj = self
-    rows.sort.reverse.each do |index|
-      obj = obj.delete_row(index)
+    new_keys = @keys.clone
+    rows.each do |j|
+      new_keys.delete_at(j)
     end
-    obj
+
+    return WinLossMatrix.new(new_keys, new_matrix)
   end
 
   ##

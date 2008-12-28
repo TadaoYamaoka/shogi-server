@@ -1,3 +1,11 @@
+2008-12-28 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Check kifu files more carefully so that files that contain
+	    incomplete records are skipped.
+	  -  mk_rate might have failed to alloc due to out of memory. Now it
+	     consumes less memory (about 200MB instead of 2GB).
+
 2008-12-13 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
