@@ -89,7 +89,6 @@
 
 require 'yaml'
 require 'time'
-require 'stringio'
 require 'getoptlong'
 require 'gsl'
 require 'rubygems'
@@ -436,11 +435,7 @@ class WinLossMatrix
 
   def self.mk_win_loss_matrix(players)
     obj = mk_matrix(players)
-    while true do
-      obj, ret = obj.filter
-      break if ret
-    end
-    return obj
+    return obj.filter
   end
 
   ##################
@@ -471,37 +466,23 @@ class WinLossMatrix
   end
 
   ##
-  # Removes the delete_index'th player and returns a new object.
-  #
-  #  [ 1 0 0   * [ 1 2 3   * [ 1 0   = [ 1 3
-  #    0 0 1 ]     4 5 6       0 0       7 9 ]
-  #                7 8 9 ]     0 1 ]
+  # Removes a delete_index'th player and returns a new object.
   #
   def delete_row(delete_index)
-    new_matrix = nil
-    if delete_index == 0 && @matrix.size1 == 1 && @matrix.size2 == 1
+    copied_cols = []
+    (0...size).each do |i|
+      next if i == delete_index
+      row = @matrix.row(i).clone
+      row.delete_at(delete_index)
+      copied_cols << row
+    end
+    if copied_cols.size == 0
       new_matrix = GSL::Matrix.new
     else
-      a1 = []
-      size.times do |i|
-        next if i == delete_index
-        v = Array.new(size, 0)
-        v[i] = 1
-        a1 << v
-      end
-      m1 = GSL::Matrix[*a1]
-      a1 = nil
-      m2 = m1.transpose
-      new_matrix = m1 * @matrix * m2
+      new_matrix = GSL::Matrix[*copied_cols]
     end
-
     new_keys = @keys.clone
     new_keys.delete_at(delete_index)
-
-    unless new_matrix
-      raise "The new matrix is null!"
-    end
-
     return WinLossMatrix.new(new_keys, new_matrix)
   end
 
@@ -535,10 +516,10 @@ class WinLossMatrix
     end
 
     # The recursion ends if there is nothing to delete
-    return [self, true] if delete.empty?
+    return self if delete.empty?
 
     new_obj = delete_rows(delete)
-    return [new_obj, false]
+    new_obj.filter
   end
 
   ##
@@ -645,42 +626,30 @@ def identify_id(id)
 end
 
 def grep(file)
-  black_name = nil
-  white_name = nil
-  black_mark = nil
-  white_mark = nil
-  black_id   = nil
-  white_id   = nil
-  time       = nil
+  str = File.open(file).read
 
-  lines = StringIO.new File.open(file).read
+  if /^N\+(.*)$/ =~ str then black_name = $1.strip end
+  if /^N\-(.*)$/ =~ str then white_name = $1.strip end
 
-  lines.each_line do |str|
-    case str
-    when /^N\+(.*)$/
-      black_name = $1.strip 
-    when /^N\-(.*)$/
-      white_name = $1.strip 
-    when /^'summary:(.*)$/
-      state, p1, p2 = $1.split(":").map {|a| a.strip}    
-      return if state == "abnormal"
-      p1_name, p1_mark = p1.split(" ")
-      p2_name, p2_mark = p2.split(" ")
-      if p1_name == black_name
-        black_name, black_mark = p1_name, p1_mark
-        white_name, white_mark = p2_name, p2_mark
-      elsif p2_name == black_name
-        black_name, black_mark = p2_name, p2_mark
-        white_name, white_mark = p1_name, p1_mark
-      else
-        raise "Never reach!: #{black} #{white} #{p3} #{p2}"
-      end
-    when /^'\$END_TIME:(.*)$/
-      time = Time.parse($1.strip)
-    end # case
-  end # each line
-
-  if /^'rating:(.*)$/ =~ lines.string
+  if /^'summary:(.*)$/ =~ str
+    state, p1, p2 = $1.split(":").map {|a| a.strip}    
+    return if state == "abnormal"
+    p1_name, p1_mark = p1.split(" ")
+    p2_name, p2_mark = p2.split(" ")
+    if p1_name == black_name
+      black_name, black_mark = p1_name, p1_mark
+      white_name, white_mark = p2_name, p2_mark
+    elsif p2_name == black_name
+      black_name, black_mark = p2_name, p2_mark
+      white_name, white_mark = p1_name, p1_mark
+    else
+      raise "Never reach!: #{black} #{white} #{p3} #{p2}"
+    end
+  end
+  if /^'\$END_TIME:(.*)$/ =~ str
+    time = Time.parse($1.strip)
+  end
+  if /^'rating:(.*)$/ =~ str
     black_id, white_id = $1.split(":").map {|a| a.strip}
     black_id = identify_id(black_id)
     white_id = identify_id(white_id)

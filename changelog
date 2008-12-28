@@ -1,11 +1,3 @@
-2008-12-27 Daigo Moriwaki <daigo at debian dot org>
-
-	* [mk_rate]
-	  - Check kifu files more carefully so that files that contain 
-	    incomplete records are skipped.
-	  - Optimized for speed and memory size so that mk_rate might fail
-	    to alloc due to out of memory.
-
 2008-12-13 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
