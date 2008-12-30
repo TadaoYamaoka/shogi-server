@@ -30,21 +30,31 @@
 #
 # ./mk_html [OPTION] < players.yaml > rating.html
 #
-# -h, --help::
+# [<tt>-h, --help</tt>]
 #    show help
 #
-# -w,--wdoor::
+# [<tt>-w,--wdoor</tt>]
 #    adpot wdoor style
 #
-# == PREREQUIRE
+# [<tt>--footer</tt> <i>filename</i>]
+#    insert contents in the filename at the bottom of a genrated page.
 #
-# * Ruby 1.8.7 and RDoc
+# == Prerequire
 #
-#   $ sudo aptitude install ruby1.8 rdoc1.8
+# * Ruby 1.8.7
+#
+#   $ sudo aptitude install ruby ruby1.8
+#
+# == Example
+#
+#   $ ./mk_html --footer ./wdoor_1000.html < players.yaml > players.html
+#
+#   $ cat ./wdoor-1000.html
+#   <p>The average of the rates in a group is always 1000. 
+#   <p><a href="http://wdoor.c.u-tokyo.ac.jp/shogi/">BACK</a>
 #
 
 require 'optparse'
-require 'rdoc/usage'
 require 'yaml'
 require 'erb'
 
@@ -61,13 +71,6 @@ def show_date(time)
   end
 end
 
-def usage
-  $stderr.puts <<-EOF
-USAGE: #{$0} 
-  EOF
-  exit 1
-end
-
 def remove_long_to_see_players(file)
   return unless file["players"][999] # only for Not-Yet-Rated players
 
@@ -78,10 +81,27 @@ end
 
 def main
   $wdoor = false
+  $footer_content = nil
   opts = OptionParser.new
-  opts.on("-h", "--help"){ RDoc::usage(0, 'Synopsis', 'Usage') }
-  opts.on("-w","--wdoor") { $wdoor=true }
-  opts.parse(ARGV) rescue RDoc::usage(1, 'Synopsis', 'Usage')
+  opts.banner = "Usage: mk_html [OPTIONS]"
+  opts.on("--footer filename", String, "Insert contents of the filename at the bottom of a genrated page") do |filename|
+    unless File.exist?(filename)
+      $stderr.puts "File not found: %s" % [filename]
+      raise
+    end
+    $footer_content = File.open(filename).read
+  end
+  opts.on("-w","--wdoor", "adopt a wdoor style") { $wdoor=true }
+  opts.on_tail("-h", "--help", "show this message") do
+    puts opts
+    exit
+  end
+  begin
+    opts.parse(ARGV) 
+  rescue
+    puts opts
+    exit -1
+  end
 
   lines = ""
   while l = $stdin.gets do
@@ -273,8 +293,8 @@ __END__
 % end
 
 <p>Groups are independently rated. You can not compare rates across them.
-<p>The average of the rates in a group is always 1000. 
-<p><a href="http://wdoor.c.u-tokyo.ac.jp/shogi/">BACK</a>
+
+<%= $footer_content %>
 
 <hr/>
 </div>

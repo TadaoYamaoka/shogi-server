@@ -1,3 +1,13 @@
+2008-12-30 Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	  - Added a new option: --footer filename, which inserts contents of 
+	    the filename at the bottom of a genrated page. A text specific to 
+	    wdoor should be written by using this option. 
+	    (Closes: #14470)
+	  - It does no more depend on RDoc. RDoc::usage does not work well
+	    (due to RDoc).
+
 2008-12-28 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
