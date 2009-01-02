@@ -174,7 +174,6 @@ class Player < BasicPlayer
         log_debug("Terminating %s's write thread..." % [@name])
         if @write_thread && @write_thread.alive?
           write_safe(nil)
-          @write_thread.join
         end
         @player_logger.close if @player_logger
         log_debug("done.")

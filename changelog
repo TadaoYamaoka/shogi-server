@@ -4,6 +4,11 @@
 	  - shogi_server/timeout_queue.rb: the timeout parameter of the
 	    constructor was not respected erroneously. This issue
 	    has been fixed.
+	  - shogi_server/players.rb: When a player was finishing with its
+	    write socket broken, there was a chance that the thread of the
+	    player in the giant lock had to wait for a long time (about 20
+	    seconds), which might cause threads of other players stop and 
+	    time out. (Closes: #14469)
 
 2008-12-30 Daigo Moriwaki <daigo at debian dot org>
 
