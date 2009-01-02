@@ -34,7 +34,7 @@ module ShogiServer
 
 class TimeoutQueue
   def initialize(timeout=20)
-    @timeout = 20 # sec
+    @timeout = timeout # sec
     @queue = []
     @mon  = Monitor.new
     @cond = @mon.new_cond
@@ -48,14 +48,14 @@ class TimeoutQueue
   end
 
   #
-  # @return :timeout if timeout
+  # @return :timeout if it timed out
   #
   def deq
     timeout_flg = false
     ret = :timeout
     @mon.synchronize do
       if @queue.empty?
-        unless @cond.wait(15)
+        unless @cond.wait(@timeout)
           #timeout
           timeout_flg = true
         end

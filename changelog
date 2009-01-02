@@ -1,3 +1,10 @@
+2009-01-02 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/timeout_queue.rb: the timeout parameter of the
+	    constructor was not respected erroneously. This issue
+	    has been fixed.
+
 2008-12-30 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html]
