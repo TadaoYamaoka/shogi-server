@@ -1,0 +1,11 @@
+Start a thrift server
+
+  $ ./graphicserver --port 9090 -d ./public/images
+
+Start a Webrick server
+
+  $ ./start.rb
+
+Browser
+
+  http://localhost:7000/game/hoge+testJishogiTest-1500-0+senteJishogiTest+goteJishogiTest+20081125125336.csa
