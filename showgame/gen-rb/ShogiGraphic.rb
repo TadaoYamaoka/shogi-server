@@ -45,18 +45,28 @@ module ShogiGraphic
 
   class Usi2png_args
     include Thrift::Struct
+    USI = 1
+
     Thrift::Struct.field_accessor self, :usi
     FIELDS = {
-      1 => {:type => Thrift::Types::STRING, :name => 'usi'}
+      USI => {:type => Thrift::Types::STRING, :name => 'usi'}
     }
+    def validate
+    end
+
   end
 
   class Usi2png_result
     include Thrift::Struct
+    SUCCESS = 0
+
     Thrift::Struct.field_accessor self, :success
     FIELDS = {
-      0 => {:type => Thrift::Types::STRING, :name => 'success'}
+      SUCCESS => {:type => Thrift::Types::STRING, :name => 'success'}
     }
+    def validate
+    end
+
   end
 
 end

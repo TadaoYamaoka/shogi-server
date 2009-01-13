@@ -1,3 +1,9 @@
+2009-01-13 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi_server]
+	  - It failed to proccess a game result, OuteKaihiMoreWin where a
+	    checked king does not escape. This issue has been fixed.
+
 2009-01-02 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -197,7 +197,7 @@ class GameResultUchifuzumeWin < GameResultIllegalWin
   end
 end
 
-class GameResultOuteKaihiMoreWin < GameResultWin
+class GameResultOuteKaihiMoreWin < GameResultIllegalWin
   def initialize(game, winner, loser)
     super(game, winner, loser, "oute_kaihimore")
   end
@@ -205,11 +205,11 @@ end
 
 class GameResultOutoriWin < GameResultWin
   def initialize(game, winner, loser)
-    super(game, winner, loser, "outori")
+    super(game, winner, loser)
   end
 end
 
-class GameReulstToryoWin < GameResultWin
+class GameResultToryoWin < GameResultWin
   def process
     @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
@@ -446,7 +446,7 @@ class Game
     elsif (move_status == :kachi_lose)
       result = GameResultIllegalKachiWin.new(self, @next_player, @current_player)
     elsif (move_status == :toryo)
-      result = GameReulstToryoWin.new(self, @next_player, @current_player)
+      result = GameResultToryoWin.new(self, @next_player, @current_player)
     elsif (move_status == :outori)
       # The current player captures the next player's king
       result = GameResultOutoriWin.new(self, @current_player, @next_player)
