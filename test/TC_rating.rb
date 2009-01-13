@@ -82,22 +82,15 @@ class TestWinLossMatrix < Test::Unit::TestCase
     @matrix = WinLossMatrix.new(keys, win_loss)
   end
     
-  def test_delete_row
-    new_matrix = @matrix.delete_row(1)
-    assert_equal(3, @matrix.size)
-    assert_equal(2, new_matrix.size)
-    assert_equal(['a','c'], new_matrix.keys)
-    assert_equal(GSL::Matrix[[0,3],[1,0]], new_matrix.matrix)
-  end
-
   def test_delete_rows
     $deleted = []
-    def @matrix.delete_row(index)
-      $deleted << index
-      self
-    end
-    @matrix.delete_rows([0,1])
-    assert_equal([1,0], $deleted)
+    result = @matrix.delete_rows([0])
+    assert_equal(["b", "c"], result.keys)
+    assert_equal(GSL::Matrix[[0,1],[1,0]], result.matrix)
+
+    result = @matrix.delete_rows([0,2])
+    assert_equal(["b"], result.keys)
+    assert_equal(GSL::Matrix[[0]], result.matrix)
   end
 
   def test_connected_subsets
