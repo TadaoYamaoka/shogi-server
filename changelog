@@ -1,6 +1,14 @@
+2009-02-01 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - The shogi-server records csa files of games in an illegal
+	    format. This issue has been fixed. (Closes: #14635)
+	  - A ##[MONITOR] command for showing a game result such as %TORYO
+	    was not correct. This issue has been fixed.  
+
 2009-01-13 Daigo Moriwaki <daigo at debian dot org>
 
-	* [shogi_server]
+	* [shogi-server]
 	  - It failed to proccess a game result, OuteKaihiMoreWin where a
 	    checked king does not escape. This issue has been fixed.
 

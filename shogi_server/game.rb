@@ -28,7 +28,7 @@ module ShogiServer # for a namespace
 class MonitorObserver
   def update(game_result)
     game_result.game.each_monitor do |monitor|
-      monitor.write_safe("##[MONITOR][%s] %s\n" % [game_result.game.game_id, game_result.type])
+      monitor.write_safe("##[MONITOR][%s] %s\n" % [game_result.game.game_id, game_result.result_type])
     end
   end
 end
@@ -46,7 +46,7 @@ class GameResult
   attr_reader :black
   # White plyer object
   attr_reader :white
-  # Command to send monitors such as '%%TORYO' etc...
+  # Command to send monitors such as '%TORYO' etc...
   attr_reader :result_type
 
   def initialize(game, p1, p2)
@@ -92,7 +92,7 @@ class GameResult
   end
 
   def log_board
-    log(@game.board.to_s.gsub(/^/, "\'"))
+    log(@game.board.to_s.gsub(/^/, "\'").chomp)
   end
 
 end
@@ -118,9 +118,9 @@ class GameResultWin < GameResult
       black_result = "lose"
       white_result = "win"
     end
-    log("'summary:%s:%s %s:%s %s\n" % [type, 
-                                       @black.name, black_result,
-                                       @white.name, white_result])
+    log("'summary:%s:%s %s:%s %s" % [type, 
+                                     @black.name, black_result,
+                                     @white.name, white_result])
 
   end
 end
@@ -129,9 +129,9 @@ class GameResultAbnormalWin < GameResultWin
   def process
     @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
-    log("%%TORYO\n")
+    log("%TORYO")
     log_summary("abnormal")
-    @result_type = "%%TORYO"
+    @result_type = "%TORYO"
     notify
   end
 end
@@ -151,9 +151,9 @@ class GameResultKachiWin < GameResultWin
   def process
     @winner.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
     @loser.write_safe( "%KACHI\n#JISHOGI\n#LOSE\n")
-    log("%%KACHI\n")
+    log("%KACHI")
     log_summary("kachi")
-    @result_type = "%%KACHI"
+    @result_type = "%KACHI"
     notify
   end
 end
@@ -163,9 +163,9 @@ class GameResultIllegalKachiWin < GameResultWin
   def process
     @winner.write_safe("%KACHI\n#ILLEGAL_MOVE\n#WIN\n")
     @loser.write_safe( "%KACHI\n#ILLEGAL_MOVE\n#LOSE\n")
-    log("%%KACHI\n")
+    log("%KACHI")
     log_summary("illegal kachi")
-    @result_type = "%%KACHI"
+    @result_type = "%KACHI"
     notify
   end
 end
@@ -213,9 +213,9 @@ class GameResultToryoWin < GameResultWin
   def process
     @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
-    log("%%TORYO\n")
+    log("%TORYO")
     log_summary("toryo")
-    @result_type = "%%TORYO"
+    @result_type = "%TORYO"
     notify
   end
 end
@@ -239,7 +239,7 @@ class GameResultDraw < GameResult
   
   def log_summary(type)
     log_board
-    log("'summary:%s:%s draw:%s draw\n" % [type, @black.name, @white.name])
+    log("'summary:%s:%s draw:%s draw" % [type, @black.name, @white.name])
   end
 end
 

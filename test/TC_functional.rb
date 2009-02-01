@@ -5,10 +5,10 @@ class TestClientAtmark < BaseClient
   # login with trip
   def login
     cmd "LOGIN testsente@p1 dummy x1"
-    cmd "%%GAME testcase-1500-0 +"
+    cmd "%%GAME testClientAtmark-1500-0 +"
     
     cmd2 "LOGIN testgote@p2 dummy2 x1"
-    cmd2 "%%CHALLENGE testcase-1500-0 -"
+    cmd2 "%%CHALLENGE testClientAtmark-1500-0 -"
   end
 
   def test_toryo
@@ -17,6 +17,53 @@ class TestClientAtmark < BaseClient
     end
     assert(/#LOSE/ =~ result)
     assert(/#WIN/  =~ result2)
+
+    now = Time.now
+    year  = now.strftime("%Y")
+    month = now.strftime("%m")
+    day   = now.strftime("%d")
+    path = File.join( File.dirname(__FILE__), "..", year, month, day, "*testClientAtmark-1500-0*")
+    log_files = Dir.glob(path)
+    assert(!log_files.empty?) 
+    log_content = File.open(log_files.sort.last).read
+
+    # "$EVENT", "$START_TIME" and "'$END_TIME" are removed since they vary dinamically.
+    should_be = <<-EOF
+V2
+N+testsente@p1
+N-testgote@p2
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+'rating:testsente@p1+275876e34cf609db118f3d84b799a790:testgote@p2+c0c40e7a94eea7e2c238b75273087710
++2726FU
+T1
+-3334FU
+T1
+%TORYO
+'P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+'P2 * -HI *  *  *  *  * -KA * 
+'P3-FU-FU-FU-FU-FU-FU * -FU-FU
+'P4 *  *  *  *  *  * -FU *  * 
+'P5 *  *  *  *  *  *  *  *  * 
+'P6 *  *  *  *  *  *  * +FU * 
+'P7+FU+FU+FU+FU+FU+FU+FU * +FU
+'P8 * +KA *  *  *  *  * +HI * 
+'P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+'+
+'summary:toryo:testsente@p1 lose:testgote@p2 win
+EOF
+
+    log_content.gsub!(/^\$.*?\n/m, "")
+    log_content.gsub!(/^'\$.*?\n/m, "")
+    assert_equal(should_be, log_content)
   end
 end
 
