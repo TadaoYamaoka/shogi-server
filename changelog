@@ -1,3 +1,8 @@
+2009-02-11 Daigo Moriwaki <daigo at debian dot org>
+
+	* [utils/csa-filter.rb]
+	  - Added a new file. This program filters CSA files.
+
 2009-02-01 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
