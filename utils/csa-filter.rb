@@ -129,7 +129,6 @@ if $0 == __FILE__
       eval "$OPT_#{name.sub(/^--/, '').gsub(/-/, '_').upcase} = '#{arg}'"
     end
   rescue
-    puts "hoge"
     usage
   end
   
@@ -141,19 +140,19 @@ if $0 == __FILE__
 
       if $OPT_PLAYERS
         players = $OPT_PLAYERS.split(",")
-        unless (csa.black_id.index(players[0]) == 0 &&
-                csa.white_id.index(players[1]) == 0) ||
-               (csa.black_id.index(players[1]) == 0 &&
-                csa.white_id.index(players[0]) == 0)
+        unless (csa.black_id.downcase.index(players[0].downcase) == 0 &&
+                csa.white_id.downcase.index(players[1].downcase) == 0) ||
+               (csa.black_id.downcase.index(players[1].downcase) == 0 &&
+                csa.white_id.downcase.index(players[0].downcase) == 0)
           next
         end
       end
       
       if $OPT_BLACK
-        next unless csa.black_id.index($OPT_BLACK) == 0
+        next unless csa.black_id.downcase.index($OPT_BLACK.downcase) == 0
       end
       if $OPT_WHITE
-        next unless csa.white_id.index($OPT_WHITE) == 0
+        next unless csa.white_id.downcase.index($OPT_WHITE.downcase) == 0
       end
       puts csa.file_name
     end
