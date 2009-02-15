@@ -1,3 +1,10 @@
+2009-02-15 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - A duplicated comment that is the one of the previous (or older)
+	    move might be erroneously recorded in a csa file. This issue has 
+	    been fixed. (Closes: #15080)
+
 2009-02-11 Daigo Moriwaki <daigo at debian dot org>
 
 	* [utils/csa-filter.rb]

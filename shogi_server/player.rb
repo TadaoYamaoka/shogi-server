@@ -273,6 +273,7 @@ class Player < BasicPlayer
             array_str = str.split(",")
             move = array_str.shift
             additional = array_str.shift
+            comment = nil
             if /^'(.*)/ =~ additional
               comment = array_str.unshift("'*#{$1.toeuc}")
             end
