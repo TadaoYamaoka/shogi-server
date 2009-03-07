@@ -1,3 +1,8 @@
+2009-03-07 Daigo Moriwaki <daigo at debian dot org>
+
+	* [csa-file-filter]
+	  - Improved performance.
+
 2009-02-15 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

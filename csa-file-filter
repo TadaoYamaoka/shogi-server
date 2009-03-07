@@ -76,10 +76,8 @@ def filter(filename)
     return unless /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.csa$/ =~ filename
 
     file_date = Date.new($1.to_i, $2.to_i, $3.to_i)
-    now       = Time.now
-    now_date  = Date.new(now.year, now.month, now.day)
 
-    return if now_date - file_date > $options["within"]
+    return if $now_date - file_date > $options["within"]
   end
     
   puts filename
@@ -145,6 +143,8 @@ def main
 end
 
 if __FILE__ == $0
+  now       = Time.now
+  $now_date  = Date.new(now.year, now.month, now.day)
   main
 end
 
