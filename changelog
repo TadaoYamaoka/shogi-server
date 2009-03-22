@@ -1,3 +1,9 @@
+2009-03-22 Daigo Moriwaki <daigo at debian dot org>
+
+	* [utils/correct-bug14635.rb]
+	  - Added a new file. This program corrects illegal lines introduced
+	    by the #14635 bug.
+
 2009-03-07 Daigo Moriwaki <daigo at debian dot org>
 
 	* [csa-file-filter]
