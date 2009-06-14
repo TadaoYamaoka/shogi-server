@@ -218,7 +218,7 @@ class Board
     raise "can't find ou"
   end
 
-  # note checkmate, but check. sente is checked.
+  # not checkmate, but check. sente is checked.
   def checkmated?(sente)        # sente is loosing
     ou = look_for_ou(sente)
     x = 1
@@ -339,16 +339,30 @@ class Board
   end
 
   def oute_sennichite?(player)
-    if (@sente_history[to_s] >= 4)
-      return :oute_sennichite_sente_lose
-    elsif (@gote_history[to_s] >= 4)
-      return :oute_sennichite_gote_lose
+    return nil unless sennichite?
+
+    if player
+      # sente's turn
+      if (@sente_history[to_s] >= 4)   # sente is checking gote
+        return :oute_sennichite_sente_lose
+      elsif (@gote_history[to_s] >= 3) # sente is escaping
+        return :oute_sennichite_gote_lose
+      else
+        return nil # Not oute_sennichite, but sennichite
+      end
     else
-      return nil
+      # gote's turn
+      if (@gote_history[to_s] >= 4)     # gote is checking sente
+        return :oute_sennichite_gote_lose
+      elsif (@sente_history[to_s] >= 3) # gote is escaping
+        return :oute_sennichite_sente_lose
+      else
+        return nil # Not oute_sennichite, but sennichite
+      end
     end
   end
 
-  def sennichite?(sente)
+  def sennichite?
     if (@history[to_s] >= 4) # already 3 times
       return true
     end
@@ -481,7 +495,7 @@ class Board
     tmp_board.update_sennichite(sente)
     os_result = tmp_board.oute_sennichite?(sente)
     return os_result if os_result # :oute_sennichite_sente_lose or :oute_sennichite_gote_lose
-    return :sennichite if tmp_board.sennichite?(sente)
+    return :sennichite if tmp_board.sennichite?
 
     if ((x0 == 0) && (y0 == 0) && (name == "FU") && tmp_board.uchifuzume?(sente))
       return :uchifuzume

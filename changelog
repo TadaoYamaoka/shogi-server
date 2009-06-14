@@ -1,3 +1,10 @@
+2009-06-14 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - The Board could not recognize a certain pattern of
+	    Oute-Sennichite. This issue has been fixed.
+	    (Closes: #13966)
+
 2009-03-22 Daigo Moriwaki <daigo at debian dot org>
 
 	* [utils/correct-bug14635.rb]
