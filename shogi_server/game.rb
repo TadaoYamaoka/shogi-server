@@ -350,9 +350,14 @@ class Game
   end
 
   def kill(killer)
-    if ["agree_waiting", "start_waiting"].include?(@sente.status)
-      reject(killer.name)
-    elsif (@current_player == killer)
+    [@sente, @gote].each do |player|
+      if ["agree_waiting", "start_waiting"].include?(player.status)
+        reject(killer.name)
+        return # return from this method
+      end
+    end
+    
+    if (@current_player == killer)
       result = GameResultAbnormalWin.new(self, @next_player, @current_player)
       result.process
       finish

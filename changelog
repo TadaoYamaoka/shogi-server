@@ -1,3 +1,12 @@
+2009-06-15 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - When a Gote player AGREEd a new game and then a Sente player
+	    logged out (LOGOUT), the Gote incorrectly received a LOGOUT message 
+	    from the server. Since Gote's state was not AGREEd or STARTed yet,
+	    the Gote should be REJECTed. This issue has been fixed. 
+	    (Closes: #17335)
+
 2009-06-14 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
