@@ -285,6 +285,12 @@ class Player < BasicPlayer
           if (@status == "game")
             s = @game.handle_one_move(str, self)
             return if (s && @protocol == LoginCSA::PROTOCOL)
+          elsif ["agree_waiting", "start_waiting"].include?(@status) 
+            if @game.prepared_expire?
+              log_warning("#{@status} lasted too long. This play has been expired.")
+              @game.reject("the Server (timed out)")
+              return if (@protocol == LoginCSA::PROTOCOL)
+            end
           end
         when :exception
           log_error("Failed to receive a message from #{@name}.")

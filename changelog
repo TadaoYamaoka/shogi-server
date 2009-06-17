@@ -1,3 +1,11 @@
+2009-06-17 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - If a new game matched between two players is not started within
+	    a certain time (default 120 seconds) (i.e. the agree_waiting or
+	    start_waiting state lasts too long), the Server REJECTs the game.
+	    (Closes: #14425)
+
 2009-06-15 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

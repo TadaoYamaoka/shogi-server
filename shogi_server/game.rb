@@ -255,9 +255,13 @@ class GameResultSennichiteDraw < GameResultDraw
 end
 
 class Game
+  # When this duration passes after this object instanciated (i.e.
+  # the agree_waiting or start_waiting state lasts too long),
+  # the game will be rejected by the Server.
+  WAITING_EXPIRATION = 120 # seconds
+
   @@mutex = Mutex.new
   @@time  = 0
-
   def initialize(game_name, player0, player1)
     @monitors = Array::new
     @game_name = game_name
@@ -287,11 +291,13 @@ class Game
                   $league.event, @game_name, 
                   @sente.name, @gote.name, issue_current_time)
     
-    now = Time.now
+    # The time when this Game instance was created.
+    # Don't be confused with @start_time when the game was started to play.
+    @prepared_time = Time.now 
     log_dir_name = File.join($league.dir, 
-                             now.strftime("%Y"),
-                             now.strftime("%m"),
-                             now.strftime("%d"))
+                             @prepared_time.strftime("%Y"),
+                             @prepared_time.strftime("%m"),
+                             @prepared_time.strftime("%d"))
     FileUtils.mkdir_p(log_dir_name) unless File.exist?(log_dir_name)
     @logfile = File.join(log_dir_name, @game_id + ".csa")
 
@@ -310,7 +316,7 @@ class Game
   end
   attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors
   attr_accessor :last_move, :current_turn
-  attr_reader   :result
+  attr_reader   :result, :prepared_time
 
   def rated?
     @sente.rated? && @gote.rated?
@@ -585,6 +591,14 @@ END Position
 END Game_Summary
 EOM
     return str
+  end
+
+  def prepared_expire?
+    if @prepared_time && (@prepared_time + WAITING_EXPIRATION < Time.now)
+      return true
+    end
+
+    return false
   end
   
   private
