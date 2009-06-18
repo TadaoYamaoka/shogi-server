@@ -3,6 +3,7 @@ $:.unshift File.dirname(__FILE__)
 require 'TC_board'
 require 'TC_before_agree'
 require 'TC_floodgate'
+require 'TC_floodgate_history'
 require 'TC_functional'
 require 'TC_game_result'
 require 'TC_jishogi_kachi'

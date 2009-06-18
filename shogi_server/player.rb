@@ -28,6 +28,7 @@ class BasicPlayer
     @win  = 0
     @loss = 0
     @last_game_win = false
+    @sente = nil
   end
 
   # Idetifier of the player in the rating system
@@ -53,6 +54,9 @@ class BasicPlayer
 
   # Whether win the previous game or not
   attr_accessor :last_game_win
+
+  # true for Sente; false for Gote
+  attr_accessor :sente
 
   def modified_at
     @modified_at || Time.now
@@ -108,7 +112,6 @@ class Player < BasicPlayer
     @game = nil
     @game_name = ""
     @mytime = 0                 # set in start method also
-    @sente = nil
     @socket_buffer = []
     @main_thread = Thread::current
     @write_queue = ShogiServer::TimeoutQueue.new(WRITE_THREAD_WATCH_INTERVAL)
@@ -117,7 +120,7 @@ class Player < BasicPlayer
   end
 
   attr_accessor :socket, :status
-  attr_accessor :protocol, :eol, :game, :mytime, :game_name, :sente
+  attr_accessor :protocol, :eol, :game, :mytime, :game_name
   attr_accessor :main_thread
   attr_reader :socket_buffer
   
