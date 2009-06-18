@@ -1,3 +1,10 @@
+2009-06-18 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - An emtpy floodgate_history.yaml caused a server error. This
+	    issue has been fixed. 
+	    (Closes: #15124)
+
 2009-06-17 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

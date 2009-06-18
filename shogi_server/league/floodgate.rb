@@ -67,7 +67,8 @@ class League
 
       attr_reader :records
 
-      # file_path_name is a Pathname object for this storage
+      # Initialize this instance.
+      # @param file_path_name a Pathname object for this storage
       #
       def initialize(file_path_name)
         @records = []
@@ -104,7 +105,7 @@ class League
         @records = YAML.load_file(@file)
         unless @records && @records.instance_of?(Array)
           $logger.error "%s is not a valid yaml file. Instead, an empty array will be used and updated." % [@file]
-          @records = [].to_yaml
+          @records = []
         end
       end
 
