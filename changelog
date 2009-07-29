@@ -1,3 +1,8 @@
+2009-07-11 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/command.rb: refactored commands out of player.rb.
+
 2009-06-18 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -483,8 +483,16 @@ class Game
     return finish_flag
   end
 
+  def is_startable_status?
+    return (@sente && @gote &&
+            (@sente.status == "start_waiting") &&
+            (@gote.status  == "start_waiting"))
+  end
+
   def start
     log_message(sprintf("game started %s", @game_id))
+    @sente.status = "game"
+    @gote.status  = "game"
     @sente.write_safe(sprintf("START:%s\n", @game_id))
     @gote.write_safe(sprintf("START:%s\n", @game_id))
     @sente.mytime = @total_time

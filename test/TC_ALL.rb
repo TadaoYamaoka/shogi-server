@@ -2,6 +2,7 @@ $:.unshift File.dirname(__FILE__)
 
 require 'TC_board'
 require 'TC_before_agree'
+require 'TC_command'
 require 'TC_floodgate'
 require 'TC_floodgate_history'
 require 'TC_functional'
