@@ -1,3 +1,22 @@
+## $Id$
+
+## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
+## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 require 'kconv'
 require 'shogi_server'
 
@@ -55,6 +74,20 @@ module ShogiServer
         cmd = LogoutCommand.new(str, player)
       when /^CHALLENGE/
         cmd = ChallengeCommand.new(str, player)
+      when /^%%SETBUOY\s+(\S+)\s+(\S+)(.*)/
+        game_name = $1
+        moves     = $2
+        count = 1 # default
+        if $3 && /^\s+(\d*)/ =~ $3
+          count = $1.to_i
+        end
+        cmd = SetBuoyCommand.new(str, player, game_name, moves, count)
+      when /^%%DELETEBUOY\s+(\S+)/
+        game_name = $1
+        cmd = DeleteBuoyCommand.new(str, player, game_name)
+      when /^%%GETBUOYCOUNT\s+(\S+)/
+        game_name = $1
+        cmd = GetBuoyCountCommand.new(str, player, game_name)
       when /^\s*$/
         cmd = SpaceCommand.new(str, player)
       else
@@ -142,7 +175,7 @@ module ShogiServer
       rc = :continue
 
       if @player.game.prepared_expire?
-        log_warning("#{@player.status} lasted too long. This play has been expired.")
+        log_warning("#{@player.status} lasted too long. This play has been expired: %s" % [@player.game.game_id])
         @player.game.reject("the Server (timed out)")
         rc = :return if (@player.protocol == LoginCSA::PROTOCOL)
       end
@@ -349,6 +382,14 @@ module ShogiServer
       end
 
       rival = nil
+      if (Buoy.game_name?(@game_name))
+        if (@my_sente_str != "*")
+          @player.write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n", @my_sente_str, @game_name))
+          return :continue
+        end
+        @player.sente = nil
+      end # really end
+
       if (League::Floodgate.game_name?(@game_name))
         if (@my_sente_str != "*")
           @player.write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n", @my_sente_str, @game_name))
@@ -371,6 +412,7 @@ module ShogiServer
 
       if (rival)
         @player.game_name = @game_name
+        
         if ((@my_sente_str == "*") && (rival.sente == nil))
           if (rand(2) == 0)
             @player.sente = true
@@ -392,7 +434,31 @@ module ShogiServer
         else
           ## never reached
         end
-        Game::new(@player.game_name, @player, rival)
+        if (Buoy.game_name?(@game_name))
+          buoy = Buoy.new # TODO config
+          if buoy.is_new_game?(@game_name)
+            # The buoy game is not ready yet.
+            # When the game is set, it will be started.
+          else
+            buoy_game = buoy.get_game(@game_name)
+            if buoy_game.instance_of NilBuoyGame
+              # error. never reach
+            end
+            board = Board.new
+            begin
+              board.set_from_moves(buoy_game.moves)
+            rescue => err
+              # it will never happen since moves have already been checked
+              log_error "Failed to set up a buoy game: #{moves}"
+              return :continue
+            end
+            Game::new(@player.game_name, @player, rival, board)
+          end
+        else
+          board = Board.new
+          board.initial
+          Game::new(@player.game_name, @player, rival, board)
+        end
       else # rival not found
         if (@command_name == "GAME")
           @player.status = "game_waiting"
@@ -538,5 +604,130 @@ module ShogiServer
     end
   end
 
+  #
+  #
+  class SetBuoyCommand < Command
+    class WrongMoves < ArgumentError; end
+
+    def initialize(str, player, game_name, moves, count)
+      super(str, player)
+      @game_name = game_name
+      @moves     = moves
+      @count     = count
+    end
+
+    def call
+      unless (Buoy.game_name?(@game_name))
+        @player.write_safe(sprintf("##[ERROR] wrong buoy game name: %s\n", @game_name))
+        log_error "Received a wrong buoy game name: %s from %s." % [@game_name, @player.name]
+        return :continue
+      end
+      buoy = Buoy.new
+      unless buoy.is_new_game?(@game_name)
+        @player.write_safe(sprintf("##[ERROR] duplicated buoy game name: %s\n", @game_name))
+        log_error "Received duplicated buoy game name: %s from %s." % [@game_name, @player.name]
+        return :continue
+      end
+      if @count < 1
+        @player.write_safe(sprintf("##[ERROR] invalid count: %s\n", @count))
+        log_error "Received an invalid count for a buoy game: %s, %s from %s." % [@count, @game_name, @player.name]
+        return :continue
+      end
+
+      # check moves
+      moves_array = split_moves @moves
+
+      board = Board.new
+      begin
+        board.set_from_moves(moves_array)
+      rescue
+        raise WrongMoves
+      end
+
+      buoy_game = BuoyGame.new(@game_name, @moves, @player.name, @count)
+      buoy.add_game(buoy_game)
+
+      # if two players, who are not @player, are waiting for a new game, start it
+      p1 = $league.get_player("game_waiting", @game_name, true, @player)
+      return :continue unless p1
+      p2 = $league.get_player("game_waiting", @game_name, false, @player)
+      return :continue unless p2
+
+      game = Game::new(@game_name, p1, p2, board)
+      return :continue
+    rescue WrongMoves => e
+      @player.write_safe(sprintf("##[ERROR] wrong moves: %s\n", @moves))
+      log_error "Received wrong moves: %s from %s. [%s]" % [@moves, @player.name, e.message]
+      return :continue
+    end
+
+    private
+    
+    # Split a moves line into an array of a move string.
+    # If it fails to parse the moves, it raises WrongMoves.
+    # @param moves a moves line. Ex. "+776FU-3334Fu"
+    # @return an array of a move string. Ex. ["+7776FU", "-3334FU"]
+    #
+    def split_moves(moves)
+      ret = []
+
+      rs = moves.gsub %r{[\+\-]\d{4}\w{2}} do |s|
+             ret << s
+             ""
+           end
+      raise WrongMoves, rs unless rs.empty?
+
+      return ret
+    end
+  end
+
+  #
+  #
+  class DeleteBuoyCommand < Command
+    def initialize(str, player, game_name)
+      super(str, player)
+      @game_name = game_name
+    end
+
+    def call
+      buoy = Buoy.new
+      buoy_game = buoy.get_game(@game_name)
+      if buoy_game.instance_of?(NilBuoyGame)
+        @player.write_safe(sprintf("##[ERROR] buoy game not found: %s\n", @game_name))
+        log_error "Game name not found: %s by %s" % [@game_name, @player.name]
+        return :continue
+      end
+
+      if buoy_game.owner != @player.name
+        @player.write_safe(sprintf("##[ERROR] you are not allowed to delete a buoy game that you did not set: %s\n", @game_name))
+        log_error "%s are not allowed to delete a game: %s" % [@player.name, @game_name]
+        return :continue
+      end
+
+      buoy.delete_game(buoy_game)
+      log_info("A buoy game was deleted: %s" % [@game_name])
+      return :continue
+    end
+  end
+
+  #
+  #
+  class GetBuoyCountCommand < Command
+    def initialize(str, player, game_name)
+      super(str, player)
+      @game_name = game_name
+    end
+
+    def call
+      buoy = Buoy.new
+      buoy_game = buoy.get_game(@game_name)
+      if buoy_game.instance_of?(NilBuoyGame)
+        @player.write_safe("##[GETBUOYCOUNT] 0\n")
+      else
+        @player.write_safe("##[GETBUOYCOUNT] %s\n" % [buoy_game.count])
+      end
+      @player.write_safe("##[GETBUOYCOUNT] +OK\n")
+    end
+  end
 
 end # module ShogiServer

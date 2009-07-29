@@ -1,3 +1,35 @@
+2009-07-29 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - A experimental new feature, codenamed Buoy: it allows players to
+	    play a game starting with a specified position. First, a player
+	    sets a buoy game with moves to a specific position. Then, two
+	    players can play a new game with the game name.
+	    New commands:
+	    + %%SETBUOY <game_name> <moves> [count]
+	      Set a new buoy game.
+	      ex. %%SETBUOYGAME buoy_foo-900-0 +7776FU 10
+	      ex. %%SETBUOYGAME buoy_foo-1500-0 +7776FU-3334FU
+	      - game_name is a valid game name with a prefix "buoy_".
+	      ex. buoy_foo-900-0
+	      - moves are initial moves from the Hirate position to a
+	      spcific position that you want to start with.
+	      ex. +7776FU-3334FU+8786FU
+	      - count is an optional attribute to tell how many times the
+	      game can be played (default 1). The count is decremented
+	      when the game finishes. If the count reaches zero, the buoy
+	      game is removed automatically by the server.
+	      ex. 10
+	    + %%DELETEBUOY <game_name>
+	      Delete a buoy game. The only owner who set up the game is
+	      allowed to delete it.
+	      ex. %%DELETEBUOY buoy_foo-900-0
+	      - game_name is the buoy game name that was created.
+	    + %%GETBUOYCOUNT <game_name>
+	      Show a current count of the buoy game or zero for non-existing
+	      games.
+
+
 2009-07-11 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

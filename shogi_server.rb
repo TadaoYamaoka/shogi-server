@@ -38,6 +38,8 @@ require 'shogi_server/player'
 require 'shogi_server/timeout_queue'
 require 'shogi_server/usi'
 require 'shogi_server/util'
+require 'shogi_server/command'
+require 'shogi_server/buoy'
 
 module ShogiServer # for a namespace
 

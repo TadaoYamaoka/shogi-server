@@ -76,6 +76,11 @@ class GameResult
        $options["floodgate-history"]
       add_observer League::Floodgate::History.factory
     end
+
+    # TODO take observers from the game object
+    if Buoy.game_name?(@game.game_name)
+      add_observer(BuoyObserver.new)
+    end
   end
 
   def process
@@ -262,7 +267,7 @@ class Game
 
   @@mutex = Mutex.new
   @@time  = 0
-  def initialize(game_name, player0, player1)
+  def initialize(game_name, player0, player1, board)
     @monitors = Array::new
     @game_name = game_name
     if (@game_name =~ /-(\d+)-(\d+)$/)
@@ -277,12 +282,17 @@ class Game
     end
     @sente.socket_buffer.clear
     @gote.socket_buffer.clear
-    @current_player, @next_player = @sente, @gote
+    @board = board
+    if @board.teban
+      @current_player, @next_player = @sente, @gote
+    else
+      @current_player, @next_player = @gote, @sente
+    end
     @sente.game = self
     @gote.game  = self
 
-    @last_move = ""
-    @current_turn = 0
+    @last_move = @board.initial_moves.empty? ? "" : "%s,T1" % [@board.initial_moves.last]
+    @current_turn = @board.initial_moves.size
 
     @sente.status = "agree_waiting"
     @gote.status  = "agree_waiting"
@@ -305,8 +315,6 @@ class Game
 
     log_message(sprintf("game created %s", @game_id))
 
-    @board = Board::new
-    @board.initial
     @start_time = nil
     @fh = open(@logfile, "w")
     @fh.sync = true
@@ -317,6 +325,9 @@ class Game
   attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors
   attr_accessor :last_move, :current_turn
   attr_reader   :result, :prepared_time
+
+  # Path of a log file for this game.
+  attr_reader   :logfile
 
   def rated?
     @sente.rated? && @gote.rated?
@@ -528,6 +539,13 @@ EOM
       white_name = @gote.rated?  ? @gote.player_id  : @gote.name
       @fh.puts("'rating:%s:%s" % [black_name, white_name])
     end
+    unless @board.initial_moves.empty?
+      @fh.puts "'buoy game starting with %d moves" % [@board.initial_moves.size]
+      @board.initial_moves.each do |move|
+        @fh.puts move
+        @fh.puts "T1"
+      end
+    end
   end
 
   def show()
@@ -583,18 +601,7 @@ Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
-P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
-P2 * -HI *  *  *  *  * -KA * 
-P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
-P4 *  *  *  *  *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
-P8 * +KA *  *  *  *  * +HI * 
-P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
-P+
-P-
-+
+#{@board.to_s.chomp}
 END Position
 END Game_Summary
 EOM

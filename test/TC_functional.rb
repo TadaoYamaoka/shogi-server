@@ -287,7 +287,7 @@ class TestDuplicatedMoves < BaseClient
   end
 end
 
-class TestChatCommand < BaseClient
+class TestFunctionalChatCommand < BaseClient
   def test_chat
     cmd "%%CHAT Hello"
     sleep 1

@@ -20,6 +20,7 @@
 module ShogiServer # for a namespace
 
 class Board
+
   def initialize(move_count=0)
     @sente_hands = Array::new
     @gote_hands  = Array::new
@@ -29,9 +30,15 @@ class Board
     @array = [[], [], [], [], [], [], [], [], [], []]
     @move_count = move_count
     @teban = nil # black => true, white => false
+    @initial_moves = []
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history, :teban
   attr_reader :move_count
+  
+  # Initial moves for a Buoy game. If it is an empty array, the game is
+  # normal with the initial setting; otherwise, the game is started after the
+  # moves.
+  attr_reader :initial_moves
 
   def deep_copy
     return Marshal.load(Marshal.dump(self))
@@ -70,9 +77,14 @@ class Board
     @teban = true
   end
 
+  # Set up a board with the strs.
+  # Failing to parse the moves raises an StandardError.
+  # @param strs a board text
+  #
   def set_from_str(strs)
-    strs.split(/\n/).each do |str|
-      if (str =~ /^P\d/)
+    strs.each_line do |str|
+      case str
+      when /^P\d/
         str.sub!(/^P(.)/, '')
         y = $1.to_i
         x = 9
@@ -125,7 +137,7 @@ class Board
           end
           x = x - 1
         end
-      elsif (str =~ /^P([\+\-])/)
+      when /^P([\+\-])/
         sg = $1
         if (sg == "+")
           sente = true
@@ -155,8 +167,29 @@ class Board
             raise "unkown piece #{name}"
           end
         end # while
-      end # if
+      when /^\+$/
+        @teban = true
+      when /^\-$/
+        @teban = false
+      else
+        raise "bad line: #{str}"
+      end # case
     end # do
+  end
+
+  # Set up a board starting with a position after the moves.
+  # Failing to parse the moves raises an ArgumentError.
+  # @param moves an array of moves. ex. ["+7776FU", "-3334FU"]
+  #
+  def set_from_moves(moves)
+    initial()
+    return :normal if moves.empty?
+    rt = nil
+    moves.each do |move|
+      rt = handle_one_move(move, @teban)
+      raise ArgumentError, "bad moves: #{moves}" unless rt == :normal
+    end
+    @initial_moves = moves.dup
   end
 
   def have_piece?(hands, name)

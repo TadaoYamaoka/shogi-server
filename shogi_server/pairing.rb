@@ -129,7 +129,9 @@ module ShogiServer
       log_message("Floodgate: Starting a game: BLACK %s vs WHITE %s" % [p1.name, p2.name])
       p1.sente = true
       p2.sente = false
-      Game.new(p1.game_name, p1, p2)
+      board = Board.new
+      board.initial
+      Game.new(p1.game_name, p1, p2, board)
     end
   end
 

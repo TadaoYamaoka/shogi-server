@@ -28,8 +28,10 @@
 $topdir = nil
 $league = nil
 $logger = nil
+$config = nil
 $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
+require 'shogi_server/config'
 require 'tempfile'
 
 #################################################
@@ -335,6 +337,7 @@ def main
   
   $options = parse_command_line
   check_command_line
+  $config = ShogiServer::Config.new $options
 
   $league = ShogiServer::League.new($topdir)
 

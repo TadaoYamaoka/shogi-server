@@ -685,3 +685,52 @@ EOM
     assert_equal(false, b.uchifuzume?(true))
  end
 end
+
+class TestBoardForBuoy < Test::Unit::TestCase
+  def setup
+    @board = ShogiServer::Board.new
+  end
+
+  def test_set_from_moves_empty
+    moves = []
+    rt = @board.set_from_moves moves
+    assert_equal(:normal, rt)
+  end
+
+  def test_set_from_moves
+    moves = ["+7776FU", "-3334FU"]
+    assert_nothing_raised do
+      @board.set_from_moves moves
+    end
+
+    correct = ShogiServer::Board.new
+    correct.set_from_str <<EOF
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU * -FU-FU
+P4 *  *  *  *  *  * -FU *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  * +FU *  *  *  *  *  * 
+P7+FU+FU * +FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOF
+    assert_equal(correct.to_s, @board.to_s)
+  end
+
+  def test_set_from_moves_error1
+    moves = ["+7776FU", "-3435FU"]
+    assert_raise ArgumentError do
+      @board.set_from_moves moves
+    end
+  end
+
+  def test_set_from_moves_error2
+    moves = ["+7776FU", "+8786FU"]
+    assert_raise ArgumentError do
+      @board.set_from_moves moves
+    end
+  end
+end # TestBoardForBuoy
+

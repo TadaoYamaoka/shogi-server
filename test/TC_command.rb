@@ -1,92 +1,13 @@
 $:.unshift File.join(File.dirname(__FILE__), "..")
+$topdir = File.expand_path File.dirname(__FILE__)
 require 'test/unit'
+require 'mock_game'
+require 'mock_log_message'
+require 'test/mock_player'
 require 'shogi_server/login'
 require 'shogi_server/player'
 require 'shogi_server/command'
 
-def log_warning(str)
-  $stderr.puts str
-end
-
-def log_error(str)
-  $stderr.puts str
-end
-
-class MockPlayer < ShogiServer::BasicPlayer
-  attr_reader :out
-  attr_accessor :game, :status, :protocol
-  attr_accessor :game_name
-
-  def initialize
-    @out      = []
-    @game     = nil
-    @status   = nil
-    @protocol = nil
-    @game_name = "dummy_game_name"
-  end
-
-  def write_safe(str)
-    @out << str
-  end
-end
-
-class MockGame
-  attr_accessor :finish_flag
-  attr_reader :log
-  attr_accessor :prepared_expire
-  attr_accessor :rejected
-  attr_accessor :is_startable_status
-  attr_accessor :started
-  attr_accessor :game_id
-
-  def initialize
-    @finish_flag     = false
-    @log             = []
-    @prepared_expire = false
-    @rejected        = false
-    @is_startable_status = false
-    @started             = false
-    @game_id         = "dummy_game_id"
-    @monitoron_called = false
-    @monitoroff_called = false
-  end
-
-  def handle_one_move(move, player)
-    return @finish_flag
-  end
-
-  def log_game(str)
-    @log << str
-  end
-
-  def prepared_expire?
-    return @prepared_expire
-  end
-
-  def reject(str)
-    @rejected = true
-  end
-
-  def is_startable_status?
-    return @is_startable_status
-  end
-
-  def start
-    @started = true
-  end
-
-  def show
-    return "dummy_game_show"
-  end
-
-  def monitoron(player)
-    @monitoron_called = true
-  end
-
-  def monitoroff(player)
-    @monitoroff_called = true
-  end
-end
 
 class MockLeague
   def initialize
@@ -105,6 +26,30 @@ class MockLeague
   def players
     return [MockPlayer.new]
   end
+
+  def event
+    return "test"
+  end
+
+  def dir
+    return $topdir
+  end
+
+  def get_player(status, game_id, sente, searcher)
+    if sente == true
+      $p1 = MockPlayer.new
+      $p1.name = "p1"
+      return $p1
+    elsif sente == false
+      $p2 = MockPlayer.new
+      $p2.name = "p2"
+      return $p2
+    elsif sente == nil
+      return nil
+    else
+      return nil
+    end
+  end
 end
 
 
@@ -112,6 +57,7 @@ class TestFactoryMethod < Test::Unit::TestCase
 
   def setup
     @p = MockPlayer.new
+    @p.name = "test_factory_method_player"
     $league = MockLeague.new
   end
 
@@ -223,6 +169,26 @@ class TestFactoryMethod < Test::Unit::TestCase
   def test_space_command
     cmd = ShogiServer::Command.factory(" ", @p)
     assert_instance_of(ShogiServer::SpaceCommand, cmd)
+  end
+
+  def test_setbuoy_command
+    cmd = ShogiServer::Command.factory("%%SETBUOY buoy_test-1500-0 +7776FU", @p)
+    assert_instance_of(ShogiServer::SetBuoyCommand, cmd)
+  end
+
+  def test_setbuoy_command_with_counter
+    cmd = ShogiServer::Command.factory("%%SETBUOY buoy_test-1500-0 +7776FU 3", @p)
+    assert_instance_of(ShogiServer::SetBuoyCommand, cmd)
+  end
+
+  def test_deletebuoy_command
+    cmd = ShogiServer::Command.factory("%%DELETEBUOY buoy_test-1500-0", @p)
+    assert_instance_of(ShogiServer::DeleteBuoyCommand, cmd)
+  end
+
+  def test_getbuoycount_command
+    cmd = ShogiServer::Command.factory("%%GETBUOYCOUNT buoy_test-1500-0", @p)
+    assert_instance_of(ShogiServer::GetBuoyCountCommand, cmd)
   end
 
   def test_error
@@ -703,6 +669,190 @@ class TestErrorCommand < Test::Unit::TestCase
     rc = cmd.call
 
     assert_equal(:continue, rc)
+  end
+end
+
+class BaseTestBuoyCommand < Test::Unit::TestCase
+  def setup
+    @p = MockPlayer.new
+    $p1 = nil
+    $p2 = nil
+
+    delete_buoy_yaml
+    @buoy = ShogiServer::Buoy.new
+  end
+
+  def teadown
+    delete_buoy_yaml
+  end
+
+  def delete_buoy_yaml
+    if File.exist?(File.join($topdir, "buoy.yaml"))
+      File.delete File.join($topdir, "buoy.yaml")
+    end
+  end
+
+  def test_dummy
+    assert true
+  end
+end
+
+
+#
+#
+class TestSetBuoyCommand < BaseTestBuoyCommand
+  
+  def setup
+    super
+    @p.name = "set_buoy_player"
+  end
+
+  def test_split_moves1
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    rs = cmd.__send__ :split_moves, "+7776FU"
+    assert_equal ["+7776FU"], rs
+  end
+
+  def test_split_moves2
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    rs = cmd.__send__ :split_moves, "+7776FU-3334FU"
+    assert_equal ["+7776FU", "-3334FU"], rs
+  end
+
+  def test_split_moves3
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    assert_nothing_raised do
+      cmd.__send__ :split_moves, ""
+    end
+  end
+
+  def test_split_moves_error1
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    assert_raise ShogiServer::SetBuoyCommand::WrongMoves do
+      cmd.__send__ :split_moves, "dummy"
+    end
+  end
+
+  def test_call
+    assert @buoy.is_new_game?("buoy_hoge-1500-0")
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    rt = cmd.call
+    assert :continue, rt
+    assert !@buoy.is_new_game?("buoy_hoge-1500-0")
+    assert !$p1.out.empty?
+    assert !$p2.out.empty?
+    buoy_game2 = @buoy.get_game("buoy_hoge-1500-0")
+    assert_equal ShogiServer::BuoyGame.new("buoy_hoge-1500-0", "+7776FU", @p.name, 1), buoy_game2
+  end
+
+  def test_call_error_not_buoy_game_name
+    assert @buoy.is_new_game?("buoy_hoge-1500-0")
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoyhoge-1500-0", "+7776FU", 1
+    rt = cmd.call
+    assert :continue, rt
+    assert !$p1
+    assert !$p2
+    assert @buoy.is_new_game?("buoy_hoge-1500-0")
+  end
+
+  def test_call_error_duplicated_game_name
+    assert @buoy.is_new_game?("buoy_duplicated-1500-0")
+    bg = ShogiServer::BuoyGame.new("buoy_duplicated-1500-0", ["+7776FU"], @p.name, 1)
+    @buoy.add_game bg
+    assert !@buoy.is_new_game?("buoy_duplicated-1500-0")
+    
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_duplicated-1500-0", "+7776FU", 1
+    rt = cmd.call
+    assert :continue, rt
+    assert !$p1
+    assert !$p2
+    assert !@buoy.is_new_game?("buoy_duplicated-1500-0")
+  end
+
+  def test_call_error_bad_moves
+    assert @buoy.is_new_game?("buoy_badmoves-1500-0")
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_badmoves-1500-0", "+7776FU+8786FU", 1
+    rt = cmd.call
+    assert :continue, rt
+    assert !$p1
+    assert !$p2
+    assert @buoy.is_new_game?("buoy_badmoves-1500-0")
+  end
+
+  def test_call_error_bad_counter
+    assert @buoy.is_new_game?("buoy_badcounter-1500-0")
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_badcounter-1500-0", "+7776FU", 0
+    rt = cmd.call
+    assert :continue, rt
+    assert !$p1
+    assert !$p2
+    assert @buoy.is_new_game?("buoy_badcounter-1500-0")
+  end
+end
+
+
+#
+#
+class TestDeleteBuoyCommand < BaseTestBuoyCommand
+  def test_call
+    buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1)
+    assert @buoy.is_new_game?(buoy_game.game_name)
+    @buoy.add_game buoy_game
+    assert !@buoy.is_new_game?(buoy_game.game_name)
+    cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
+    rt = cmd.call
+    assert :continue, rt
+    assert !$p1
+    assert !$p2
+    assert @buoy.is_new_game?(buoy_game.game_name)
+  end
+
+  def test_call_not_exist
+    buoy_game = ShogiServer::BuoyGame.new("buoy_notexist-1500-0", "+7776FU", @p.name, 1)
+    assert @buoy.is_new_game?(buoy_game.game_name)
+    cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
+    rt = cmd.call
+    assert :continue, rt
+    assert !$p1
+    assert !$p2
+    assert @buoy.is_new_game?(buoy_game.game_name)
+  end
+
+  def test_call_another_player
+    buoy_game = ShogiServer::BuoyGame.new("buoy_anotherplayer-1500-0", "+7776FU", "another_player", 1)
+    assert @buoy.is_new_game?(buoy_game.game_name)
+    @buoy.add_game(buoy_game)
+    assert !@buoy.is_new_game?(buoy_game.game_name)
+
+    cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
+    rt = cmd.call
+    assert :continue, rt
+    assert_equal "##[ERROR] you are not allowed to delete a buoy game that you did not set: buoy_anotherplayer-1500-0\n", @p.out.first
+    assert !@buoy.is_new_game?(buoy_game.game_name)
+  end
+end
+
+#
+#
+class TestGetBuoyCountCommand < BaseTestBuoyCommand
+  def test_call
+    buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1)
+    assert @buoy.is_new_game?(buoy_game.game_name)
+    @buoy.add_game buoy_game
+    assert !@buoy.is_new_game?(buoy_game.game_name)
+    cmd = ShogiServer::GetBuoyCountCommand.new "%%GETBUOYCOUNT", @p, buoy_game.game_name
+    rt = cmd.call
+    assert :continue, rt
+    assert_equal ["##[GETBUOYCOUNT] 1\n", "##[GETBUOYCOUNT] +OK\n"], @p.out
+  end
+
+  def test_call_not_exist
+    buoy_game = ShogiServer::BuoyGame.new("buoy_notexist-1500-0", "+7776FU", @p.name, 1)
+    assert @buoy.is_new_game?(buoy_game.game_name)
+    cmd = ShogiServer::GetBuoyCountCommand.new "%%GETBUOYCOUNT", @p, buoy_game.game_name
+    rt = cmd.call
+    assert :continue, rt
+    assert_equal ["##[GETBUOYCOUNT] 0\n", "##[GETBUOYCOUNT] +OK\n"], @p.out
   end
 end
 
