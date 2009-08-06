@@ -65,19 +65,9 @@ class TestConfig < Test::Unit::TestCase
   end
 
   def test_top_dir2
-    topdir_orig = $topdir
-    $topdir = "/should_be_replaced"
+    assert !File.exist?(File.join("/", "tmp", ShogiServer::Config::FILENAME))
     conf = ShogiServer::Config.new({:topdir => "/tmp"})
     assert_equal "/tmp", conf[:topdir]
-    $topdir = topdir_orig
-  end
-
-  def test_top_dir3
-    topdir_orig = $topdir
-    $topdir = "/should_be_replaced"
-    conf = ShogiServer::Config.new({"topdir" => "/tmp"})
-    assert_equal "/tmp", conf[:topdir]
-    $topdir = topdir_orig
   end
 
   def test_braces1

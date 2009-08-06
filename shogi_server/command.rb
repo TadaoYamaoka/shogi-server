@@ -441,7 +441,7 @@ module ShogiServer
             # When the game is set, it will be started.
           else
             buoy_game = buoy.get_game(@game_name)
-            if buoy_game.instance_of NilBuoyGame
+            if buoy_game.instance_of? NilBuoyGame
               # error. never reach
             end
             board = Board.new
@@ -452,6 +452,7 @@ module ShogiServer
               log_error "Failed to set up a buoy game: #{moves}"
               return :continue
             end
+            buoy.decrement_count(buoy_game)
             Game::new(@player.game_name, @player, rival, board)
           end
         else
@@ -653,6 +654,7 @@ module ShogiServer
       p2 = $league.get_player("game_waiting", @game_name, false, @player)
       return :continue unless p2
 
+      buoy.decrement_count(buoy_game)
       game = Game::new(@game_name, p1, p2, board)
       return :continue
     rescue WrongMoves => e
@@ -722,7 +724,7 @@ module ShogiServer
       buoy = Buoy.new
       buoy_game = buoy.get_game(@game_name)
       if buoy_game.instance_of?(NilBuoyGame)
-        @player.write_safe("##[GETBUOYCOUNT] 0\n")
+        @player.write_safe("##[GETBUOYCOUNT] -1\n")
       else
         @player.write_safe("##[GETBUOYCOUNT] %s\n" % [buoy_game.count])
       end

@@ -77,10 +77,6 @@ class GameResult
       add_observer League::Floodgate::History.factory
     end
 
-    # TODO take observers from the game object
-    if Buoy.game_name?(@game.game_name)
-      add_observer(BuoyObserver.new)
-    end
   end
 
   def process

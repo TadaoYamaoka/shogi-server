@@ -687,9 +687,8 @@ class BaseTestBuoyCommand < Test::Unit::TestCase
   end
 
   def delete_buoy_yaml
-    if File.exist?(File.join($topdir, "buoy.yaml"))
-      File.delete File.join($topdir, "buoy.yaml")
-    end
+    file = File.join($topdir, "buoy.yaml")
+    File.delete file if File.exist? file
   end
 
   def test_dummy
@@ -733,9 +732,9 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     end
   end
 
-  def test_call
+  def test_call_2
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
-    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 2
     rt = cmd.call
     assert :continue, rt
     assert !@buoy.is_new_game?("buoy_hoge-1500-0")
@@ -743,6 +742,16 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert !$p2.out.empty?
     buoy_game2 = @buoy.get_game("buoy_hoge-1500-0")
     assert_equal ShogiServer::BuoyGame.new("buoy_hoge-1500-0", "+7776FU", @p.name, 1), buoy_game2
+  end
+
+  def test_call_1
+    assert @buoy.is_new_game?("buoy_hoge-1500-0")
+    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
+    rt = cmd.call
+    assert :continue, rt
+    assert @buoy.is_new_game?("buoy_hoge-1500-0")
+    assert !$p1.out.empty?
+    assert !$p2.out.empty?
   end
 
   def test_call_error_not_buoy_game_name
@@ -852,7 +861,7 @@ class TestGetBuoyCountCommand < BaseTestBuoyCommand
     cmd = ShogiServer::GetBuoyCountCommand.new "%%GETBUOYCOUNT", @p, buoy_game.game_name
     rt = cmd.call
     assert :continue, rt
-    assert_equal ["##[GETBUOYCOUNT] 0\n", "##[GETBUOYCOUNT] +OK\n"], @p.out
+    assert_equal ["##[GETBUOYCOUNT] -1\n", "##[GETBUOYCOUNT] +OK\n"], @p.out
   end
 end
 

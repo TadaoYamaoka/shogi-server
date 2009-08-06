@@ -102,28 +102,19 @@ module ShogiServer
         end
       end
     end
-  end
 
+    def decrement_count(buoy_game)
+      return if buoy_game.instance_of?(NilBuoyGame)
 
-  # Observer obserers GameResult of a buoy game
-  #
-  class BuoyObserver
-    def update(game_result)
-      game_name = game_result.game.game_name
-      unless game_result.instance_of?(GameResultWin)
-        log_message "#{game_name} was not valid. It will be retried"
-        return
-      end
-      buoy = Buoy.new
-      buoy_game = buoy.get_game(game_name)
       buoy_game.decrement_count
-      if buoy_game.count < 1
-        buoy.delete_game buoy_game
-        log_message "#{game_name} has finished."
-      else
-        buoy.update_game buoy_game
-        log_message "#{game_name} remains #{buoy_game.count} slots."
+      if buoy_game.count > 0
+        update_game buoy_game
+        log_message "Buoy #{buoy_game.game_name} remains #{buoy_game.count} slots."
+      else                
+        delete_game buoy_game
+        log_message "Buoy #{buoy_game.game_name} finished."
       end
     end
   end
+
 end # module ShogiServer
