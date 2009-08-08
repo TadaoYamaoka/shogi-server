@@ -48,7 +48,6 @@ class TestHistory < Test::Unit::TestCase
     file = removed_file
 
     file.open("w") {|f| f.write ""}
-    puts file
     assert(file.exist?)
 
     history = ShogiServer::League::Floodgate::History.new(file)
