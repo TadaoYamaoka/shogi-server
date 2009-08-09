@@ -706,32 +706,6 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     @p.name = "set_buoy_player"
   end
 
-  def test_split_moves1
-    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
-    rs = cmd.__send__ :split_moves, "+7776FU"
-    assert_equal ["+7776FU"], rs
-  end
-
-  def test_split_moves2
-    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
-    rs = cmd.__send__ :split_moves, "+7776FU-3334FU"
-    assert_equal ["+7776FU", "-3334FU"], rs
-  end
-
-  def test_split_moves3
-    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
-    assert_nothing_raised do
-      cmd.__send__ :split_moves, ""
-    end
-  end
-
-  def test_split_moves_error1
-    cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
-    assert_raise ShogiServer::SetBuoyCommand::WrongMoves do
-      cmd.__send__ :split_moves, "dummy"
-    end
-  end
-
   def test_call_2
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 2

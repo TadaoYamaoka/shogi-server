@@ -19,7 +19,26 @@
 
 module ShogiServer # for a namespace
 
+class WrongMoves < ArgumentError; end
+
 class Board
+  
+  # Split a moves line into an array of a move string.
+  # If it fails to parse the moves, it raises WrongMoves.
+  # @param moves a moves line. Ex. "+776FU-3334Fu"
+  # @return an array of a move string. Ex. ["+7776FU", "-3334FU"]
+  #
+  def Board.split_moves(moves)
+    ret = []
+
+    rs = moves.gsub %r{[\+\-]\d{4}\w{2}} do |s|
+           ret << s
+           ""
+         end
+    raise WrongMoves, rs unless rs.empty?
+
+    return ret
+  end
 
   def initialize(move_count=0)
     @sente_hands = Array::new

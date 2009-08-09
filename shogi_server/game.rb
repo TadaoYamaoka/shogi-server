@@ -589,7 +589,7 @@ Name+:#{@sente.name}
 Name-:#{@gote.name}
 Your_Turn:#{sg_flag}
 Rematch_On_Draw:NO
-To_Move:+
+To_Move:#{@board.teban ? "+" : "-"}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:#{@total_time}

@@ -444,9 +444,11 @@ module ShogiServer
             if buoy_game.instance_of? NilBuoyGame
               # error. never reach
             end
+
+            moves_array = Board::split_moves(buoy_game.moves)
             board = Board.new
             begin
-              board.set_from_moves(buoy_game.moves)
+              board.set_from_moves(moves_array)
             rescue => err
               # it will never happen since moves have already been checked
               log_error "Failed to set up a buoy game: #{moves}"
@@ -608,7 +610,6 @@ module ShogiServer
   #
   #
   class SetBuoyCommand < Command
-    class WrongMoves < ArgumentError; end
 
     def initialize(str, player, game_name, moves, count)
       super(str, player)
@@ -636,8 +637,7 @@ module ShogiServer
       end
 
       # check moves
-      moves_array = split_moves @moves
-
+      moves_array = Board::split_moves(@moves)
       board = Board.new
       begin
         board.set_from_moves(moves_array)
@@ -661,25 +661,6 @@ module ShogiServer
       @player.write_safe(sprintf("##[ERROR] wrong moves: %s\n", @moves))
       log_error "Received wrong moves: %s from %s. [%s]" % [@moves, @player.name, e.message]
       return :continue
-    end
-
-    private
-    
-    # Split a moves line into an array of a move string.
-    # If it fails to parse the moves, it raises WrongMoves.
-    # @param moves a moves line. Ex. "+776FU-3334Fu"
-    # @return an array of a move string. Ex. ["+7776FU", "-3334FU"]
-    #
-    def split_moves(moves)
-      ret = []
-
-      rs = moves.gsub %r{[\+\-]\d{4}\w{2}} do |s|
-             ret << s
-             ""
-           end
-      raise WrongMoves, rs unless rs.empty?
-
-      return ret
     end
   end
 

@@ -734,3 +734,26 @@ EOF
   end
 end # TestBoardForBuoy
 
+class TestSplitMoves < Test::Unit::TestCase
+  def test_split_moves1
+    rs = ShogiServer::Board::split_moves "+7776FU"
+    assert_equal ["+7776FU"], rs
+  end
+
+  def test_split_moves2
+    rs = ShogiServer::Board::split_moves "+7776FU-3334FU"
+    assert_equal ["+7776FU", "-3334FU"], rs
+  end
+
+  def test_split_moves3
+    assert_nothing_raised do
+      ShogiServer::Board::split_moves ""
+    end
+  end
+
+  def test_split_moves_error1
+    assert_raise ShogiServer::WrongMoves do
+      ShogiServer::Board::split_moves "dummy"
+    end
+  end
+end
