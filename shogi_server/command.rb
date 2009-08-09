@@ -439,6 +439,7 @@ module ShogiServer
           if buoy.is_new_game?(@game_name)
             # The buoy game is not ready yet.
             # When the game is set, it will be started.
+            @player.status = "game_waiting"
           else
             buoy_game = buoy.get_game(@game_name)
             if buoy_game.instance_of? NilBuoyGame
@@ -647,8 +648,11 @@ module ShogiServer
 
       buoy_game = BuoyGame.new(@game_name, @moves, @player.name, @count)
       buoy.add_game(buoy_game)
+      @player.write_safe(sprintf("##[SETBUOY] +OK\n"))
+      log_info("A buoy game was created: %s by %s" % [@game_name, @player.name])
 
       # if two players, who are not @player, are waiting for a new game, start it
+      log_error $league.inspect
       p1 = $league.get_player("game_waiting", @game_name, true, @player)
       return :continue unless p1
       p2 = $league.get_player("game_waiting", @game_name, false, @player)
@@ -688,6 +692,7 @@ module ShogiServer
       end
 
       buoy.delete_game(buoy_game)
+      @player.write_safe(sprintf("##[DELETEBUOY] +OK\n"))
       log_info("A buoy game was deleted: %s" % [@game_name])
       return :continue
     end
