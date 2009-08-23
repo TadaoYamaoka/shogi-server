@@ -652,7 +652,6 @@ module ShogiServer
       log_info("A buoy game was created: %s by %s" % [@game_name, @player.name])
 
       # if two players, who are not @player, are waiting for a new game, start it
-      log_error $league.inspect
       p1 = $league.get_player("game_waiting", @game_name, true, @player)
       return :continue unless p1
       p2 = $league.get_player("game_waiting", @game_name, false, @player)
