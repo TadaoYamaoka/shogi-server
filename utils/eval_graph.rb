@@ -142,7 +142,7 @@ module EvalGraph
     def eval_values
       moves = []
       comments.each_with_index do |c, i|
-        moves << i*2 + 1 if c
+        moves << i*2 if c
       end
       moves.unshift 0
       [moves, comments.compact.unshift(0)]
@@ -171,7 +171,7 @@ module EvalGraph
     def eval_values
       moves = []
       comments.each_with_index do |c, i|
-        moves << i*2 if c
+        moves << i*2+1 if c
       end
       moves.unshift 0
       [moves, comments.compact.unshift(0)]
