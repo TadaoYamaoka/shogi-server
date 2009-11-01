@@ -15,7 +15,7 @@ class UchifuzumeTest < ReadFileClient
     assert_match(/#ILLEGAL_MOVE.*#LOSE/m, result2)
   end
 
-  def est_not_uchifuzume
+  def test_not_uchifuzume
     csa = File.open(filepath("not_uchifuzume.csa")) {|f| f.read}
     handshake(csa)
     cmd2 "-0092FU"
