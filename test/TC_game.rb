@@ -149,7 +149,7 @@ Name+:p1
 Name-:p2
 Your_Turn:+
 Rematch_On_Draw:NO
-To_Move:+
+To_Move:-
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -183,7 +183,7 @@ Name+:p1
 Name-:p2
 Your_Turn:-
 Rematch_On_Draw:NO
-To_Move:+
+To_Move:-
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
