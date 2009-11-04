@@ -207,7 +207,7 @@ def plot(csa_file, title, black, white, a_play_time)
   width = [black.comments.size, white.comments.size].max * 2 + 1
   Gnuplot.open do |gp|
     Gnuplot::Plot.new( gp ) do |plot|
-      plot.terminal "svg" # or png
+      plot.terminal "svg size 800 500 fixed" # or png
       plot.output   to_svg_file(csa_file)
       
       plot.title  title
