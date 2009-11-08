@@ -658,13 +658,6 @@ def grep(file)
   end
 end
 
-def usage
-  $stderr.puts <<-EOF
-USAGE: #{$0} dir [...]
-  EOF
-  exit 1
-end
-
 def validate(yaml)
   yaml["players"].each do |group_key, group|
     group.each do |player_key, player|
