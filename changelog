@@ -5,7 +5,7 @@
 	    a new command, mk_game_results. Now, Generating players.yaml
 	    requires two steps as follows:
 	      % ./mk_game_results dir_of_csa_files > 00list
-	      % ./mk_rate 00list > players.html
+	      % ./mk_rate 00list > players.yaml
 	      or
 	      % ./mk_game_results dir_of_csa_files | ./mk_rate > players.yaml 
 	    (Closes: #19454)
