@@ -2,12 +2,12 @@
 
 	* [mk_rate]
 	  - Split a pre-process collecting game results from csa files into
-	    a new command, mk_game_results. Now, Generating players.html
+	    a new command, mk_game_results. Now, Generating players.yaml
 	    requires two steps as follows:
 	      % ./mk_game_results dir_of_csa_files > 00list
 	      % ./mk_rate 00list > players.html
 	      or
-	      % ./mk_game_results dir_of_csa_files | ./mk_rate > players.html 
+	      % ./mk_game_results dir_of_csa_files | ./mk_rate > players.yaml 
 	    (Closes: #19454)
 
 2009-08-06 Daigo Moriwaki <daigo at debian dot org>
