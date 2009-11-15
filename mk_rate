@@ -34,6 +34,9 @@
 # DIR::
 #   CSA files are recursively looked up the directories.
 #
+# --base-date::
+#   a base time point for this calicuration (default now). Ex. '2009-10-31'
+#
 # --half-life::
 #   n [days] (default 60)
 #   
@@ -591,7 +594,7 @@ def half_life(days)
 end
 
 def _add_win_loss(winner, loser, time)
-  how_long_days = (Time.now - time)/(3600*24)
+  how_long_days = ($options["base-date"] - time)/(3600*24)
   $players[winner] ||= Hash.new { GSL::Vector[0,0] }
   $players[loser]  ||= Hash.new { GSL::Vector[0,0] }
   $players[winner][loser] += GSL::Vector[1.0*half_life(how_long_days),0]
@@ -635,6 +638,7 @@ def parse(line)
 
   return if state == "abnormal"
   time = Time.parse(time)
+  return if $options["base-date"] < time
   black_id = identify_id(black_id)
   white_id = identify_id(white_id)
 
@@ -662,6 +666,7 @@ def usage(io)
 USAGE: #{$0} [options] DIR..
   DIR                where CSA files are looked up recursively
 OPTOINS:
+  --base-date         a base time point for this calicuration (default now). Ex. '2009-10-31'
   --half-life         n [days] (default 60)
   --half-life-ignore  m [days] (default  7)
                       after m days, half-life effect works
@@ -674,6 +679,7 @@ end
 def main
   $options = Hash::new
   parser = GetoptLong.new(
+    ["--base-date",         GetoptLong::REQUIRED_ARGUMENT],
     ["--half-life",         GetoptLong::REQUIRED_ARGUMENT],
     ["--half-life-ignore",  GetoptLong::REQUIRED_ARGUMENT],
     ["--help", "-h",        GetoptLong::NO_ARGUMENT],
@@ -698,6 +704,11 @@ def main
   if $options["help"]
     usage($stdout) 
     exit 0
+  end
+  if $options["base-date"]
+    $options["base-date"] = Time::parse $options["base-date"]
+  else
+    $options["base-date"] = Time.now
   end
   $options["half-life"] ||= 60
   $options["half-life"] = $options["half-life"].to_i
