@@ -252,7 +252,14 @@ def login_loop(client)
   player = login = nil
  
   while r = select([client], nil, nil, ShogiServer::Login_Time) do
-    break unless str = r[0].first.gets
+    str = nil
+    begin
+      break unless str = r[0].first.gets
+    rescue Exception => ex
+      # It is posssible that the socket causes an error (ex. Errno::ECONNRESET)
+      log_error("login_loop: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+      break
+    end
     $mutex.lock # guards $league
     begin
       str =~ /([\r\n]*)$/
