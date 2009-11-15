@@ -1,11 +1,27 @@
+2009-11-10 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - The server logs a result of each game to a file named '00LIST',
+	    which will be used to generate players.yaml. If the file does
+	    not exist, the server will create one automatically.
+	    Instruction to use the game result list file:
+	    1. Make a list of game results from exisiting CSA files with
+	       mk_game_results
+	       % ./mk_game_results dir_of_csa_files > 00LIST
+	    2. Run the server. It appends a result of each game to
+	       '00LIST' when the game finishes.
+	    3. From the list of game results, calcurate rating scores of
+	       players.
+	       % ./mk_rate 00LIST > players.yaml
+
 2009-11-08 Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
 	  - Split a pre-process collecting game results from csa files into
 	    a new command, mk_game_results. Now, Generating players.yaml
 	    requires two steps as follows:
-	      % ./mk_game_results dir_of_csa_files > 00list
-	      % ./mk_rate 00list > players.yaml
+	      % ./mk_game_results dir_of_csa_files > 00LIST
+	      % ./mk_rate 00LIST > players.yaml
 	      or
 	      % ./mk_game_results dir_of_csa_files | ./mk_rate > players.yaml 
 	    (Closes: #19454)

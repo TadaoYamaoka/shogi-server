@@ -138,15 +138,20 @@ class Game
     end
     
     if (@current_player == killer)
-      result = GameResultAbnormalWin.new(self, @next_player, @current_player)
-      result.process
+      @result = GameResultAbnormalWin.new(self, @next_player, @current_player)
+      @result.process
       finish
     end
   end
 
   def finish
     log_message(sprintf("game finished %s", @game_id))
-    @fh.printf("'$END_TIME:%s\n", Time::new.strftime("%Y/%m/%d %H:%M:%S"))    
+
+    # In a case where a player in agree_waiting or start_waiting status is
+    # rejected, a GameResult object is not yet instanciated.
+    # See test/TC_before_agree.rb.
+    end_time = @result ? @result.end_time : Time.now
+    @fh.printf("'$END_TIME:%s\n", end_time.strftime("%Y/%m/%d %H:%M:%S"))    
     @fh.close
 
     @sente.game = nil
@@ -218,39 +223,39 @@ class Game
       end
     end
 
-    result = nil
+    @result = nil
     if (@next_player.status != "game") # rival is logout or disconnected
-      result = GameResultAbnormalWin.new(self, @current_player, @next_player)
+      @result = GameResultAbnormalWin.new(self, @current_player, @next_player)
     elsif (status == :timeout)
       # current_player losed
-      result = GameResultTimeoutWin.new(self, @next_player, @current_player)
+      @result = GameResultTimeoutWin.new(self, @next_player, @current_player)
     elsif (move_status == :illegal)
-      result = GameResultIllegalMoveWin.new(self, @next_player, @current_player)
+      @result = GameResultIllegalMoveWin.new(self, @next_player, @current_player)
     elsif (move_status == :kachi_win)
-      result = GameResultKachiWin.new(self, @current_player, @next_player)
+      @result = GameResultKachiWin.new(self, @current_player, @next_player)
     elsif (move_status == :kachi_lose)
-      result = GameResultIllegalKachiWin.new(self, @next_player, @current_player)
+      @result = GameResultIllegalKachiWin.new(self, @next_player, @current_player)
     elsif (move_status == :toryo)
-      result = GameResultToryoWin.new(self, @next_player, @current_player)
+      @result = GameResultToryoWin.new(self, @next_player, @current_player)
     elsif (move_status == :outori)
       # The current player captures the next player's king
-      result = GameResultOutoriWin.new(self, @current_player, @next_player)
+      @result = GameResultOutoriWin.new(self, @current_player, @next_player)
     elsif (move_status == :oute_sennichite_sente_lose)
-      result = GameResultOuteSennichiteWin.new(self, @gote, @sente) # Sente is checking
+      @result = GameResultOuteSennichiteWin.new(self, @gote, @sente) # Sente is checking
     elsif (move_status == :oute_sennichite_gote_lose)
-      result = GameResultOuteSennichiteWin.new(self, @sente, @gote) # Gote is checking
+      @result = GameResultOuteSennichiteWin.new(self, @sente, @gote) # Gote is checking
     elsif (move_status == :sennichite)
-      result = GameResultSennichiteDraw.new(self, @current_player, @next_player)
+      @result = GameResultSennichiteDraw.new(self, @current_player, @next_player)
     elsif (move_status == :uchifuzume)
       # the current player losed
-      result = GameResultUchifuzumeWin.new(self, @next_player, @current_player)
+      @result = GameResultUchifuzumeWin.new(self, @next_player, @current_player)
     elsif (move_status == :oute_kaihimore)
       # the current player losed
-      result = GameResultOuteKaihiMoreWin.new(self, @next_player, @current_player)
+      @result = GameResultOuteKaihiMoreWin.new(self, @next_player, @current_player)
     else
       finish_flag = false
     end
-    result.process if result
+    @result.process if @result
     finish() if finish_flag
     @current_player, @next_player = @next_player, @current_player
     @start_time = Time::new

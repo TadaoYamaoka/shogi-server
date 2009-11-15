@@ -32,7 +32,41 @@ class MonitorObserver
   end
 end
 
-# Base class for a game result
+# LoggingObserver appends a result of each game to a log file, which will
+# be used to calculate rating scores of players.
+#
+class LoggingObserver
+  def initialize
+    @logfile = File.join($league.dir, "00LIST")
+  end
+
+  def update(game_result)
+    end_time_str = game_result.end_time.strftime("%Y/%m/%d %H:%M:%S")
+    black = game_result.black
+    white = game_result.white
+    black_name = black.rated? ? black.player_id : black.name
+    white_name = white.rated? ? white.player_id : white.name
+    msg = [end_time_str,
+           game_result.log_summary_type,
+           game_result.black_result,
+           black_name,
+           white_name,
+           game_result.white_result,
+           game_result.game.logfile]
+    begin
+      # Note that this is proccessed in the gian lock.
+      File.open(@logfile, "a") do |f|
+        f << msg.join("\t") << "\n"
+      end
+    rescue => e
+      # ignore
+      $stderr.puts "Failed to write to the game result file: #{@logfile}" if $DEBUG
+    end
+  end
+end
+
+# Base abstract class for a game result.
+# Imediate subclasses are GameResultWin and GameResultDraw.
 #
 class GameResult
   include Observable
@@ -47,6 +81,10 @@ class GameResult
   attr_reader :white
   # Command to send monitors such as '%TORYO' etc...
   attr_reader :result_type
+  # Result types to write the main log file such as 'toryo' etc... 
+  attr_reader :log_summary_type
+  # Time when the game ends
+  attr_reader :end_time
 
   def initialize(game, p1, p2)
     @game = game
@@ -62,12 +100,13 @@ class GameResult
       player.status = "connected"
     end
     @result_type = ""
-
+    @end_time = Time.now
     regist_observers
   end
 
   def regist_observers
     add_observer MonitorObserver.new
+    add_observer LoggingObserver.new
 
     if League::Floodgate.game_name?(@game.game_name) &&
        @game.sente.player_id &&
@@ -75,7 +114,6 @@ class GameResult
        $options["floodgate-history"]
       add_observer League::Floodgate::History.factory
     end
-
   end
 
   def process
@@ -95,6 +133,20 @@ class GameResult
     log(@game.board.to_s.gsub(/^/, "\'").chomp)
   end
 
+  def black_result
+    return "Implemet me!"
+  end
+
+  def white_result
+    return "Implemet me!"
+  end
+
+  def log_summary
+    log_board
+    log("'summary:%s:%s %s:%s %s" % [@log_summary_type, 
+                                     @black.name, black_result,
+                                     @white.name, white_result])
+  end
 end
 
 class GameResultWin < GameResult
@@ -107,65 +159,77 @@ class GameResultWin < GameResult
     @loser.last_game_win  = false
   end
 
-  def log_summary(type)
-    log_board
+  def black_result
+    return @black == @winner ? "win" : "lose"
+  end
 
-    black_result = white_result = ""
-    if @black == @winner
-      black_result = "win"
-      white_result = "lose"
-    else
-      black_result = "lose"
-      white_result = "win"
-    end
-    log("'summary:%s:%s %s:%s %s" % [type, 
-                                     @black.name, black_result,
-                                     @white.name, white_result])
-
+  def white_result
+    return @black == @winner ? "lose" : "win"
   end
 end
 
 class GameResultAbnormalWin < GameResultWin
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "abnormal"
+    @result_type      = "%TORYO"
+  end
+
   def process
     @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
-    log("%TORYO")
-    log_summary("abnormal")
-    @result_type = "%TORYO"
+    log(@result_type)
+    log_summary
     notify
   end
 end
 
 class GameResultTimeoutWin < GameResultWin
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "time up"
+    @result_type      = "#TIME_UP"
+  end
+
   def process
     @winner.write_safe("#TIME_UP\n#WIN\n")
     @loser.write_safe( "#TIME_UP\n#LOSE\n")
-    log_summary("time up")
-    @result_type = "#TIME_UP"
+    # no log
+    log_summary
     notify
   end
 end
 
 # A player declares (successful) Kachi
 class GameResultKachiWin < GameResultWin
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "kachi"
+    @result_type      = "%KACHI"
+  end
+
   def process
     @winner.write_safe("%KACHI\n#JISHOGI\n#WIN\n")
     @loser.write_safe( "%KACHI\n#JISHOGI\n#LOSE\n")
-    log("%KACHI")
-    log_summary("kachi")
-    @result_type = "%KACHI"
+    log(@result_type)
+    log_summary
     notify
   end
 end
 
 # A player declares wrong Kachi
 class GameResultIllegalKachiWin < GameResultWin
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "illegal kachi"
+    @result_type      = "%KACHI"
+  end
+
   def process
     @winner.write_safe("%KACHI\n#ILLEGAL_MOVE\n#WIN\n")
     @loser.write_safe( "%KACHI\n#ILLEGAL_MOVE\n#LOSE\n")
-    log("%KACHI")
-    log_summary("illegal kachi")
-    @result_type = "%KACHI"
+    log(@result_type)
+    log_summary
     notify
   end
 end
@@ -173,14 +237,15 @@ end
 class GameResultIllegalWin < GameResultWin
   def initialize(game, winner, loser, cause)
     super(game, winner, loser)
-    @cause = cause
+    @log_summary_type = cause
+    @result_type      = "#ILLEGAL_MOVE"
   end
 
   def process
     @winner.write_safe("#ILLEGAL_MOVE\n#WIN\n")
     @loser.write_safe( "#ILLEGAL_MOVE\n#LOSE\n")
-    log_summary(@cause)
-    @result_type = "#ILLEGAL_MOVE"
+    # no log
+    log_summary
     notify
   end
 end
@@ -203,33 +268,48 @@ class GameResultOuteKaihiMoreWin < GameResultIllegalWin
   end
 end
 
-class GameResultOutoriWin < GameResultWin
+# This won't happen, though.
+#
+class GameResultOutoriWin < GameResultIllegalWin
   def initialize(game, winner, loser)
-    super(game, winner, loser)
+    super(game, winner, loser, "outori")
   end
 end
 
 class GameResultToryoWin < GameResultWin
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "toryo"
+    @result_type      = "%TORYO"
+  end
+
   def process
     @winner.write_safe("%TORYO\n#RESIGN\n#WIN\n")
     @loser.write_safe( "%TORYO\n#RESIGN\n#LOSE\n")
-    log("%TORYO")
-    log_summary("toryo")
-    @result_type = "%TORYO"
+    log(@result_type)
+    log_summary
     notify
   end
 end
 
 class GameResultOuteSennichiteWin < GameResultWin
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "oute_sennichite"
+    @result_type      = "#OUTE_SENNICHITE"
+  end
+
   def process
     @winner.write_safe("#OUTE_SENNICHITE\n#WIN\n")
     @loser.write_safe( "#OUTE_SENNICHITE\n#LOSE\n")
-    log_summary("oute_sennichite")
-    @result_type = "#OUTE_SENNICHITE"
+    # no log
+    log_summary
     notify
   end
 end
 
+# Draw
+#
 class GameResultDraw < GameResult
   def initialize(game, p1, p2)
     super
@@ -237,22 +317,30 @@ class GameResultDraw < GameResult
     p2.last_game_win = false
   end
   
-  def log_summary(type)
-    log_board
-    log("'summary:%s:%s draw:%s draw" % [type, @black.name, @white.name])
+  def black_result
+    return "draw"
+  end
+
+  def white_result
+    return "draw"
   end
 end
 
 class GameResultSennichiteDraw < GameResultDraw
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "sennichite"
+    @result_type      = "#SENNICHITE"
+  end
+
   def process
     @players.each do |player|
       player.write_safe("#SENNICHITE\n#DRAW\n")
     end
-    log_summary("sennichite")
-    @result_type = "#SENNICHITE"
+    # no log
+    log_summary
     notify
   end
 end
 
 end # ShogiServer
-
