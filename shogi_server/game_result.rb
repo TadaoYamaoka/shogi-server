@@ -21,7 +21,7 @@ require 'observer'
 
 module ShogiServer # for a namespace
  
-# MonitorObserver obserers GameResult to send messages to the monotors
+# MonitorObserver observes GameResult to send messages to the monitors
 # watching the game
 #
 class MonitorObserver
