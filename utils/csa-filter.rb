@@ -28,6 +28,7 @@
 require 'time'
 require 'pathname'
 require 'getoptlong'
+require 'nkf'
 
 class CsaFileReader
   WIN_MARK  = "win"
@@ -35,9 +36,11 @@ class CsaFileReader
   DRAW_MARK = "draw"
 
   attr_reader :file_name
+  attr_reader :str
   attr_reader :black_name, :white_name
   attr_reader :black_id, :white_id
   attr_reader :winner, :loser
+  attr_reader :state
   attr_reader :start_time, :end_time
 
   def initialize(file_name)
@@ -46,13 +49,14 @@ class CsaFileReader
   end
 
   def grep
-    str = File.open(@file_name).read
+    @str = File.open(@file_name, "r:Shift_JIS:EUC-JP").read
 
-    if /^N\+(.*)$/ =~ str then @black_name = $1.strip end
-    if /^N\-(.*)$/ =~ str then @white_name = $1.strip end
-    if /^'summary:(.*)$/ =~ str
-      state, p1, p2 = $1.split(":").map {|a| a.strip}    
-      return if state == "abnormal"
+
+    if /^N\+(.*)$/ =~ @str then @black_name = $1.strip end
+    if /^N\-(.*)$/ =~ @str then @white_name = $1.strip end
+    if /^'summary:(.*)$/ =~ @str
+      @state, p1, p2 = $1.split(":").map {|a| a.strip}    
+      return if @state == "abnormal"
       p1_name, p1_mark = p1.split(" ")
       p2_name, p2_mark = p2.split(" ")
       if p1_name == @black_name
@@ -65,13 +69,13 @@ class CsaFileReader
         raise "Never reach!: #{black} #{white} #{p3} #{p2}"
       end
     end
-    if /^\$START_TIME:(.*)$/ =~ str
+    if /^\$START_TIME:(.*)$/ =~ @str
       @start_time = Time.parse($1.strip)
     end
-    if /^'\$END_TIME:(.*)$/ =~ str
+    if /^'\$END_TIME:(.*)$/ =~ @str
       @end_time = Time.parse($1.strip)
     end
-    if /^'rating:(.*)$/ =~ str
+    if /^'rating:(.*)$/ =~ @str
       black_id, white_id = $1.split(":").map {|a| a.strip}
       @black_id = identify_id(black_id)
       @white_id = identify_id(white_id)
@@ -88,6 +92,14 @@ class CsaFileReader
         end
       end
     end
+  end
+
+  def movetimes
+    ret = []
+    @str.gsub(%r!^T(\d+)!) do |match|
+      ret << $1.to_i
+    end
+    return ret
   end
 
   def to_s
