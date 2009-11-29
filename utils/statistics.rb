@@ -1,11 +1,16 @@
 #!/usr/bin/ruby1.9.1
-# This program filters CSA files. For example, if you want only CSA files
-# played by GPS vs Bonanza,
-#   $ ./csa-filter.rb --players gps-l,bonanza some_dir
-# you will see such files under the some_dir directory.
+# This program shows statistics of CSA kifu files like following: 
+#   - Monthly #games and #players
+#   - Game results
+#   - Time of each move
+#   - Time of each game
+#   - Moves of each game
+#
+# Sample command line:
+#   $ ./statistics.rb /dev/shm/floodgate
 #
 # Author::    Daigo Moriwaki <daigo at debian dot org>
-# Copyright:: Copyright (C) 2006-2008  Daigo Moriwaki <daigo at debian dot org>
+# Copyright:: Copyright (C) 2009  Daigo Moriwaki <daigo at debian dot org>
 #
 # $Id$
 #
@@ -109,13 +114,14 @@ def do_file(file)
   $OPT_REPEAT -= 1 if $OPT_REPEAT > 0
   csa = CsaFileReader.new(file)
 
+  # See games between 2008/03 to 2009/07
+  return if csa.start_time.nil? ||
+            csa.start_time <  Time.parse("2008/03/01") ||
+            csa.start_time >= Time.parse("2009/08/01")
+
   # Want to see complete games
   $states.add csa.state
   return unless csa.state == "toryo"
-
-  # See games between 2008/03 to 2009/07
-  return if csa.start_time <  Time.parse("2008/03/01") ||
-            csa.start_time >= Time.parse("2009/08/01")
 
   # Process monthly
   $monthly.add(csa)
