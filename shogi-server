@@ -387,8 +387,10 @@ def main
       fg_thread.kill if fg_thread
     end
   end
-  trap("HUP") do
-    Dependencies.clear
+  unless (RUBY_PLATFORM.downcase =~ /mswin|mingw|cygwin|bccwin/)
+    trap("HUP") do
+      Dependencies.clear
+    end
   end
   $stderr.puts("server started as a deamon [Revision: #{ShogiServer::Revision}]") if $options["daemon"] 
   log_message("server started [Revision: #{ShogiServer::Revision}]")
