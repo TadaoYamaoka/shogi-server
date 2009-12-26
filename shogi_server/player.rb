@@ -31,6 +31,7 @@ class BasicPlayer
     @loss = 0
     @last_game_win = false
     @sente = nil
+    @game_name = ""
   end
 
   # Idetifier of the player in the rating system
@@ -59,6 +60,9 @@ class BasicPlayer
 
   # true for Sente; false for Gote
   attr_accessor :sente
+
+  # game name
+  attr_accessor :game_name
 
   def is_human?
     return [%r!_human$!, %r!_human@!].any? do |re|
@@ -122,7 +126,6 @@ class Player < BasicPlayer
     @protocol = nil             # CSA or x1
     @eol = eol || "\m"          # favorite eol code
     @game = nil
-    @game_name = ""
     @mytime = 0                 # set in start method also
     @socket_buffer = []
     @main_thread = Thread::current
@@ -132,7 +135,7 @@ class Player < BasicPlayer
   end
 
   attr_accessor :socket, :status
-  attr_accessor :protocol, :eol, :game, :mytime, :game_name
+  attr_accessor :protocol, :eol, :game, :mytime
   attr_accessor :main_thread
   attr_reader :socket_buffer
   
