@@ -9,6 +9,8 @@
 	    StartGameWithoutHumans, which tries to make pairs trying to
 	    avoid a human-human match. This is now enabled instread of the
 	    previous class: StartGame.
+	  - shogi-server, shogi_server/league/floodgate.rb:
+	    Changed the argument of Floodgate.new.
 
 2009-12-04 Daigo Moriwaki <daigo at debian dot org>
 

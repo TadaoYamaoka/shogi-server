@@ -307,10 +307,12 @@ def setup_watchdog_for_giant_lock
   end
 end
 
-def setup_floodgate
+def setup_floodgate_900
   return Thread.start do 
     Thread.pass
-    floodgate = ShogiServer::League::Floodgate.new($league)
+    game_name = "floodgate-900-0"
+    floodgate = ShogiServer::League::Floodgate.new($league, 
+                                                   {:game_name => game_name})
     log_message("Flooddgate reloaded. The next match will start at %s." % 
                 [floodgate.next_time])
 
@@ -329,7 +331,9 @@ def setup_floodgate
           log_message("Reloading source...")
           ShogiServer.reload
         end
-        floodgate = ShogiServer::League::Floodgate.new($league, next_time)
+        floodgate = ShogiServer::League::Floodgate.new($league, 
+                                                       {:game_name => game_name,
+                                                        :next_time => next_time})
         log_message("Floodgate: The next match will start at %s." % 
                     [floodgate.next_time])
       rescue Exception => ex 
@@ -370,7 +374,7 @@ def main
     end
     setup_watchdog_for_giant_lock
     $league.setup_players_database
-    fg_thread = setup_floodgate
+    fg_thread = setup_floodgate_900
   end
 
   config[:StopCallback] = Proc.new do

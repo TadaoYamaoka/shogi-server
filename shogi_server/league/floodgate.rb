@@ -16,10 +16,15 @@ class League
 
     attr_reader :next_time, :league
 
-    def initialize(league, next_time=nil)
+    def initialize(league, hash={})
       @league = league
-      @next_time = next_time
+      @next_time = hash[:next_time] || nil
+      @game_name = hash[:game_name] || "floodgate-900-0"
       charge
+    end
+
+    def game_name?(str)
+      return Regexp.new(@game_name).match(str) ? true : false
     end
 
     def charge
@@ -44,7 +49,7 @@ class League
     def match_game
       players = @league.find_all_players do |pl|
         pl.status == "game_waiting" &&
-        Floodgate.game_name?(pl.game_name) &&
+        game_name?(pl.game_name) &&
         pl.sente == nil
       end
       Pairing.match(players)
