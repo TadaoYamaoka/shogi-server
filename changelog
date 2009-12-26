@@ -5,6 +5,10 @@
 	    is_computer?. 
 	    A human player is recommened to use a name ending with '_human'.  
 	    ex. 'hoge_human', 'hoge_human@p1'
+	  - shogi_server/pairing.rb: Added a new class:
+	    StartGameWithoutHumans, which tries to make pairs trying to
+	    avoid a human-human match. This is now enabled instread of the
+	    previous class: StartGame.
 
 2009-12-04 Daigo Moriwaki <daigo at debian dot org>
 

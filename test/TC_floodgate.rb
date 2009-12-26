@@ -84,66 +84,6 @@ class TestPairing < Test::Unit::TestCase
   end
 end
 
-class TestStartGame < Test::Unit::TestCase
-  def setup
-    @pairing= ShogiServer::StartGame.new
-    $called = 0
-    def @pairing.start_game(p1,p2)
-      $called += 1
-    end
-    @a = ShogiServer::BasicPlayer.new
-    @a.name = "a"
-    @a.win  = 1
-    @a.loss = 2
-    @a.rate = 0
-    @b = ShogiServer::BasicPlayer.new
-    @b.name = "b"
-    @b.win  = 10
-    @b.loss = 20
-    @b.rate = 1500
-    @c = ShogiServer::BasicPlayer.new
-    @c.name = "c"
-    @c.win  = 100
-    @c.loss = 200
-    @c.rate = 1000
-    @d = ShogiServer::BasicPlayer.new
-    @d.name = "d"
-    @d.win  = 1000
-    @d.loss = 2000
-    @d.rate = 2000
-  end
-
-  def test_match_two_players
-    players = [@a,@b]
-    @pairing.match(players)
-    assert_equal(1, $called)
-  end
-
-  def test_match_one_player
-    players = [@a]
-    @pairing.match(players)
-    assert_equal(0, $called)
-  end
-
-  def test_match_zero_player
-    players = []
-    @pairing.match(players)
-    assert_equal(0, $called)
-  end
-
-  def test_match_three_players
-    players = [@a,@b,@c]
-    @pairing.match(players)
-    assert_equal(1, $called)
-  end
-
-  def test_match_four_players
-    players = [@a,@b,@c,@d]
-    @pairing.match(players)
-    assert_equal(2, $called)
-  end
-end
-
 class TestDeleteMostPlayingPlayer < Test::Unit::TestCase
   def setup
     @pairing= ShogiServer::DeleteMostPlayingPlayer.new

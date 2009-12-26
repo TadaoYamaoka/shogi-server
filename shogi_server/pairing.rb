@@ -33,7 +33,7 @@ module ShogiServer
                 ExcludeSacrificeGps500.new,
                 MakeEven.new,
                 SortByRateWithRandomness.new(1200, 2400),
-                StartGame.new]
+                StartGameWithoutHumans.new]
       end
 
       def random_pairing
@@ -41,7 +41,7 @@ module ShogiServer
                 ExcludeSacrificeGps500.new,
                 MakeEven.new,
                 Randomize.new,
-                StartGame.new]
+                StartGameWithoutHumans.new]
       end
 
       def swiss_pairing
@@ -50,7 +50,7 @@ module ShogiServer
                 ExcludeSacrificeGps500.new,
                 MakeEven.new,
                 Swiss.new(history),
-                StartGame.new]
+                StartGameWithoutHumans.new]
       end
 
       def match(players)
@@ -105,7 +105,23 @@ module ShogiServer
     end
   end
 
-  class StartGame < Pairing
+  class AbstractStartGame < Pairing
+    def start_game(p1, p2)
+      log_message("Floodgate: Starting a game: BLACK %s vs WHITE %s" % [p1.name, p2.name])
+      p1.sente = true
+      p2.sente = false
+      board = Board.new
+      board.initial
+      Game.new(p1.game_name, p1, p2, board)
+    end
+
+    def start_game_shuffle(pair)
+      pair.shuffle!
+      start_game(pair.first, pair.last)
+    end
+  end
+
+  class StartGame < AbstractStartGame
     def match(players)
       super
       if players.size < 2
@@ -120,18 +136,79 @@ module ShogiServer
       log_players(players)
       while (players.size >= 2) do
         pair = players.shift(2)
-        pair.shuffle!
-        start_game(pair.first, pair.last)
+        start_game_shuffle(pair)
+      end
+    end
+  end
+
+  # This tries to avoid a human-human match
+  #
+  class StartGameWithoutHumans < AbstractStartGame
+    def match(players)
+      super
+      log_players(players)
+      if players.size < 2
+        log_warning("Floodgate: There should be more than one player (%d)." % [players.size])
+        return
+      elsif players.size == 2
+        start_game_shuffle(players)
+        return
+      end
+
+      loop do 
+        humans = get_human_indexes(players)
+        log_message("Floodgate: There are (still) %d humans." % [humans.size])
+        break if humans.size < 2
+
+        pairing_possible = false
+        for i in 0..(humans.size-2)  # -2
+          next if humans[i].odd?
+          if humans[i]+1 == humans[i+1]
+            pairing_possible = i
+            break
+          end
+        end
+        unless pairing_possible
+          log_message("Floodgate: No possible human-human match found")
+          break
+        end
+
+        current_index = pairing_possible
+        j = (current_index == 0 ? current_index : current_index-1)
+        while j < players.size
+          break if players[j].is_computer?
+          j += 1
+        end
+
+        pairing_indexes = []
+        if j == players.size 
+          # no computer player found
+          pairing_indexes << current_index << current_index+1
+        else
+          # a comupter player found
+          pairing_indexes << current_index << j
+        end
+
+        pair = []
+        pair << players.delete_at(pairing_indexes.max)
+        pair << players.delete_at(pairing_indexes.min)
+        start_game_shuffle(pair)
+      end # loop
+
+      while (players.size >= 2) do
+        pair = players.shift(2)
+        start_game_shuffle(pair)
       end
     end
 
-    def start_game(p1, p2)
-      log_message("Floodgate: Starting a game: BLACK %s vs WHITE %s" % [p1.name, p2.name])
-      p1.sente = true
-      p2.sente = false
-      board = Board.new
-      board.initial
-      Game.new(p1.game_name, p1, p2, board)
+    private
+
+    def get_human_indexes(players)
+      ret = []
+      for i in 0..(players.size-1)
+        ret << i if players[i].is_human?
+      end
+      return ret
     end
   end
 
