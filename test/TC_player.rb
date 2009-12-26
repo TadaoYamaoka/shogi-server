@@ -29,5 +29,17 @@ class TestPlayer < Test::Unit::TestCase
   def test_rating_group
     assert_nothing_raised {@p.rating_group = 1}
   end
+
+  def test_human1
+    @p.name = "hoge_human"
+    assert(@p.is_human?)
+    assert(!@p.is_computer?)
+  end
+
+  def test_human2
+    @p.name = "hoge_human@p1"
+    assert(@p.is_human?)
+    assert(!@p.is_computer?)
+  end
 end
 

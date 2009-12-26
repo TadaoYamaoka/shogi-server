@@ -1,4 +1,13 @@
+2009-12-20 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/player.rb: Added new methods: is_human? and
+	    is_computer?. 
+	    A human player is recommened to use a name ending with '_human'.  
+	    ex. 'hoge_human', 'hoge_human@p1'
+
 2009-12-04 Daigo Moriwaki <daigo at debian dot org>
+
 	* [shogi-server]
 	  - The HUP signal is not supported by Ruby on Windows.
 

@@ -60,6 +60,16 @@ class BasicPlayer
   # true for Sente; false for Gote
   attr_accessor :sente
 
+  def is_human?
+    return [%r!_human$!, %r!_human@!].any? do |re|
+      re.match(@name)
+    end
+  end
+
+  def is_computer?
+    return !is_human?
+  end
+
   def modified_at
     @modified_at || Time.now
   end
