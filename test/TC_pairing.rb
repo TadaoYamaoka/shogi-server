@@ -33,6 +33,47 @@ def same_pair?(a, b)
   return true if [a.first, a.last] == b || [a.last, a.first] == b
 end
 
+class TestPairing < Test::Unit::TestCase  
+  def setup
+    @pairing= ShogiServer::Pairing.new
+    $pairs = []
+    def @pairing.start_game(p1,p2)
+      $pairs << [p1,p2]
+    end
+    @a = ShogiServer::BasicPlayer.new
+    @a.name = "a"
+    @a.win  = 1
+    @a.loss = 2
+    @a.rate = 0
+    @a.last_game_win = false
+    @b = ShogiServer::BasicPlayer.new
+    @b.name = "b"
+    @b.win  = 10
+    @b.loss = 20
+    @b.rate = 1500
+    @b.last_game_win = true
+    @c = ShogiServer::BasicPlayer.new
+    @c.name = "c"
+    @c.win  = 100
+    @c.loss = 200
+    @c.rate = 1000
+    @c.last_game_win = true
+    @d = ShogiServer::BasicPlayer.new
+    @d.name = "d"
+    @d.win  = 1000
+    @d.loss = 2000
+    @d.rate = 1800
+    @d.last_game_win = true
+  end
+
+  def test_include_newbie
+    assert(@pairing.include_newbie?([@a]))
+    assert(!@pairing.include_newbie?([@b]))
+    assert(@pairing.include_newbie?([@b,@a]))
+    assert(!@pairing.include_newbie?([@b,@c]))
+  end
+end
+
 class TestStartGame < Test::Unit::TestCase
   def setup
     @pairing= ShogiServer::StartGame.new
