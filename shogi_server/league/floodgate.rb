@@ -7,14 +7,21 @@ module ShogiServer
 class League
   class Floodgate
     class << self
-      # "floodgate-900-0"
+      # ex. "floodgate-900-0"
       #
       def game_name?(str)
         return /^floodgate\-\d+\-\d+$/.match(str) ? true : false
       end
-    end
 
-    attr_reader :next_time, :league
+      def history_file_path(gamename)
+        return nil unless game_name?(gamename)
+        filename = "floodgate_history_%s.yaml" % [gamename.gsub("floodgate-", "").gsub("-","_")]
+        file = File.join($topdir, filename)
+        return Pathname.new(file)
+      end
+    end # class method
+
+    attr_reader :next_time, :league, :game_name
 
     def initialize(league, hash={})
       @league = league
@@ -28,21 +35,11 @@ class League
     end
 
     def charge
-      now = Time.now
-      unless $DEBUG
-        # each 30 minutes
-        if now.min < 30
-          @next_time = Time.mktime(now.year, now.month, now.day, now.hour, 30)
-        else
-          @next_time = Time.mktime(now.year, now.month, now.day, now.hour) + 3600
-        end
+      ntg = NextTimeGenerator.factory(@game_name)
+      if ntg
+        @next_time = ntg.call(Time.now)
       else
-        # for test, each 30 seconds
-        if now.sec < 30
-          @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
-        else
-          @next_time = Time.mktime(now.year, now.month, now.day, now.hour, now.min) + 60
-        end
+        @next_time = nil
       end
     end
 
@@ -54,7 +51,53 @@ class League
       end
       Pairing.match(players)
     end
+    
+    #
+    #
+    class NextTimeGenerator
+      class << self
+        def factory(game_name)
+          ret = nil
+          if $DEBUG
+            ret = NextTimeGenerator_Debug.new
+          elsif game_name == "floodgate-900-0"
+            ret = NextTimeGenerator_Floodgate_900_0.new
+          elsif game_name == "floodgate-3600-0"
+            ret = NextTimeGenerator_Floodgate_3600_0.new
+          end
+          return ret
+        end
+      end
+    end
 
+    class NextTimeGenerator_Floodgate_900_0
+      def call(now)
+        # each 30 minutes
+        if now.min < 30
+          return Time.mktime(now.year, now.month, now.day, now.hour, 30)
+        else
+          return Time.mktime(now.year, now.month, now.day, now.hour) + 3600
+        end
+      end
+    end
+
+    class NextTimeGenerator_Floodgate_3600_0
+      def call(now)
+        # each 2 hours (odd hour)
+        return Time.mktime(now.year, now.month, now.day, now.hour) + ((now.hour%2)+1)*3600
+      end
+    end
+
+    class NextTimeGenerator_Debug
+      def call(now)
+        # for test, each 30 seconds
+        if now.sec < 30
+          return Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
+        else
+          return Time.mktime(now.year, now.month, now.day, now.hour, now.min) + 60
+        end
+      end
+    end
 
     #
     #
@@ -62,9 +105,12 @@ class League
       @@mutex = Mutex.new
 
       class << self
-        def factory
-          file = Pathname.new $options["floodgate-history"]
-          history = History.new file
+        def factory(pathname)
+          unless ShogiServer::is_writable_file?(pathname.to_s)
+            log_error("Failed to write a history file: %s" % [pathname]) 
+            return nil
+          end
+          history = History.new pathname
           history.load
           return history
         end

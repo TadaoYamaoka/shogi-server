@@ -109,10 +109,10 @@ class GameResult
     add_observer LoggingObserver.new
 
     if League::Floodgate.game_name?(@game.game_name) &&
-       @game.sente.player_id &&
-       @game.gote.player_id &&
-       $options["floodgate-history"]
-      add_observer League::Floodgate::History.factory
+       @game.sente.player_id && @game.gote.player_id
+      path = League::Floodgate.history_file_path(@game.game_name) 
+      history = League::Floodgate::History.factory(path)
+      add_observer history if history
     end
   end
 

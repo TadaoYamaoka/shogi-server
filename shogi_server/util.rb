@@ -17,6 +17,9 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'fileutils'
+require 'pathname'
+
 module ShogiServer
 
   # Generate a random number such as i<=n<max
@@ -36,5 +39,32 @@ module ShogiServer
     end
   end
   module_function :shuffle
+
+  # See if the file is writable. The file will be created if it does not exist
+  # yet.
+  # Return true if the file is writable, otherwise false.
+  #
+  def is_writable_file?(file)
+    if String === file
+      file = Pathname.new file
+    end
+    if file.exist?
+      if file.file?
+        return file.writable_real?
+      else
+        return false
+      end
+    end
+    
+    begin
+      file.open("w") {|fh| } 
+      file.delete
+    rescue
+      return false
+    end
+
+    return true
+  end
+  module_function :is_writable_file?
 
 end

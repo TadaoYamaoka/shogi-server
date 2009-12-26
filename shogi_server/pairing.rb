@@ -45,11 +45,10 @@ module ShogiServer
       end
 
       def swiss_pairing
-        history = ShogiServer::League::Floodgate::History.factory
         return [LogPlayers.new,
                 ExcludeSacrificeGps500.new,
                 MakeEven.new,
-                Swiss.new(history),
+                Swiss.new,
                 StartGameWithoutHumans.new]
       end
 
@@ -251,15 +250,21 @@ module ShogiServer
   end
 
   class Swiss < Pairing
-    def initialize(history)
-      super()
-      @history = history
-    end
-
     def match(players)
       super
-      winners = players.find_all {|pl| @history.last_win?(pl.player_id)}
-      rest    = players - winners
+      if players.size < 3
+        log_message("Floodgate: players are small enough to skip Swiss pairing: %d" % [players.size])
+        return
+      end
+
+      path = ShogiServer::League::Floodgate.history_file_path(players.first.game_name)
+      history = ShogiServer::League::Floodgate::History.factory(path)
+
+      winners = []
+      if history
+        winners = players.find_all {|pl| history.last_win?(pl.player_id)}
+      end
+      rest = players - winners
 
       log_message("Floodgate: Ordering %d winners..." % [winners.size])
       sbrwr_winners = SortByRateWithRandomness.new(800, 2500)

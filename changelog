@@ -1,3 +1,18 @@
+2009-12-26 Daigo Moriwaki <daigo at debian dot org> 
+
+	* [shogi-server]
+	  - The server can now provide multiple floodgate modes such as
+	    floodgate-900-0 and floodgate-3600-0.
+
+2009-12-25 Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi-server: The command line option --floodgate-history has
+	    been deprectated. The server will decide history file names such
+	    as 'floodgate_history_900_0.yaml' and
+	    'floodgate_history_3600_0.yaml', and then put them in the top
+	    directory.
+
 2009-12-20 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -32,6 +32,7 @@ $config = nil
 $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
 require 'shogi_server/config'
+require 'shogi_server/util'
 require 'tempfile'
 
 #################################################
@@ -70,9 +71,6 @@ OPTIONS
         --player-log-dir dir
                 log network messages for each player. Log files
                 will be put in the dir.
-        --floodgate-history
-                file name to record Floodgate game history
-                default: './floodgate_history.yaml'
 
 LICENSE
 	GPL versoin 2 or later
@@ -118,8 +116,7 @@ def parse_command_line
   parser = GetoptLong.new(
     ["--daemon",            GetoptLong::REQUIRED_ARGUMENT],
     ["--pid-file",          GetoptLong::REQUIRED_ARGUMENT],
-    ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT],
-    ["--floodgate-history", GetoptLong::REQUIRED_ARGUMENT])
+    ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -164,43 +161,17 @@ def check_command_line
 
   if $options["pid-file"] 
     $options["pid-file"] = File.expand_path($options["pid-file"], $topdir)
-    unless is_writable_file? $options["pid-file"]
+    unless ShogiServer::is_writable_file? $options["pid-file"]
       usage
       $stderr.puts "Can not create the pid file: %s" % [$options["pid-file"]]
       exit 4
     end
   end
 
-  $options["floodgate-history"] ||= File.join($topdir, "floodgate_history.yaml")
-  $options["floodgate-history"] = File.expand_path($options["floodgate-history"], $topdir)
-  unless is_writable_file? $options["floodgate-history"]
-    usage
-    $stderr.puts "Can not create the floodgate history file: %s" % [$options["floodgate-history"]]
-    exit 6
+  if $options["floodgate-history"]
+    $stderr.puts "WARNING: --floodgate-history has been deprecated."
+    $options["floodgate-history"] = nil
   end
-end
-
-# See if the file is writable. The file will be created if it does not exist
-# yet.
-# Return true if the file is writable, otherwise false.
-#
-def is_writable_file?(file)
-  if File.exist?(file)
-    if FileTest.file?(file)
-      return FileTest.writable_real?(file)
-    else
-      return false
-    end
-  end
-  
-  begin
-    open(file, "w") {|fh| } 
-    FileUtils.rm file
-  rescue
-    return false
-  end
-
-  return true
 end
 
 # See if a file can be created in the directory.
@@ -307,22 +278,38 @@ def setup_watchdog_for_giant_lock
   end
 end
 
-def setup_floodgate_900
-  return Thread.start do 
+def setup_floodgate(game_names)
+  return Thread.start(game_names) do |game_names|
     Thread.pass
-    game_name = "floodgate-900-0"
-    floodgate = ShogiServer::League::Floodgate.new($league, 
-                                                   {:game_name => game_name})
-    log_message("Flooddgate reloaded. The next match will start at %s." % 
-                [floodgate.next_time])
-
     while (true)
       begin
+        leagues = game_names.collect do |game_name|
+          floodgate = ShogiServer::League::Floodgate.new($league, 
+                                                         {:game_name => game_name})
+          log_message("Floodgate reloaded. The next match will start at %s." % 
+                      [floodgate.next_time])
+          floodgate
+        end
+        leagues.delete_if do |floodgate|
+          ret = false
+          unless floodgate.next_time 
+            log_error("Unsupported game name: %s" % floodgate.game_name)
+            ret = true
+          end
+          ret
+        end
+        if leagues.empty?
+          log_error("No valid Floodgate game names found")
+          return # exit from this thread
+        end
+
+        floodgate = leagues.min {|a,b| a.next_time <=> b.next_time}
         diff = floodgate.next_time - Time.now
         if diff > 0
           sleep(diff/2)
           next
         end
+        log_message("Starting Floodgate games...: %s" % [floodgate.game_name])
         $league.reload
         floodgate.match_game
         floodgate.charge
@@ -334,8 +321,8 @@ def setup_floodgate_900
         floodgate = ShogiServer::League::Floodgate.new($league, 
                                                        {:game_name => game_name,
                                                         :next_time => next_time})
-        log_message("Floodgate: The next match will start at %s." % 
-                    [floodgate.next_time])
+        log_message("Floodgate: The next match of %s will start at %s." % 
+                    [floodgate.game_name, floodgate.next_time])
       rescue Exception => ex 
         # ignore errors
         log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
@@ -374,7 +361,7 @@ def main
     end
     setup_watchdog_for_giant_lock
     $league.setup_players_database
-    fg_thread = setup_floodgate_900
+    fg_thread = setup_floodgate(["floodgate-900-0", "floodgate-3600-0"])
   end
 
   config[:StopCallback] = Proc.new do

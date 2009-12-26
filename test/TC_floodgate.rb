@@ -5,15 +5,20 @@ require 'shogi_server/player'
 require 'shogi_server/pairing'
 require 'shogi_server/league/floodgate'
 
+$topdir = File.expand_path File.dirname(__FILE__)
+
 class MockLogger
   def debug(str)
+    #puts str
   end
   def info(str)
     #puts str
   end
   def warn(str)
+    puts str
   end
   def error(str)
+    puts str
   end
 end
 
@@ -24,6 +29,10 @@ end
 
 def log_warning(msg)
   $logger.warn(msg)
+end
+
+def log_error(msg)
+  $logger.error(msg)
 end
 
 class TestFloodgate < Test::Unit::TestCase
@@ -268,50 +277,66 @@ class TestSwissPairing < Test::Unit::TestCase
     @a = ShogiServer::BasicPlayer.new
     @a.player_id = "a"
     @a.rate = 0
+    @a.game_name = "floodgate-900-0"
     @b = ShogiServer::BasicPlayer.new
     @b.player_id = "b"
     @b.rate = 1000
+    @b.game_name = "floodgate-900-0"
     @c = ShogiServer::BasicPlayer.new
     @c.player_id = "c"
     @c.rate = 1500
+    @c.game_name = "floodgate-900-0"
     @d = ShogiServer::BasicPlayer.new
     @d.player_id = "d"
     @d.rate = 2000
+    @d.game_name = "floodgate-900-0"
 
     @players = [@a, @b, @c, @d]
 
-    @file = Pathname.new(File.join(File.dirname(__FILE__), "floodgate_history.yaml"))
-    @history = ShogiServer::League::Floodgate::History.new @file
+    @file = Pathname.new(File.join(File.dirname(__FILE__), "floodgate_history_900_0.yaml"))
+    @history = ShogiServer::League::Floodgate::History.factory @file
 
-    @swiss = ShogiServer::Swiss.new @history
+    @swiss = ShogiServer::Swiss.new
   end
 
   def teardown
     @file.delete if @file.exist?
   end
 
+  def test_none
+    players = []
+    @swiss.match players
+    assert(players.empty?)
+  end
+
   def test_all_win
-    def @history.last_win?(player_id)
-      true
+    ShogiServer::League::Floodgate::History.class_eval do
+      def last_win?(player_id)
+        true
+      end
     end
     @swiss.match @players
     assert_equal([@d, @c, @b, @a], @players)
   end
 
   def test_all_lose
-    def @history.last_win?(player_id)
-      false
+    ShogiServer::League::Floodgate::History.class_eval do
+      def last_win?(player_id)
+        false
+      end
     end
     @swiss.match @players
     assert_equal([@d, @c, @b, @a], @players)
   end
 
   def test_one_win
-    def @history.last_win?(player_id)
-      if player_id == "a"
-        true
-      else
-        false
+    ShogiServer::League::Floodgate::History.class_eval do
+      def last_win?(player_id)
+        if player_id == "a"
+          true
+        else
+          false
+        end
       end
     end
     @swiss.match @players
@@ -319,11 +344,13 @@ class TestSwissPairing < Test::Unit::TestCase
   end
 
   def test_two_win
-    def @history.last_win?(player_id)
-      if player_id == "a" || player_id == "d"
-        true
-      else
-        false
+    ShogiServer::League::Floodgate::History.class_eval do
+      def last_win?(player_id)
+        if player_id == "a" || player_id == "d"
+          true
+        else
+          false
+        end
       end
     end
     @swiss.match @players
