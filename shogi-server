@@ -278,51 +278,65 @@ def setup_watchdog_for_giant_lock
   end
 end
 
+def floodgate_reload_log(leagues)
+  floodgate = leagues.min {|a,b| a.next_time <=> b.next_time}
+  diff = floodgate.next_time - Time.now
+  log_message("Floodgate reloaded. The next match will start at %s in %d seconds" % 
+              [floodgate.next_time, diff])
+end
+
 def setup_floodgate(game_names)
   return Thread.start(game_names) do |game_names|
     Thread.pass
+    leagues = game_names.collect do |game_name|
+      ShogiServer::League::Floodgate.new($league, 
+                                         {:game_name => game_name})
+    end
+    leagues.delete_if do |floodgate|
+      ret = false
+      unless floodgate.next_time 
+        log_error("Unsupported game name: %s" % floodgate.game_name)
+        ret = true
+      end
+      ret
+    end
+    if leagues.empty?
+      log_error("No valid Floodgate game names found")
+      return # exit from this thread
+    end
+    floodgate_reload_log(leagues)
+
     while (true)
       begin
-        leagues = game_names.collect do |game_name|
-          floodgate = ShogiServer::League::Floodgate.new($league, 
-                                                         {:game_name => game_name})
-          log_message("Floodgate reloaded. The next match will start at %s." % 
-                      [floodgate.next_time])
-          floodgate
-        end
-        leagues.delete_if do |floodgate|
-          ret = false
-          unless floodgate.next_time 
-            log_error("Unsupported game name: %s" % floodgate.game_name)
-            ret = true
-          end
-          ret
-        end
-        if leagues.empty?
-          log_error("No valid Floodgate game names found")
-          return # exit from this thread
-        end
-
         floodgate = leagues.min {|a,b| a.next_time <=> b.next_time}
         diff = floodgate.next_time - Time.now
         if diff > 0
+          floodgate_reload_log(leagues) if $DEBUG
           sleep(diff/2)
           next
         end
-        log_message("Starting Floodgate games...: %s" % [floodgate.game_name])
-        $league.reload
-        floodgate.match_game
-        floodgate.charge
-        next_time = floodgate.next_time
+        next_array = leagues.collect do |floodgate|
+          if (floodgate.next_time - Time.now) > 0
+            [floodgate.game_name, floodgate.next_time]
+          else
+            log_message("Starting Floodgate games...: %s" % [floodgate.game_name])
+            $league.reload
+            floodgate.match_game
+            floodgate.charge
+            [floodgate.game_name, floodgate.next_time] # next_time has been updated
+          end
+        end
         $mutex.synchronize do
           log_message("Reloading source...")
           ShogiServer.reload
         end
-        floodgate = ShogiServer::League::Floodgate.new($league, 
-                                                       {:game_name => game_name,
-                                                        :next_time => next_time})
-        log_message("Floodgate: The next match of %s will start at %s." % 
-                    [floodgate.game_name, floodgate.next_time])
+        # Regenerate floodgate instances after ShogiServer.realod
+        leagues = next_array.collect do |game_name, next_time|
+          floodgate = ShogiServer::League::Floodgate.new($league, 
+                                                         {:game_name => game_name,
+                                                          :next_time => next_time})
+        end
+        floodgate_reload_log(leagues)
       rescue Exception => ex 
         # ignore errors
         log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
