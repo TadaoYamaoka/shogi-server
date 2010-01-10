@@ -1,3 +1,7 @@
+2010-01-10  Daigo Moriwaki <daigo at debian dot org>
+
+	* Converted the repository from Subversion to Git.
+
 2009-12-26 Daigo Moriwaki <daigo at debian dot org> 
 
 	* [shogi-server]
