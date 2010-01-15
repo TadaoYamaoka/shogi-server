@@ -484,6 +484,19 @@ class Board
   end
 
   # sente is nil only if tests in test_board run
+  # @return
+  #   - :normal
+  #   - :toryo 
+  #   - :kachi_win 
+  #   - :kachi_lose 
+  #   - :sennichite 
+  #   - :oute_sennichite_sente_lose 
+  #   - :oute_sennichite_gote_lose 
+  #   - :illegal 
+  #   - :uchifuzume 
+  #   - :oute_kaihimore 
+  #   - (:outori will not be returned)
+  #
   def handle_one_move(str, sente=nil)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
       sg = $1

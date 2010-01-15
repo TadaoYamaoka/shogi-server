@@ -31,7 +31,7 @@ class Game
   @@mutex = Mutex.new
   @@time  = 0
   def initialize(game_name, player0, player1, board)
-    @monitors = Array::new
+    @monitors = Array::new # array of MonitorHandler*
     @game_name = game_name
     if (@game_name =~ /-(\d+)-(\d+)$/)
       @total_time = $1.to_i
@@ -100,18 +100,18 @@ class Game
     return player.status == "game" && @current_player == player
   end
 
-  def monitoron(monitor)
-    @monitors.delete(monitor)
-    @monitors.push(monitor)
+  def monitoron(monitor_handler)
+    monitoroff(monitor_handler)
+    @monitors.push(monitor_handler)
   end
 
-  def monitoroff(monitor)
-    @monitors.delete(monitor)
+  def monitoroff(monitor_handler)
+    @monitors.delete_if {|mon| mon == monitor_handler}
   end
 
   def each_monitor
-    @monitors.each do |monitor|
-      yield monitor
+    @monitors.each do |monitor_handler|
+      yield monitor_handler
     end
   end
 
@@ -207,20 +207,20 @@ class Game
       if [:illegal, :uchifuzume, :oute_kaihimore].include?(move_status)
         @fh.printf("'ILLEGAL_MOVE(%s)\n", str)
       else
-        if [:normal, :outori, :sennichite, :oute_sennichite_sente_lose, :oute_sennichite_gote_lose].include?(move_status)
+        if :toryo != move_status
           # Thinking time includes network traffic
           @sente.write_safe(sprintf("%s,T%d\n", str, t))
           @gote.write_safe(sprintf("%s,T%d\n", str, t))
           @fh.printf("%s\nT%d\n", str, t)
           @last_move = sprintf("%s,T%d", str, t)
           @current_turn += 1
-        end
 
-        @monitors.each do |monitor|
-          monitor.write_safe(show.gsub(/^/, "##[MONITOR][#{@game_id}] "))
-          monitor.write_safe(sprintf("##[MONITOR][%s] +OK\n", @game_id))
-        end
-      end
+          @monitors.each do |monitor_handler|
+            monitor_handler.write_one_move(@game_id, self)
+          end
+        end # if
+        # if move_status is :toryo then a GameResult message will be sent to monitors   
+      end # if
     end
 
     @result = nil

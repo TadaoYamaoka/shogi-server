@@ -1,3 +1,16 @@
+2010-01-16  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/command.rb, test/TC_command.rb
+	    Proposal implementation of a new command called MONITOR2{ON,OFF}.
+	    When the MONITOR2ON command is issued by a player, the server
+	    immediately sends the player the entire contents of a record
+	    file of the game, i.e. history of moves and so on, at that time.
+	    Then, the server will forward subsequent moves like they are
+	    appended to the record file.
+	  - Behavior changed: A player monitoring a game with MONITORON will
+	    not receive Game#show again when a gaming player resigns (:toryo).
+
 2010-01-10  Daigo Moriwaki <daigo at debian dot org>
 
 	* Converted the repository from Subversion to Git.

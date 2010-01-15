@@ -46,7 +46,7 @@ class MockGame
   end
 
   def show
-    return "dummy_game_show"
+    return "dummy_game_show\nline1\nline2\n"
   end
 
   def monitoron(player)

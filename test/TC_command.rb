@@ -1,6 +1,7 @@
 $:.unshift File.join(File.dirname(__FILE__), "..")
 $topdir = File.expand_path File.dirname(__FILE__)
 require 'test/unit'
+require 'tempfile'
 require 'mock_game'
 require 'mock_log_message'
 require 'test/mock_player'
@@ -104,6 +105,11 @@ class TestFactoryMethod < Test::Unit::TestCase
   def test_monitoron_command
     cmd = ShogiServer::Command.factory("%%MONITORON game_id", @p)
     assert_instance_of(ShogiServer::MonitorOnCommand, cmd)
+  end
+
+  def test_monitor2on_command
+    cmd = ShogiServer::Command.factory("%%MONITOR2ON game_id", @p)
+    assert_instance_of(ShogiServer::Monitor2OnCommand, cmd)
   end
 
   def test_monitoroff_command
@@ -430,6 +436,46 @@ class TestMonitorOnCommand < Test::Unit::TestCase
     rc = cmd.call
 
     assert_equal(:continue, rc)
+  end
+
+  def test_call_read_logfile
+    game = MockGame.new
+    cmd = ShogiServer::MonitorOnCommand.new("%%MONITORON hoge", @p, game)
+    rc = cmd.call
+    assert_equal("##[MONITOR][dummy_game_id] dummy_game_show\n##[MONITOR][dummy_game_id] line1\n##[MONITOR][dummy_game_id] line2\n##[MONITOR][dummy_game_id] +OK\n", @p.out.join)
+    assert_equal(:continue, rc)
+  end
+end
+
+#
+#
+class TestMonitor2OnCommand < Test::Unit::TestCase 
+  def setup
+    @p = MockPlayer.new
+    @game = MockGame.new
+    @p.game = @game
+  end
+
+  def test_call
+    cmd = ShogiServer::Monitor2OnCommand.new("%%MONITOR2ON hoge", @p, nil)
+    rc = cmd.call
+
+    assert_equal(:continue, rc)
+  end
+
+  def test_call_read_logfile
+    $tempfile = Tempfile.new("TC_command_test_call_read_logfile")
+    $tempfile.write "hoge\nfoo\n"
+    $tempfile.close
+    game = MockGame.new
+    def game.logfile
+      $tempfile.path
+    end
+    cmd = ShogiServer::Monitor2OnCommand.new("%%MONITOR2ON hoge", @p, game)
+    rc = cmd.call
+    assert_equal("##[MONITOR2][dummy_game_id] hoge\n##[MONITOR2][dummy_game_id] foo\n##[MONITOR2][dummy_game_id] +OK\n", @p.out.join)
+    assert_equal(:continue, rc)
+    $tempfile = nil
   end
 end
 
@@ -839,4 +885,56 @@ class TestGetBuoyCountCommand < BaseTestBuoyCommand
   end
 end
 
+
+#
+#
+class TestMonitorHandler1 < Test::Unit::TestCase
+  def setup
+    @player = MockPlayer.new
+    @handler = ShogiServer::MonitorHandler1.new @player
+  end
+
+  def test_type
+    assert_equal(1, @handler.type)
+  end
+
+  def test_header
+    assert_equal("MONITOR", @handler.header)
+  end
+
+  def test_write_safe
+    @handler.write_safe("game_id", "hoge")
+    assert_equal("##[MONITOR][game_id] hoge\n##[MONITOR][game_id] +OK\n", 
+                 @player.out.join)
+  end
+end
+
+#
+#
+class TestMonitorHandler2 < Test::Unit::TestCase
+  def setup
+    @player = MockPlayer.new
+    @handler = ShogiServer::MonitorHandler2.new @player
+  end
+
+  def test_type
+    assert_equal(2, @handler.type)
+  end
+
+  def test_header
+    assert_equal("MONITOR2", @handler.header)
+  end
+
+  def test_write_safe
+    @handler.write_safe("game_id", "hoge")
+    assert_equal("##[MONITOR2][game_id] hoge\n##[MONITOR2][game_id] +OK\n", 
+                 @player.out.join)
+  end
+
+  def test_write_safe2
+    @handler.write_safe("game_id", "hoge\nfoo")
+    assert_equal("##[MONITOR2][game_id] hoge\n##[MONITOR2][game_id] foo\n##[MONITOR2][game_id] +OK\n", 
+                 @player.out.join)
+  end
+end
 

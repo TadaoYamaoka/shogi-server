@@ -49,6 +49,12 @@ module ShogiServer
       when /^%%MONITOROFF\s+(\S+)/
         game_id = $1
         cmd = MonitorOffCommand.new(str, player, $league.games[game_id])
+      when /^%%MONITOR2ON\s+(\S+)/
+        game_id = $1
+        cmd = Monitor2OnCommand.new(str, player, $league.games[game_id])
+      when /^%%MONITOR2OFF\s+(\S+)/
+        game_id = $1
+        cmd = Monitor2OffCommand.new(str, player, $league.games[game_id])
       when /^%%HELP/
         cmd = HelpCommand.new(str, player)
       when /^%%RATING/
@@ -263,6 +269,53 @@ module ShogiServer
     end
   end
 
+  class MonitorHandler
+    def initialize(player)
+      @player = player
+      @type = nil
+      @header = nil
+    end
+    attr_reader :player, :type, :header
+
+    def ==(rhs)
+      return rhs != nil &&
+             rhs.is_a?(MonitorHandler) &&
+             @player = rhs.player &&
+             @type   = rhs.type
+    end
+
+    def write_safe(game_id, str)
+      str.chomp.split("\n").each do |line|
+        @player.write_safe("##[%s][%s] %s\n" % [@header, game_id, line.chomp])
+      end
+      @player.write_safe("##[%s][%s] %s\n" % [@header, game_id, "+OK"])
+    end
+  end
+
+  class MonitorHandler1 < MonitorHandler
+    def initialize(player)
+      super
+      @type = 1
+      @header = "MONITOR"
+    end
+
+    def write_one_move(game_id, game)
+      write_safe(game_id, game.show.chomp)
+    end
+  end
+
+  class MonitorHandler2 < MonitorHandler
+    def initialize(player)
+      super
+      @type = 2
+      @header = "MONITOR2"
+    end
+
+    def write_one_move(game_id, game)
+      write_safe(game_id, game.last_move.gsub(",", "\n"))
+    end
+  end
+
   # Command of MONITORON
   #
   class MonitorOnCommand < BaseCommandForGame
@@ -272,9 +325,9 @@ module ShogiServer
 
     def call
       if (@game)
-        @game.monitoron(@player)
-        @player.write_safe(@game.show.gsub(/^/, "##[MONITOR][#{@game_id}] "))
-        @player.write_safe("##[MONITOR][#{@game_id}] +OK\n")
+        monitor_handler = MonitorHandler1.new(@player)
+        @game.monitoron(monitor_handler)
+        monitor_handler.write_safe(@game_id, @game.show)
       end
       return :continue
     end
@@ -289,9 +342,33 @@ module ShogiServer
 
     def call
       if (@game)
-        @game.monitoroff(@player)
+        @game.monitoroff(MonitorHandler1.new(@player))
       end
       return :continue
+    end
+  end
+
+  # Command of MONITOR2ON
+  #
+  class Monitor2OnCommand < BaseCommandForGame
+    def initialize(str, player, game)
+      super
+    end
+
+    def call
+      if (@game)
+        monitor_handler = MonitorHandler2.new(@player)
+        @game.monitoron(monitor_handler)
+        lines = IO::readlines(@game.logfile).join("")
+        monitor_handler.write_safe(@game_id, lines)
+      end
+      return :continue
+    end
+  end
+
+  class Monitor2OffCommand < MonitorOffCommand # same
+    def initialize(str, player, game)
+      super
     end
   end
 

@@ -26,8 +26,8 @@ module ShogiServer # for a namespace
 #
 class MonitorObserver
   def update(game_result)
-    game_result.game.each_monitor do |monitor|
-      monitor.write_safe("##[MONITOR][%s] %s\n" % [game_result.game.game_id, game_result.result_type])
+    game_result.game.each_monitor do |monitor_handler|
+      monitor_handler.write_safe(game_result.game.game_id, game_result.result_type)
     end
   end
 end
