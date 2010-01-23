@@ -474,14 +474,13 @@ module ShogiServer
         end
         @player.sente = nil
       else
-        if (@my_sente_str == "*")
+        if (@my_sente_str == "*") && !Login.handicapped_game_name?(@game_name)
           rival = $league.get_player("game_waiting", @game_name, nil, @player) # no preference
         elsif (@my_sente_str == "+")
           rival = $league.get_player("game_waiting", @game_name, false, @player) # rival must be gote
         elsif (@my_sente_str == "-")
           rival = $league.get_player("game_waiting", @game_name, true, @player) # rival must be sente
         else
-          ## never reached
           @player.write_safe(sprintf("##[ERROR] bad game option\n"))
           return :continue
         end
@@ -536,7 +535,8 @@ module ShogiServer
             Game::new(@player.game_name, @player, rival, board)
           end
         else
-          board = Board.new
+          klass = Login.handicapped_game_name?(@game_name) || Board
+          board = klass.new
           board.initial
           Game::new(@player.game_name, @player, rival, board)
         end

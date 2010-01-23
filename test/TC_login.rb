@@ -3,6 +3,7 @@ require 'test/unit'
 require 'shogi_server'
 require 'shogi_server/player'
 require 'shogi_server/login'
+require 'shogi_server/handicapped_boards'
 
 class ShogiServer::BasicPlayer
   attr_accessor :protocol
@@ -36,5 +37,5 @@ class TestLogin < Test::Unit::TestCase
     login = ShogiServer::Login::factory("LOGIN hoge floodagate-900-0,xyz", player)
     assert_equal(@p_csa.player_id, player.player_id)
   end
-
 end
+

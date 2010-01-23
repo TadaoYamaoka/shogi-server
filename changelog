@@ -1,3 +1,20 @@
+2010-01-22  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Experimental feature: support handicapped games.
+	    Game names that have the following prefixes are recognized as
+	    handicapped games. Turn symbols "+" and "-" mean Uwate (expert)
+	    and Shitate (beginner) respectively (i.e. Uwate players first).
+	    "*" is not available. 
+	    - hclance_
+	    - hcbishop_
+	    - hcrook_
+	    - hcrooklance_
+	    - hc2p_
+	    - hc4p_
+	    - hc6p_
+	    - hc10p_
+
 2010-01-16  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

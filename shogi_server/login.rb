@@ -17,6 +17,8 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'shogi_server/handicapped_boards'
+
 module ShogiServer # for a namespace
 
 ######################################################
@@ -41,6 +43,39 @@ class Login
     else
       return false
     end
+  end
+
+  # Check if a game name str is a handicapped game.
+  # @return a subclass of Board coresponding to the handicapped game; false,
+  # otherwise.
+  #
+  def Login.handicapped_game_name?(str)
+    return false unless good_game_name?(str)
+    ret = nil
+    
+    case str
+    when %r!^hclance_!
+      ret = HCKYBoard
+    when %r!^hcbishop_!
+      ret = HCKABoard
+    when %r!^hcrook_!
+      ret = HCHIBoard
+    when %r!^hcrooklance_!
+      ret = HCHIKYBoard
+    when %r!^hc2p_!
+      ret = HC2PBoard
+    when %r!^hc4p_!
+      ret = HC4PBoard
+    when %r!^hc6p_!
+      ret = HC6PBoard
+    when %r!^hc8p_!
+      ret = HC8PBoard
+    when %r!^hc10p_!
+      ret = HC10PBoard
+    else
+      ret = false
+    end
+    return ret
   end
 
   def Login.good_identifier?(str)
