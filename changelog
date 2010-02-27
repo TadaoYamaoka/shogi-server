@@ -1,3 +1,11 @@
+2010-02-27  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - The server now provides more accurate time control. Previouslly,
+	    a player's thinking time included a time waiting to get the giant
+	    lock. This may have caused games to time up, especially, during
+	    byo-yomi etc.
+
 2010-01-22  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -174,7 +174,7 @@ class Game
   end
 
   # class Game
-  def handle_one_move(str, player)
+  def handle_one_move(str, player, end_time)
     unless turn?(player)
       return false if str == :timeout
 
@@ -186,7 +186,7 @@ class Game
     end
 
     finish_flag = true
-    @end_time = Time::new
+    @end_time = end_time
     t = [(@end_time - @start_time).floor, Least_Time_Per_Move].max
     
     move_status = nil

@@ -258,6 +258,7 @@ class Player < BasicPlayer
   def run(csa_1st_str=nil)
     while ( csa_1st_str || 
             str = gets_safe(@socket, (@socket_buffer.empty? ? Default_Timeout : 1)) )
+      time = Time.now
       log(:info, :in, str) if str && str.instance_of?(String) 
       $mutex.lock
       begin
@@ -281,7 +282,11 @@ class Player < BasicPlayer
         end
         str.chomp! if (str.class == String) # may be strip! ?
 
-        cmd = ShogiServer::Command.factory(str, self)
+        delay = Time.now - time
+        if delay > 5
+          log_warning("Detected a long delay: %.2f sec" % [delay])
+        end
+        cmd = ShogiServer::Command.factory(str, self, time)
         case cmd.call
         when :return
           return

@@ -21,7 +21,7 @@ class MockGame
     @monitoroff_called = false
   end
 
-  def handle_one_move(move, player)
+  def handle_one_move(move, player, time)
     return @finish_flag
   end
 

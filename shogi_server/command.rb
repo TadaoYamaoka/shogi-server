@@ -25,7 +25,7 @@ module ShogiServer
   class Command
     # Factory method
     #
-    def Command.factory(str, player)
+    def Command.factory(str, player, time=Time.now)
       cmd = nil
       case str 
       when "" 
@@ -100,13 +100,16 @@ module ShogiServer
         cmd = ErrorCommand.new(str, player)
       end
 
+      cmd.time = time
       return cmd
     end
 
     def initialize(str, player)
       @str    = str
       @player = player
+      @time   = Time.now # this should be replaced later with a real time
     end
+    attr_accessor :time
   end
 
   # Application-level protocol for Keep-Alive.
@@ -141,7 +144,7 @@ module ShogiServer
         if /^'(.*)/ =~ additional
           comment = array_str.unshift("'*#{$1.toeuc}")
         end
-        s = @player.game.handle_one_move(move, @player)
+        s = @player.game.handle_one_move(move, @player, @time)
         @player.game.log_game(Kconv.toeuc(comment.first)) if (comment && comment.first && !s)
         return :return if (s && @player.protocol == LoginCSA::PROTOCOL)
       end
@@ -171,7 +174,7 @@ module ShogiServer
     def in_game_status
       rc = :continue
 
-      s = @player.game.handle_one_move(@str, @player)
+      s = @player.game.handle_one_move(@str, @player, @time)
       rc = :return if (s && @player.protocol == LoginCSA::PROTOCOL)
 
       return rc
