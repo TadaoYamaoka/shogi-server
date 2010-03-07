@@ -1,3 +1,11 @@
+2010-03-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - If two sequential moves from a player are identical, the last
+	    one will be ignored and a game is in play. This situation might
+	    happen with human players, especially on slow network,
+	    impatiently sending a move twice. 
+
 2010-02-27  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

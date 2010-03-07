@@ -7,7 +7,9 @@ class BaseClient < Test::Unit::TestCase
     port = 4000
     params = {"Host" => "localhost", "Port" => port, "Prompt" => //}
     @socket1 = TCPSocket.open("localhost", port)
+    @socket1.sync = true
     @socket2 = TCPSocket.open("localhost", port)
+    @socket2.sync = true
   end
 
   def teardown
@@ -111,8 +113,10 @@ class ReadFileClient < BaseClient
     while line = csa_io.gets do
       case line
       when /^\+\d{4}\w{2}/
+        cmd ""
         cmd $&
       when /^\-\d{4}\w{2}/
+        cmd2 ""
         cmd2 $&
       end
     end

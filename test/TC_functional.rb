@@ -296,3 +296,17 @@ class TestFunctionalChatCommand < BaseClient
     assert("", str)
   end
 end
+
+class TestTwoSameMoves < CSABaseClient
+  def test_two_same_moves
+    result, result2 = handshake do
+      cmd  "+7776FU"
+      cmd2 "-3334FU"
+      cmd2 "-3334FU"
+      cmd  "+2726FU"
+      sleep 1
+    end
+    assert(/#ILLEGAL_MOVE/ !~ result)
+    assert(/#ILLEGAL_MOVE/ !~ result2)
+  end
+end

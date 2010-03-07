@@ -139,6 +139,11 @@ module ShogiServer
       if (@player.status == "game")
         array_str = @str.split(",")
         move = array_str.shift
+        if @player.game.last_move &&
+           @player.game.last_move.split(",").first == move
+          log_warning("Received two sequencial identical moves [#{move}] from #{@player.name}. The last one was ignored.")
+          return :continue
+        end
         additional = array_str.shift
         comment = nil
         if /^'(.*)/ =~ additional

@@ -8,6 +8,8 @@ class UchifuzumeTest < ReadFileClient
     result2 = cmd2 "-0064FU"
     result1 = cmd  "%TORYO"
     sleep 1
+    result1 = cmd ""
+    result2 = cmd2 ""
     result1 += read_nonblock(@socket1)
     result2 += read_nonblock(@socket2)
     logout12
@@ -21,8 +23,10 @@ class UchifuzumeTest < ReadFileClient
     cmd2 "-0092FU"
     cmd  "%TORYO"
     sleep 1
-    result1 = read_nonblock(@socket1)
-    result2 = read_nonblock(@socket2)
+    result1 = cmd ""
+    result2 = cmd2 ""
+    result1 += read_nonblock(@socket1)
+    result2 += read_nonblock(@socket2)
     logout12
     assert_match(/#LOSE/m, result1)
     assert_match(/#WIN/m, result2)

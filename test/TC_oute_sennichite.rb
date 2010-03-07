@@ -7,8 +7,10 @@ class OuteSennichiteTest < ReadFileClient
     handshake(csa)
     #cmd2 "%KACHI"
     sleep 1
-    result1 = read_nonblock(@socket1)
-    result2 = read_nonblock(@socket2)
+    result1 = cmd ""
+    result2 = cmd2 ""
+    result1 += read_nonblock(@socket1)
+    result2 += read_nonblock(@socket2)
     logout12
     assert_match(/#OUTE_SENNICHITE.#LOSE/m, result1)
     assert_match(/#OUTE_SENNICHITE.#WIN/m, result2)
@@ -19,8 +21,10 @@ class OuteSennichiteTest < ReadFileClient
     handshake(csa)
     #cmd2 "%KACHI"
     sleep 1
-    result1 = read_nonblock(@socket1)
-    result2 = read_nonblock(@socket2)
+    result1 = cmd ""
+    result2 = cmd2 ""
+    result1 += read_nonblock(@socket1)
+    result2 += read_nonblock(@socket2)
     logout12
     assert_match(/#OUTE_SENNICHITE.#WIN/m, result1)
     assert_match(/#OUTE_SENNICHITE.#LOSE/m, result2)
@@ -31,8 +35,10 @@ class OuteSennichiteTest < ReadFileClient
     handshake(csa)
     #cmd2 "%KACHI"
     sleep 1
-    result1 = read_nonblock(@socket1)
-    result2 = read_nonblock(@socket2)
+    result1 = cmd ""
+    result2 = cmd2 ""
+    result1 += read_nonblock(@socket1)
+    result2 += read_nonblock(@socket2)
     logout12
     assert_match(/#OUTE_SENNICHITE.#LOSE/m, result1)
     assert_match(/#OUTE_SENNICHITE.#WIN/m, result2)

@@ -7,6 +7,7 @@ class MockGame
   attr_accessor :started
   attr_accessor :game_id
   attr_accessor :game_name
+  attr_accessor :last_move
 
   def initialize
     @finish_flag     = false
