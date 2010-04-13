@@ -1,3 +1,11 @@
+2010-04-13  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/command.rb:
+	    Equality of MonitorHandler class was wrong. %%MONITOROFF and
+	    %%MONITOR2OFF may cause unexpected behavior. This issue has been
+	    fixed. Thanks to Kota Fujiwara for reporting.
+
 2010-03-07  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

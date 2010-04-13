@@ -288,8 +288,8 @@ module ShogiServer
     def ==(rhs)
       return rhs != nil &&
              rhs.is_a?(MonitorHandler) &&
-             @player = rhs.player &&
-             @type   = rhs.type
+             @player == rhs.player &&
+             @type   == rhs.type
     end
 
     def write_safe(game_id, str)

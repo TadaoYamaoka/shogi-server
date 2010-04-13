@@ -885,6 +885,26 @@ class TestGetBuoyCountCommand < BaseTestBuoyCommand
   end
 end
 
+#
+#
+class TestMonitorHandler < Test::Unit::TestCase
+  def test_not_equal
+    @player1 = MockPlayer.new
+    @handler1 = ShogiServer::MonitorHandler1.new @player1
+    @player2 = MockPlayer.new
+    @handler2 = ShogiServer::MonitorHandler1.new @player2
+
+    assert_not_equal(@handler1, @handler2)
+  end
+
+  def test_equal
+    @player1 = MockPlayer.new
+    @handler1 = ShogiServer::MonitorHandler1.new @player1
+    @handler2 = ShogiServer::MonitorHandler1.new @player1
+
+    assert_equal(@handler1, @handler2)
+  end
+end
 
 #
 #
