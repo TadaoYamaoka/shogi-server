@@ -1,3 +1,10 @@
+2010-04-25  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/player.rb:
+	    Log a warning message in a case that a player closes a
+	    connection suddenly.
+
 2010-04-13  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

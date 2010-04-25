@@ -300,6 +300,7 @@ class Player < BasicPlayer
         $mutex.unlock
       end
     end # enf of while
+    log_warning("%s's socket was suddenly closed" % [@name])
   end # def run
 end # class
 
