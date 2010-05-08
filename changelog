@@ -1,3 +1,12 @@
+2010-05-06  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Previously mk_rate did not count in draw games. Now a draw game
+	    is considered to weight 0.5 win and 0.5 loss. Respect
+	    Inaniwa-shogi which strategically aims to draw.
+	  - a new command line option, --skip-draw-games. In this mode, draw
+	    games are just ignored as mk_rate previously did.
+
 2010-04-25  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

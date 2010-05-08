@@ -50,6 +50,10 @@
 # --fixed-rate::
 #   rate 
 #
+# --skip-draw-games::
+#   skip draw games. [default: draw games are counted in as 0.5 win and 0.5
+#   lost.]
+#
 # --help::
 #   show this message
 #
@@ -601,6 +605,14 @@ def _add_win_loss(winner, loser, time)
   $players[loser][winner] += GSL::Vector[0,1.0*half_life(how_long_days)]
 end
 
+def _add_draw(player1, player2, time)
+  how_long_days = ($options["base-date"] - time)/(3600*24)
+  $players[player1] ||= Hash.new { GSL::Vector[0,0] }
+  $players[player2] ||= Hash.new { GSL::Vector[0,0] }
+  $players[player1][player2] += GSL::Vector[0.5*half_life(how_long_days),0.5*half_life(how_long_days)]
+  $players[player2][player1] += GSL::Vector[0.5*half_life(how_long_days),0.5*half_life(how_long_days)]
+end
+
 def _add_time(player, time)
   $players_time[player] = time if $players_time[player] < time
 end
@@ -611,7 +623,11 @@ def add(black_mark, black_name, white_name, white_mark, time)
   elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
     _add_win_loss(white_name, black_name, time)
   elsif black_mark == DRAW_MARK && white_mark == DRAW_MARK
-    return
+    if $options["skip-draw-games"]
+      return
+    else
+      _add_draw(black_name, white_name, time)
+    end
   else
     raise "Never reached!"
   end
@@ -672,6 +688,8 @@ OPTOINS:
                       after m days, half-life effect works
   --fixed-rate-player player whose rate is fixed at the rate
   --fixed-rate        rate 
+  --skip-draw-games   skip draw games. [default: draw games are counted in
+                      as 0.5 win and 0.5 lost]
   --help              show this message
 EOF
 end
@@ -684,7 +702,8 @@ def main
     ["--half-life-ignore",  GetoptLong::REQUIRED_ARGUMENT],
     ["--help", "-h",        GetoptLong::NO_ARGUMENT],
     ["--fixed-rate-player", GetoptLong::REQUIRED_ARGUMENT],
-    ["--fixed-rate",        GetoptLong::REQUIRED_ARGUMENT])
+    ["--fixed-rate",        GetoptLong::REQUIRED_ARGUMENT],
+    ["--skip-draw-games",   GetoptLong::NO_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
