@@ -1,3 +1,9 @@
+2010-05-10  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - test/*.rb: Improved performance and stability of tests
+	  - shogi_server/player.rb: Help the write_thread to terminate
+
 2010-05-06  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
