@@ -5,49 +5,39 @@ class TestBeforeAgree < BaseClient
 
   def test_gote_logout_after_sente_agree
     login
-    result  = cmd  "AGREE"
-    result2 = cmd2 "LOGOUT"
 
-    result  += read_nonblock(@socket1)
-    result2 += read_nonblock(@socket2)
-
-    assert(/^REJECT/ =~ result)
-    assert(/^REJECT/ =~ result2)
+    @p1.puts "AGREE"
+    @p2.puts "LOGOUT"
+    @p1.wait /^REJECT/
+    @p2.wait /^REJECT/
+    assert true
   end
 
   def test_sente_logout_after_gote_agree
     login
-    result2 = cmd2 "AGREE"
-    result  = cmd  "LOGOUT"
 
-    result  += read_nonblock(@socket1)
-    result2 += read_nonblock(@socket2)
-
-    assert(/^REJECT/ =~ result)
-    assert(/^REJECT/ =~ result2)
+    @p2.puts "AGREE"
+    @p1.puts "LOGOUT"
+    @p1.wait /^REJECT/
+    @p2.wait /^REJECT/
+    assert true
   end
 
   def test_gote_logout_before_sente_agree
     login
-    result  = ""
-    result2 = cmd2 "LOGOUT"
 
-    result  += read_nonblock(@socket1)
-    result2 += read_nonblock(@socket2)
-
-    assert(/^REJECT/ =~ result)
-    assert(/^REJECT/ =~ result2)
+    @p2.puts "LOGOUT"
+    @p1.wait /^REJECT/
+    @p2.wait /^REJECT/
+    assert true
   end
 
   def test_sente_logout_before_gote_agree
     login
-    result2 = ""
-    result  = cmd  "LOGOUT"
 
-    result  += read_nonblock(@socket1)
-    result2 += read_nonblock(@socket2)
-
-    assert(/^REJECT/ =~ result)
-    assert(/^REJECT/ =~ result2)
+    @p1.puts "LOGOUT"
+    @p1.wait /^REJECT/
+    @p2.wait /^REJECT/
+    assert true
   end
 end

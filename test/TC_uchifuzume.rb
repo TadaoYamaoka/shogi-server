@@ -5,31 +5,23 @@ class UchifuzumeTest < ReadFileClient
   def test_uchifuzume
     csa = File.open(filepath("uchifuzume.csa")) {|f| f.read}
     handshake(csa)
-    result2 = cmd2 "-0064FU"
-    result1 = cmd  "%TORYO"
-    sleep 1
-    result1 = cmd ""
-    result2 = cmd2 ""
-    result1 += read_nonblock(@socket1)
-    result2 += read_nonblock(@socket2)
+    @p2.puts "-0064FU"
+    @p1.puts "%TORYO"
+    wait_finish
+    assert_match(/#ILLEGAL_MOVE.*#WIN/m, @p1.message)
+    assert_match(/#ILLEGAL_MOVE.*#LOSE/m, @p2.message)
     logout12
-    assert_match(/#ILLEGAL_MOVE.*#WIN/m, result1)
-    assert_match(/#ILLEGAL_MOVE.*#LOSE/m, result2)
   end
 
   def test_not_uchifuzume
     csa = File.open(filepath("not_uchifuzume.csa")) {|f| f.read}
     handshake(csa)
-    cmd2 "-0092FU"
-    cmd  "%TORYO"
-    sleep 1
-    result1 = cmd ""
-    result2 = cmd2 ""
-    result1 += read_nonblock(@socket1)
-    result2 += read_nonblock(@socket2)
+    @p2.puts "-0092FU"
+    @p1.puts "%TORYO"
+    wait_finish
+    assert_no_match(/#ILLEGAL_MOVE/, @p1.message)
+    assert_no_match(/#ILLEGAL_MOVE/, @p2.message)
     logout12
-    assert_match(/#LOSE/m, result1)
-    assert_match(/#WIN/m, result2)
   end
 end # Client class
 
