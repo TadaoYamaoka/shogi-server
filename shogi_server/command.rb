@@ -374,7 +374,7 @@ module ShogiServer
     end
   end
 
-  class Monitor2OffCommand < MonitorOffCommand # same
+  class Monitor2OffCommand < MonitorOffCommand
     def initialize(str, player, game)
       super
     end

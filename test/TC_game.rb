@@ -335,5 +335,32 @@ T1
 T1
 EOF
   end
+  
+  def test_monitor_add
+    game_name = "hoge-1500-0"
+    board = ShogiServer::Board.new
+    board.initial
+    p1 = MockPlayer.new
+    p1.sente = true
+    p1.name  = "p1"
+    p2 = MockPlayer.new
+    p2.sente = false
+    p2.name  = "p2"
+    
+    game = ShogiServer::Game.new game_name, p1, p2, board 
+    handler1 = ShogiServer::MonitorHandler1.new p1
+    handler2 = ShogiServer::MonitorHandler2.new p2
+
+    assert_equal(0, game.monitors.size)
+    game.monitoron(handler1)
+    assert_equal(1, game.monitors.size)
+    game.monitoron(handler2)
+    assert_equal(2, game.monitors.size)
+    game.monitoroff(handler1)
+    assert_equal(1, game.monitors.size)
+    assert_equal(handler2, game.monitors.last)
+    game.monitoroff(handler2)
+    assert_equal(0, game.monitors.size)
+  end
 end
 

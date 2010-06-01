@@ -117,6 +117,11 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::MonitorOffCommand, cmd)
   end
 
+  def test_monitor2off_command
+    cmd = ShogiServer::Command.factory("%%MONITOR2OFF game_id", @p)
+    assert_instance_of(ShogiServer::Monitor2OffCommand, cmd)
+  end
+
   def test_help_command
     cmd = ShogiServer::Command.factory("%%HELP", @p)
     assert_instance_of(ShogiServer::HelpCommand, cmd)
@@ -490,6 +495,23 @@ class TestMonitorOffCommand < Test::Unit::TestCase
 
   def test_call
     cmd = ShogiServer::MonitorOffCommand.new("%%MONITOROFF hoge", @p, nil)
+    rc = cmd.call
+
+    assert_equal(:continue, rc)
+  end
+end
+
+#
+#
+class TestMonitor2OffCommand < Test::Unit::TestCase 
+  def setup
+    @p = MockPlayer.new
+    @game = MockGame.new
+    @p.game = @game
+  end
+
+  def test_call
+    cmd = ShogiServer::Monitor2OffCommand.new("%%MONITOR2OFF hoge", @p, nil)
     rc = cmd.call
 
     assert_equal(:continue, rc)
@@ -888,7 +910,7 @@ end
 #
 #
 class TestMonitorHandler < Test::Unit::TestCase
-  def test_not_equal
+  def test_not_equal_players
     @player1 = MockPlayer.new
     @handler1 = ShogiServer::MonitorHandler1.new @player1
     @player2 = MockPlayer.new
@@ -921,6 +943,15 @@ class TestMonitorHandler1 < Test::Unit::TestCase
   def test_header
     assert_equal("MONITOR", @handler.header)
   end
+  
+  def test_equal
+    assert_equal @handler, @handler
+    assert_not_equal @handler, nil
+  end
+
+  def test_not_equal
+    assert_not_equal(@handler, ShogiServer::MonitorHandler2.new(@player))
+  end
 
   def test_write_safe
     @handler.write_safe("game_id", "hoge")
@@ -943,6 +974,15 @@ class TestMonitorHandler2 < Test::Unit::TestCase
 
   def test_header
     assert_equal("MONITOR2", @handler.header)
+  end
+
+  def test_equal
+    assert_equal @handler, @handler
+    assert_not_equal @handler, nil
+  end
+
+  def test_not_equal
+    assert_not_equal(@handler, ShogiServer::MonitorHandler1.new(@player))
   end
 
   def test_write_safe
