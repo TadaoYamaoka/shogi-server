@@ -1,3 +1,9 @@
+2010-06-01  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/command.rb: Fixed an issue that MONITOR2OFF did not
+	    work. Thanks to HIDECHI and koudayu.
+
 2010-05-10  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

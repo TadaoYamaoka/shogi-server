@@ -378,6 +378,13 @@ module ShogiServer
     def initialize(str, player, game)
       super
     end
+
+    def call
+      if (@game)
+        @game.monitoroff(MonitorHandler2.new(@player))
+      end
+      return :continue
+    end
   end
 
   # Command of HELP
