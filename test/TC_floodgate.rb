@@ -23,6 +23,15 @@ class TestFloodgate < Test::Unit::TestCase
     assert(!ShogiServer::League::Floodgate.game_name?("floodgat-900-0"))
   end
 
+  def test_instance_game_name
+    fg = ShogiServer::League::Floodgate.new(nil, "floodgate-900-0")
+    assert(fg.game_name?("floodgate-900-0"))
+    assert(!fg.game_name?("floodgate-3600-0"))
+    fg = ShogiServer::League::Floodgate.new(nil, "floodgate-3600-0")
+    assert(fg.game_name?("floodgate-900-0"))
+    assert(!fg.game_name?("floodgate-3600-0"))
+  end
+
 end
 
 class TestDeleteMostPlayingPlayer < Test::Unit::TestCase
