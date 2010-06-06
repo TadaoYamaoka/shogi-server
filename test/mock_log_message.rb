@@ -1,17 +1,32 @@
-def log_info(str)
-  $stderr.puts str
+class MockLogger
+  def debug(str)
+    #puts str
+  end
+  def info(str)
+    #puts str
+  end
+  def warn(str)
+    puts str
+  end
+  def error(str)
+    puts str
+  end
 end
 
-def log_message(str)
-  $stderr.puts str
+$logger = MockLogger.new
+def log_message(msg)
+  $logger.info(msg)
 end
 
-def log_warning(str)
-  $stderr.puts str
+def log_warning(msg)
+  $logger.warn(msg)
 end
 
-def log_error(str)
-  $stderr.puts str
+def log_error(msg)
+  $logger.error(msg)
 end
 
+def log_info(msg)
+  $logger.info(msg)
+end
 

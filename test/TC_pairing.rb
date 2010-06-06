@@ -3,27 +3,8 @@ require 'test/unit'
 require 'shogi_server'
 require 'shogi_server/player'
 require 'shogi_server/pairing'
+require 'test/mock_log_message'
 
-class MockLogger
-  def debug(str)
-  end
-  def info(str)
-    #puts str
-  end
-  def warn(str)
-  end
-  def error(str)
-  end
-end
-
-$logger = MockLogger.new
-def log_message(msg)
-  $logger.info(msg)
-end
-
-def log_warning(msg)
-  $logger.warn(msg)
-end
 
 def same_pair?(a, b)
   unless a.size == 2 && b.size == 2
