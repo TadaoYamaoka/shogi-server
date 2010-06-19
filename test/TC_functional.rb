@@ -318,6 +318,7 @@ class TestTwoSameMoves < CSABaseClient
       move  "+2726FU"
       move "-8384FU"
       @p2.puts "-8384FU" # ignored
+      sleep 0.1 # wait for finish of the command above
       move "+2625FU"
     end
     assert(/#ILLEGAL_MOVE/ !~ result)
