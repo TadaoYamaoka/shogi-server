@@ -25,7 +25,8 @@ class TestClientAtmark < BaseClient
     path = File.join( File.dirname(__FILE__), "..", year, month, day, "*atmark-1500-0*")
     log_files = Dir.glob(path)
     assert(!log_files.empty?) 
-    log_content = File.open(log_files.sort.last).read
+    sleep 0.1
+    log_content = File.read(log_files.sort.last)
 
     # "$EVENT", "$START_TIME" and "'$END_TIME" are removed since they vary dinamically.
     should_be = <<-EOF
@@ -318,6 +319,7 @@ class TestTwoSameMoves < CSABaseClient
       move  "+2726FU"
       move "-8384FU"
       @p2.puts "-8384FU" # ignored
+      sleep 0.1 # wait for finish of the command above
       move "+2625FU"
     end
     assert(/#ILLEGAL_MOVE/ !~ result)
