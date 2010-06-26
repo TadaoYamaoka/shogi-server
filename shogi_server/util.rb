@@ -17,6 +17,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'date'
 require 'fileutils'
 require 'pathname'
 
@@ -67,4 +68,28 @@ module ShogiServer
   end
   module_function :is_writable_file?
 
+  # Convert a DateTime insntace to a Time instance.
+  #
+  def datetime2time(dt)
+    return Time.mktime dt.year, dt.month, dt.day, dt.hour, dt.min, dt.sec
+  end
+  module_function :datetime2time
+
+  # Convert a Time instance to a DateTime instance
+  #
+  def time2datetime(time)
+    return DateTime.new(time.year, time.mon, time.mday,
+                        time.hour, time.min, time.sec)
+  end
+  module_function :time2datetime
+
+  # Parse string representing a day-of-week and return a coresponding
+  # integer value: 1 (Monday) - 7 (Sunday)
+  #
+  def parse_dow(str)
+    index = Date::DAYNAMES.index(str) || Date::ABBR_DAYNAMES.index(str)
+    return nil if index.nil?
+    return index == 0 ? 7 : index
+  end
+  module_function :parse_dow
 end
