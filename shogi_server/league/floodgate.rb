@@ -1,3 +1,5 @@
+require 'shogi_server/util'
+require 'date'
 require 'thread'
 require 'ostruct'
 require 'pathname'
@@ -21,13 +23,16 @@ class League
       end
     end # class method
 
-    attr_reader :next_time, :league, :game_name
+    # @next_time is updated  if and only if charge() was called
+    #
+    attr_reader :next_time
+    attr_reader :league, :game_name
 
     def initialize(league, hash={})
       @league = league
       @next_time = hash[:next_time] || nil
       @game_name = hash[:game_name] || "floodgate-900-0"
-      charge
+      charge if @next_time.nil?
     end
 
     def game_name?(str)
@@ -58,8 +63,13 @@ class League
       class << self
         def factory(game_name)
           ret = nil
+          conf_file_name = File.join($topdir, "#{game_name}.conf")
+
           if $DEBUG
             ret = NextTimeGenerator_Debug.new
+          elsif File.exists?(conf_file_name) 
+            lines = IO.readlines(conf_file_name)
+            ret =  NextTimeGeneratorConfig.new(lines)
           elsif game_name == "floodgate-900-0"
             ret = NextTimeGenerator_Floodgate_900_0.new
           elsif game_name == "floodgate-3600-0"
@@ -70,9 +80,60 @@ class League
       end
     end
 
+    # Schedule the next time from configuration files.
+    #
+    # Line format: 
+    #   # This is a comment line
+    #   DoW Time
+    #   ...
+    # where
+    #   DoW := "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" |
+    #          "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" |
+    #          "Friday" | "Saturday" 
+    #   Time := HH:MM
+    #
+    # For example,
+    #   Sat 13:00
+    #   Sat 22:00
+    #   Sun 13:00
+    #
+    class NextTimeGeneratorConfig
+      
+      # Constructor. 
+      # Read configuration contents.
+      #
+      def initialize(lines)
+        @lines = lines
+      end
+
+      def call(now=Time.now)
+        if now.kind_of?(Time)
+          now = ::ShogiServer::time2datetime(now)
+        end
+        candidates = []
+        # now.cweek 1-53
+        # now.cwday 1(Monday)-7
+        @lines.each do |line|
+          if %r!^\s*(\w+)\s+(\d{1,2}):(\d{1,2})! =~ line
+            dow, hour, minute = $1, $2.to_i, $3.to_i
+            dow_index = ::ShogiServer::parse_dow(dow)
+            next if dow_index.nil?
+            next unless (0..23).include?(hour)
+            next unless (0..59).include?(minute)
+            time = DateTime::commercial(now.year, now.cweek, dow_index, hour, minute) rescue next
+            time += 7 if time <= now 
+            candidates << time
+          end
+        end
+        candidates.map! {|dt| ::ShogiServer::datetime2time(dt)}
+        return candidates.empty? ? nil : candidates.min
+      end
+    end
+
+    # Schedule the next time for floodgate-900-0: each 30 minutes
+    #
     class NextTimeGenerator_Floodgate_900_0
       def call(now)
-        # each 30 minutes
         if now.min < 30
           return Time.mktime(now.year, now.month, now.day, now.hour, 30)
         else
@@ -81,16 +142,18 @@ class League
       end
     end
 
+    # Schedule the next time for floodgate-3600-0: each 2 hours (odd hour)
+    #
     class NextTimeGenerator_Floodgate_3600_0
       def call(now)
-        # each 2 hours (odd hour)
         return Time.mktime(now.year, now.month, now.day, now.hour) + ((now.hour%2)+1)*3600
       end
     end
 
+    # Schedule the next time for debug: each 30 seconds.
+    #
     class NextTimeGenerator_Debug
       def call(now)
-        # for test, each 30 seconds
         if now.sec < 30
           return Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)
         else

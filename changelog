@@ -1,3 +1,43 @@
+2010-06-22  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - A new command line option: 
+	      --floodgate-names GameStringA[,GameStringB[,...]]
+	    where a game string should be a valid game name such as
+	    floodgate-900-0.  
+	    .
+	    Note: Without this option, no floodgate games are started. If
+	    you want floodgate-900-0 to run, which was default enabled in
+	    previous versions, you need to spefify the game name in this new
+	    option.
+	  - Floodgate time configuration file:
+	    You need to set starting times of floodgate groups in
+	    configuration files under the top directory. Each floodgat
+	    e group requires a correspoding configuration file named
+	    "<game_name>.conf". The file will be re-read once just after a
+	    game starts. 
+	    .
+	    For example, a floodgate-3600-30 game group requires
+	    floodgate-3600-30.conf.  However, for floodgate-900-0 and
+	    floodgate-3600-0, which were default enabled in previous
+	    versions, configuration files are optional if you are happy with
+	    defualt time settings.
+	    File format is:
+	      Line format: 
+	        # This is a comment line
+	        DoW Time
+	        ...
+	      where
+	        DoW := "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" |
+	               "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" |
+	               "Friday" | "Saturday" 
+	        Time := HH:MM
+	     
+	      For example,
+	        Sat 13:00
+	        Sat 22:00
+	        Sun 13:00
+
 2010-06-01  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

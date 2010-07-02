@@ -1,0 +1,7 @@
+## This is a sample configuration file for a Floodgate game, setting
+## starting times.
+##
+## This is a comment line	        
+Sat 13:00
+## This is a comment line	        
+Sun 13:00

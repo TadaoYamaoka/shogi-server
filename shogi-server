@@ -33,6 +33,7 @@ $:.unshift File.dirname(__FILE__)
 require 'shogi_server'
 require 'shogi_server/config'
 require 'shogi_server/util'
+require 'shogi_server/league/floodgate_thread.rb'
 require 'tempfile'
 
 #################################################
@@ -74,6 +75,8 @@ OPTIONS
 		specify filename for logging process ID
         --daemon dir
                 run as a daemon. Log files will be put in dir.
+        --floodgate-games game_A[,...]
+                enable Floodgate with various game names.
         --player-log-dir dir
                 log network messages for each player. Log files
                 will be put in the dir.
@@ -121,6 +124,7 @@ def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
     ["--daemon",            GetoptLong::REQUIRED_ARGUMENT],
+    ["--floodgate-games",   GetoptLong::REQUIRED_ARGUMENT],
     ["--pid-file",          GetoptLong::REQUIRED_ARGUMENT],
     ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
@@ -172,6 +176,19 @@ def check_command_line
       $stderr.puts "Can not create the pid file: %s" % [$options["pid-file"]]
       exit 4
     end
+  end
+
+  if $options["floodgate-games"]
+    names = $options["floodgate-games"].split(",")
+    new_names = 
+      names.select do |name|
+        ShogiServer::League::Floodgate::game_name?(name)
+      end
+    if names.size != new_names.size
+      $stderr.puts "Found a wrong Floodgate game: %s" % [names.join(",")]
+      exit 6
+    end
+    $options["floodgate-games"] = new_names
   end
 
   if $options["floodgate-history"]
@@ -284,73 +301,6 @@ def setup_watchdog_for_giant_lock
   end
 end
 
-def floodgate_reload_log(leagues)
-  floodgate = leagues.min {|a,b| a.next_time <=> b.next_time}
-  diff = floodgate.next_time - Time.now
-  log_message("Floodgate reloaded. The next match will start at %s in %d seconds" % 
-              [floodgate.next_time, diff])
-end
-
-def setup_floodgate(game_names)
-  return Thread.start(game_names) do |game_names|
-    Thread.pass
-    leagues = game_names.collect do |game_name|
-      ShogiServer::League::Floodgate.new($league, 
-                                         {:game_name => game_name})
-    end
-    leagues.delete_if do |floodgate|
-      ret = false
-      unless floodgate.next_time 
-        log_error("Unsupported game name: %s" % floodgate.game_name)
-        ret = true
-      end
-      ret
-    end
-    if leagues.empty?
-      log_error("No valid Floodgate game names found")
-      return # exit from this thread
-    end
-    floodgate_reload_log(leagues)
-
-    while (true)
-      begin
-        floodgate = leagues.min {|a,b| a.next_time <=> b.next_time}
-        diff = floodgate.next_time - Time.now
-        if diff > 0
-          floodgate_reload_log(leagues) if $DEBUG
-          sleep(diff/2)
-          next
-        end
-        next_array = leagues.collect do |floodgate|
-          if (floodgate.next_time - Time.now) > 0
-            [floodgate.game_name, floodgate.next_time]
-          else
-            log_message("Starting Floodgate games...: %s" % [floodgate.game_name])
-            $league.reload
-            floodgate.match_game
-            floodgate.charge
-            [floodgate.game_name, floodgate.next_time] # next_time has been updated
-          end
-        end
-        $mutex.synchronize do
-          log_message("Reloading source...")
-          ShogiServer.reload
-        end
-        # Regenerate floodgate instances after ShogiServer.realod
-        leagues = next_array.collect do |game_name, next_time|
-          floodgate = ShogiServer::League::Floodgate.new($league, 
-                                                         {:game_name => game_name,
-                                                          :next_time => next_time})
-        end
-        floodgate_reload_log(leagues)
-      rescue Exception => ex 
-        # ignore errors
-        log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
-      end
-    end
-  end
-end
-
 def main
   
   $options = parse_command_line
@@ -372,7 +322,7 @@ def main
   config[:ServerType] = WEBrick::Daemon if $options["daemon"]
   config[:Logger]     = $logger
 
-  fg_thread = nil
+  setup_floodgate = nil
 
   config[:StartCallback] = Proc.new do
     srand
@@ -381,7 +331,8 @@ def main
     end
     setup_watchdog_for_giant_lock
     $league.setup_players_database
-    fg_thread = setup_floodgate(["floodgate-900-0", "floodgate-3600-0"])
+    setup_floodgate = ShogiServer::SetupFloodgate.new($options["floodgate-games"])
+    setup_floodgate.start
   end
 
   config[:StopCallback] = Proc.new do
@@ -395,7 +346,7 @@ def main
   ["INT", "TERM"].each do |signal| 
     trap(signal) do
       server.shutdown
-      fg_thread.kill if fg_thread
+      setup_floodgate.kill
     end
   end
   unless (RUBY_PLATFORM.downcase =~ /mswin|mingw|cygwin|bccwin/)
