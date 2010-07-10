@@ -62,35 +62,92 @@ end
 def usage
     print <<EOM
 NAME
-	shogi-server - server for CSA server protocol
+        shogi-server - server for CSA server protocol
 
 SYNOPSIS
-	shogi-server [OPTIONS] event_name port_number
+        shogi-server [OPTIONS] event_name port_number
 
 DESCRIPTION
-	server for CSA server protocol
+        server for CSA server protocol
 
 OPTIONS
-	--pid-file file
-		specify filename for logging process ID
+        event_name
+                a prefix of record files.
+        port_number
+                a port number for the server to listen. 
+                4081 is often used.
+        --pid-file file
+                a file path in which a process ID will be written.
+                Use with --daemon option.
         --daemon dir
                 run as a daemon. Log files will be put in dir.
         --floodgate-games game_A[,...]
-                enable Floodgate with various game names.
+                enable Floodgate with various game names (separated by a comma)
         --player-log-dir dir
-                log network messages for each player. Log files
+                enable to log network messages for players. Log files
                 will be put in the dir.
 
+EXAMPLES
+
+        1. % ./shogi-server test 4081
+           Run the shogi-server. Then clients can connect to port#4081.
+           The server output logs to the stdout.
+
+        2. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
+                            --player-log-dir ./player-logs \
+                            test 4081
+           Run the shogi-server as a daemon. The server outputs regular logs
+           to shogi-server.log located in the current directory and network 
+           messages in ./player-logs directory.
+
+        3. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
+                            --player-log-dir ./player-logs \
+                            --floodgate-games floodgate-900-0,floodgate-3600-0 \
+                            test 4081
+           Run the shogi-server with two groups of Floodgate games.
+           Configuration files allow you to schedule starting times. Consult  
+           floodgate-0-240.conf.sample or shogi_server/league/floodgate.rb 
+           for format details.
+
+FLOODGATE SCHEDULE CONFIGURATIONS
+
+	    You need to set starting times of floodgate groups in
+	    configuration files under the top directory. Each floodgate 
+            group requires a corresponding configuration file named
+	    "<game_name>.conf". The file will be re-read once just after a
+	    game starts. 
+	    
+	    For example, a floodgate-3600-30 game group requires
+	    floodgate-3600-30.conf.  However, for floodgate-900-0 and
+	    floodgate-3600-0, which were default enabled in previous
+	    versions, configuration files are optional if you are happy with
+	    default time settings.
+	    File format is:
+	      Line format: 
+	        # This is a comment line
+	        DoW Time
+	        ...
+	      where
+	        DoW := "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" |
+	               "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" |
+	               "Friday" | "Saturday" 
+	        Time := HH:MM
+	     
+	      For example,
+	        Sat 13:00
+	        Sat 22:00
+	        Sun 13:00
+
 LICENSE
-	GPL versoin 2 or later
+        GPL versoin 2 or later
 
 SEE ALSO
 
 RELEASE
-	#{ShogiServer::Release}
+        #{ShogiServer::Release}
 
 REVISION
-	#{ShogiServer::Revision}
+        #{ShogiServer::Revision}
 
 EOM
 end
