@@ -30,6 +30,8 @@ class BasicPlayer
     @win  = 0
     @loss = 0
     @last_game_win = false
+    @rating_group = nil
+    @modified_at = nil
     @sente = nil
     @game_name = ""
   end

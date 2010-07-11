@@ -1,3 +1,9 @@
+2010-07-11  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/player.rb: Set initial values to BasicPlayer's
+	    instance variables.
+
 2010-06-22  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
