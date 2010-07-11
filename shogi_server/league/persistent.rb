@@ -58,25 +58,32 @@ class League
       return unless hash
 
       # a current user
+      set_player_values(player, hash)
+    end
+
+    def get_players
+      players = []
+      each_group(true) do |group, players_hash|
+        players_hash.each do |key, value|
+          bp = BasicPlayer.new
+          bp.player_id = key
+          set_player_values(bp, value)
+          players << bp
+        end
+      end
+      return players
+    end
+
+    private
+    def set_player_values(player, hash)
+      return if player.nil? || hash.nil?
+
       player.name          = hash['name']
       player.rate          = hash['rate'] || 0
       player.modified_at   = hash['last_modified']
       player.rating_group  = hash['rating_group']
       player.win           = hash['win']  || 0
       player.loss          = hash['loss'] || 0
-    end
-
-    def get_players
-      players = []
-      each_group(true) do |group, players_hash|
-        players << players_hash.keys
-      end
-      return players.flatten.collect do |player_id|
-        p = BasicPlayer.new
-        p.player_id = player_id
-        load_player(p)
-        p
-      end
     end
   end # class Persistent
 

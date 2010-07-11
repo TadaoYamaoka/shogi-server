@@ -3,6 +3,10 @@
 	* [shogi-server]
 	  - shogi_server/player.rb: Set initial values to BasicPlayer's
 	    instance variables.
+	  - shogi_server/league.rb: Improved performance of
+	    Persistant#get_players. It took about 20 seconds for a large
+	    size of players (5,300 lines in players.yaml). Now it completes in an
+	    instance.
 
 2010-06-22  Daigo Moriwaki <daigo at debian dot org>
 
