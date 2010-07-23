@@ -1,3 +1,10 @@
+2010-07-23  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/league/floodgate_thread.rb: When the server run
+	    with DEBUG mode, it ended up with an undefined variable error. 
+	    This issue has been fixed.
+
 2010-07-11  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

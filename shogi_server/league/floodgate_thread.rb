@@ -50,7 +50,6 @@ module ShogiServer
     def wait_next_floodgate(floodgate)
       diff = floodgate.next_time - Time.now
       if diff > 0
-        floodgate_reload_log(leagues) if $DEBUG
         sleep(diff/2)
         return true
       end
