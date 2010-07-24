@@ -208,6 +208,255 @@ EOM
 end
 
 
+class TestMoveBack < Test::Unit::TestCase
+  def validate_before_after(board, move)
+    orig = board.to_s
+    orig_teban = board.teban
+    orig_move_count = board.move_count
+
+    assert_equal true, board.move_to(move)
+    assert_equal !orig_teban, board.teban
+    assert_equal (orig_move_count+1), board.move_count
+
+    assert_equal true, board.move_back(move)
+    assert_equal orig_teban, board.teban
+    assert_equal orig_move_count, board.move_count
+    assert_equal orig, board.to_s
+  end
+
+  def test_normal
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOM
+    m = ShogiServer::Move.new(2,7,2,6,"FU",true)
+    validate_before_after(b,m)
+    m = ShogiServer::Move.new(3,3,3,4,"FU",false)
+    validate_before_after(b,m)
+    m = ShogiServer::Move.new(7,7,7,6,"FU",true)
+    validate_before_after(b,m)
+    m = ShogiServer::Move.new(8,3,8,4,"FU",false)
+    validate_before_after(b,m)
+  end
+
+  def test_promote
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  * +FU * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+P+00FU
+EOM
+    m = ShogiServer::Move.new(2,4,2,3,"TO",true)
+    validate_before_after(b,m)
+  end
+
+  def test_unpromote
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  * +FU * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+P+00FU
+EOM
+    m = ShogiServer::Move.new(2,4,2,3,"FU",true)
+    validate_before_after(b,m)
+  end
+
+  def test_promoted
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU+TO-FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+P+00FU
+EOM
+    m = ShogiServer::Move.new(2,3,1,2,"TO",true)
+    assert !m.promotion
+    validate_before_after(b,m)
+    assert !m.promotion
+  end
+
+  def test_capture
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  * -FU * 
+P5 *  *  *  *  *  *  * +FU * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOM
+    m = ShogiServer::Move.new(2,5,2,4,"FU",true)
+    validate_before_after(b,m)
+  end
+ 
+  def test_capture_white
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  * -FU * 
+P5 *  *  *  *  *  *  * +FU * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+-
+EOM
+    m = ShogiServer::Move.new(2,4,2,5,"FU",false)
+    validate_before_after(b,m)
+  end
+ 
+  def test_capture_promote
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  * +FU * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOM
+    m = ShogiServer::Move.new(2,4,2,3,"TO",true)
+    validate_before_after(b,m)
+  end
+
+  def test_capture_promote_white
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  * -FU * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+-
+EOM
+    m = ShogiServer::Move.new(2,6,2,7,"TO",false)
+    validate_before_after(b,m)
+  end
+
+  def test_capture_unpromote
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  * +FU * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOM
+    m = ShogiServer::Move.new(2,4,2,3,"FU",true)
+    validate_before_after(b,m)
+  end
+
+  def test_capture_unpromote_white
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  * -FU * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+-
+EOM
+    m = ShogiServer::Move.new(2,6,2,7,"FU",false)
+    validate_before_after(b,m)
+  end
+
+  def test_drop
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+P+00FU
+P-00FU
+EOM
+    m = ShogiServer::Move.new(0,0,2,3,"FU",true)
+    validate_before_after(b,m)
+  end
+
+  def test_drop_white
+    b = ShogiServer::Board.new
+    b.set_from_str(<<EOM)
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU * -FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU * +FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+-
+P+00FU
+P-00FU
+EOM
+    m = ShogiServer::Move.new(0,0,2,3,"FU",false)
+    validate_before_after(b,m)
+  end
+end # class TestMoveBack
+
+
 class Test_promote < Test::Unit::TestCase
   def test_fu
     b = ShogiServer::Board.new
@@ -330,7 +579,9 @@ EOM
     assert_equal(:normal, b.handle_one_move("+7172HI"))
     assert_equal(:normal, b.handle_one_move("-9291OU"))
 
+    orig = b.deep_copy
     assert_equal(:oute_sennichite_sente_lose, b.handle_one_move("+7271HI")) # 4
+    assert_equal orig, b
   end
 
   def test_oute_sennichite1 #330
@@ -381,7 +632,9 @@ b.history[b.to_s] = 1
     assert_equal(:normal, b.handle_one_move("-4849RY"))
 
     assert_equal(:normal, b.handle_one_move("+6968OU")) # added
+    orig = b.deep_copy
     assert_equal(:oute_sennichite_gote_lose, b.handle_one_move("-4948RY"))
+    assert_equal orig, b
   end
 
   def test_not_oute_sennichite
@@ -406,7 +659,9 @@ EOM
     assert_equal(:normal, b.handle_one_move("+7172HI"))
     assert_equal(:normal, b.handle_one_move("-9291OU"))
 
+    orig = b.deep_copy
     assert_equal(:sennichite, b.handle_one_move("+7271HI")) # 4
+    assert_equal orig, b
   end
 
   def test_sennichite0
@@ -428,7 +683,9 @@ EOM
     assert_equal(:normal, b.handle_one_move("+7172OU"))
     assert_equal(:normal, b.handle_one_move("-9192OU"))
     assert_equal(:normal, b.handle_one_move("+7271OU"))
+    orig = b.deep_copy
     assert_equal(:sennichite, b.handle_one_move("-9291OU")) # 4
+    assert_equal orig, b
   end
 
   def test_sennichite1          # 329
@@ -457,7 +714,9 @@ EOM
     assert_equal(:normal, b.handle_one_move("+2858HI"))
     assert_equal(:normal, b.handle_one_move("-8252HI"))
     assert_equal(:normal, b.handle_one_move("+5828HI"))
+    orig = b.deep_copy
     assert_equal(:sennichite, b.handle_one_move("-5282HI"))
+    assert_equal orig, b
   end
 end
 

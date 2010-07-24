@@ -17,6 +17,8 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+require 'shogi_server/move'
+
 module ShogiServer # for a namespace
 
 class WrongMoves < ArgumentError; end
@@ -58,6 +60,19 @@ class Board
   # normal with the initial setting; otherwise, the game is started after the
   # moves.
   attr_reader :initial_moves
+
+  # See if self equals rhs, including a logical board position (i.e.
+  # not see object IDs) and sennichite stuff.
+  #
+  def ==(rhs)
+    return @teban         == rhs.teban &&
+           @move_count    == rhs.move_count &&
+           to_s           == rhs.to_s &&
+           @history       == rhs.history &&
+           @sente_history == rhs.sente_history &&
+           @gote_history  == rhs.gote_history &&
+           @initial_moves == rhs.initial_moves
+  end
 
   def deep_copy
     return Marshal.load(Marshal.dump(self))
@@ -218,14 +233,17 @@ class Board
     return piece
   end
 
-  def move_to(x0, y0, x1, y1, name, sente)
+  # :illegal and :outori do not change this instance (self).
+  #
+  def move_to(move)
+    x0, x1, y0, y1, name, sente = move.x0, move.x1, move.y0, move.y1, move.name, move.sente
     if (sente)
       hands = @sente_hands
     else
       hands = @gote_hands
     end
 
-    if ((x0 == 0) || (y0 == 0))
+    if move.is_drop?
       piece = have_piece?(hands, name)
       return :illegal if (piece == nil || ! piece.move_to?(x1, y1, name))
       piece.move_to(x1, y1)
@@ -233,13 +251,18 @@ class Board
       if (@array[x0][y0] == nil || !@array[x0][y0].move_to?(x1, y1, name))
         return :illegal
       end
-      if (@array[x0][y0].name != name) # promoted ?
+      if (@array[x1][y1] && @array[x1][y1].name == "OU")
+          return :outori
+      end
+
+      # Change the state of this instance (self)
+      if (@array[x0][y0].name != name && !@array[x0][y0].promoted)
+        # the piece is promoting
         @array[x0][y0].promoted = true
+        move.promotion = true
       end
       if (@array[x1][y1]) # capture
-        if (@array[x1][y1].name == "OU")
-          return :outori        # return board update
-        end
+        move.set_captured_piece(@array[x1][y1])
         @array[x1][y1].sente = @array[x0][y0].sente
         @array[x1][y1].move_to(0, 0)
         hands.sort! {|a, b| # TODO refactor. Move to Piece class
@@ -252,6 +275,38 @@ class Board
     @teban = @teban ? false : true
     return true
   end
+
+  # Get back the previous move, which moved a name piece from [x0,y0] to 
+  # [x1, y1] with or without promotion. If the move captured
+  # a piece, it is captured_piece, which is now in hand. The captured_piece
+  # was promoted or unpromoted.
+  #
+  def move_back(move)
+    if (move.sente)
+      hands = @sente_hands
+    else
+      hands = @gote_hands
+    end
+
+    piece = @array[move.x1][move.y1]
+    if move.is_drop?
+      piece.move_to(0, 0)
+    else
+      piece.move_to(move.x0, move.y0)
+      piece.promoted = false if piece.promoted && move.promotion
+      if move.captured_piece 
+        move.captured_piece.move_to(move.x1, move.y1)
+        move.captured_piece.sente = move.sente ? false : true
+        move.captured_piece.promoted = true if move.captured_piece_promoted 
+      end
+    end
+    
+    @move_count -= 1
+    @teban = @teban ? false : true
+    return true
+  end
+  
+  # def each_reserved_square
 
   def look_for_ou(sente)
     x = 1
@@ -270,8 +325,11 @@ class Board
     raise "can't find ou"
   end
 
-  # not checkmate, but check. sente is checked.
-  def checkmated?(sente)        # sente is loosing
+  # See if sente is checked (i.e. loosing) or not.
+  # Note that the method name "checkmated?" is wrong. Instead, it should be
+  # "checked?" 
+  #
+  def checkmated?(sente)
     ou = look_for_ou(sente)
     x = 1
     while (x <= 9)
@@ -290,6 +348,8 @@ class Board
     return false
   end
 
+  # See if sente's FU drop checkmates the opponent or not.
+  #
   def uchifuzume?(sente)
     rival_ou = look_for_ou(! sente)   # rival's ou
     if (sente)                  # rival is gote
@@ -317,7 +377,7 @@ class Board
     ## case: rival_ou is moving
     rival_ou.movable_grids.each do |(cand_x, cand_y)|
       tmp_board = deep_copy
-      s = tmp_board.move_to(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU", ! sente)
+      s = tmp_board.move_to(Move.new(rival_ou.x, rival_ou.y, cand_x, cand_y, "OU", ! sente))
       raise "internal error" if (s != true)
       if (! tmp_board.checkmated?(! sente)) # good move
         return false
@@ -345,7 +405,7 @@ class Board
           end
           names.map! do |name|
             tmp_board = deep_copy
-            s = tmp_board.move_to(x, y, fu_x, fu_y, name, ! sente)
+            s = tmp_board.move_to(Move.new(x, y, fu_x, fu_y, name, ! sente))
             if s == :illegal
               s # result
             else
@@ -388,6 +448,18 @@ class Board
     if @gote_history.size > 0   # possible for Sente's or Gote's turn
       @gote_history[str] += 1
     end
+  end
+
+  # Deep-copy sennichite stuff, which will later be available to restore.
+  #
+  def dup_sennichite_stuff
+    return [@history.dup, @sente_history.dup, @gote_history.dup]
+  end
+
+  # Restore sennihite stuff.
+  #
+  def restore_sennichite_stuff(history, sente_history, gote_history)
+    @history, @sente_history, @gote_history = history, sente_history, gote_history
   end
 
   def oute_sennichite?(player)
@@ -554,21 +626,35 @@ class Board
       return :illegal           # can't put on existing piece
     end
 
-    tmp_board = deep_copy
-    return :illegal if (tmp_board.move_to(x0, y0, x1, y1, name, sente) == :illegal)
-    return :oute_kaihimore if (tmp_board.checkmated?(sente))
-    tmp_board.update_sennichite(sente)
-    os_result = tmp_board.oute_sennichite?(sente)
-    return os_result if os_result # :oute_sennichite_sente_lose or :oute_sennichite_gote_lose
-    return :sennichite if tmp_board.sennichite?
-
-    if ((x0 == 0) && (y0 == 0) && (name == "FU") && tmp_board.uchifuzume?(sente))
+    move = Move.new(x0, y0, x1, y1, name, sente)
+    result = move_to(move)
+    if (result == :illegal)
+      # self is unchanged
+      return :illegal 
+    end
+    if (checkmated?(sente))
+      move_back(move)
+      return :oute_kaihimore 
+    end
+    if ((x0 == 0) && (y0 == 0) && (name == "FU") && uchifuzume?(sente))
+      move_back(move)
       return :uchifuzume
     end
 
-    move_to(x0, y0, x1, y1, name, sente)
-
+    sennichite_stuff = dup_sennichite_stuff
     update_sennichite(sente)
+    os_result = oute_sennichite?(sente)
+    if os_result # :oute_sennichite_sente_lose or :oute_sennichite_gote_lose
+      move_back(move)
+      restore_sennichite_stuff(*sennichite_stuff)
+      return os_result 
+    end
+    if sennichite?
+      move_back(move)
+      restore_sennichite_stuff(*sennichite_stuff)
+      return :sennichite 
+    end
+
     return :normal
   end
 

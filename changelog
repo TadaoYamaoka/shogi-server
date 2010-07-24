@@ -5,6 +5,13 @@
 	    with DEBUG mode, it ended up with an undefined variable error. 
 	    This issue has been fixed.
 
+2010-07-17  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server.rb, shogi_server/board.rb, shogi_server/move.rb
+	    - Refactoring: Board can now move_to() and move_back() a move
+	      instread of deep_copy().
+
 2010-07-11  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
