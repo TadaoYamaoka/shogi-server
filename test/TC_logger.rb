@@ -2,6 +2,7 @@ $:.unshift File.join(File.dirname(__FILE__), "..")
 $topdir = File.expand_path File.dirname(__FILE__)
 require 'test/unit'
 require 'shogi_server'
+require 'fileutils'
 
 class TestableLogger < ShogiServer::Logger
   def initialize(logdev, shift_age = 0, shift_size = 1048576)
@@ -30,6 +31,14 @@ class TestLogger < Test::Unit::TestCase
     @logger.formatter = ShogiServer::Formatter.new
     @logger.level = TestableLogger::DEBUG
     @logger.datetime_format = "%Y-%m-%d %H:%M:%S"
+    @test_dir = File.join($topdir, "hoge", "hoo", "foo.txt")
+  end
+
+  def teardown
+    if FileTest.directory?(File.dirname(@test_dir))
+      Dir.rmdir(File.dirname(@test_dir))
+      Dir.rmdir(File.join($topdir, "hoge"))
+    end
   end
 
   def test_dummy
@@ -76,5 +85,11 @@ class TestLogger < Test::Unit::TestCase
     assert_equal [["/home/daigo/rubyprojects/shogi-server/test/TC_logger_test.log",
         "/home/daigo/rubyprojects/shogi-server/test/2010/07/24/TC_logger_test.log"]], 
         @logger.logdev.result_rename_file
+  end
+
+  def test_mkdir_for
+    assert !FileTest.directory?(File.dirname(@test_dir))
+    @logger.logdev.mkdir_for(@test_dir)
+    assert FileTest.directory?(File.dirname(@test_dir))
   end
 end
