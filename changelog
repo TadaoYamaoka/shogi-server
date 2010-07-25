@@ -11,6 +11,8 @@
 	    + Fixed race condition: creating a new directory to archive
 	      logs may have caused race condition, which ended up with
 	      making the server unavailable. This issue has been fixed. 
+	  - shogi-server:
+	    + Improved fault tolerance of the server.
 
 2010-07-23  Daigo Moriwaki <daigo at debian dot org>
 

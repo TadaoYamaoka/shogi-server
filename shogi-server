@@ -415,6 +415,7 @@ def main
   log_message("server started [Revision: #{ShogiServer::Revision}]")
 
   server.start do |client|
+    begin
       # client.sync = true # this is already set in WEBrick 
       client.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
         # Keepalive time can be set by /proc/sys/net/ipv4/tcp_keepalive_time
@@ -436,6 +437,9 @@ def main
       ensure
         $mutex.unlock
       end
+    rescue Exception => ex
+      log_error("server.start: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
+    end
   end
 end
 
