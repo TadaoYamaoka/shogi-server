@@ -5,6 +5,8 @@
 	    + For an unknown error command log, an empty line is no longer logged.
 	    + Commands specific to 81Dojo, starting with '%%%', are just
 	      ignored instead of unknown command errors.
+	  - shogi_server.rb: Refactoring. Added test/TC_logger.rb to test
+	    ShogiServer::Logger class.
 
 2010-07-23  Daigo Moriwaki <daigo at debian dot org>
 
