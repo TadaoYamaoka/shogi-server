@@ -96,6 +96,10 @@ module ShogiServer
         cmd = GetBuoyCountCommand.new(str, player, game_name)
       when /^\s*$/
         cmd = SpaceCommand.new(str, player)
+      when /^%%%[^%]/
+        # TODO: just ignore commands specific to 81Dojo.
+        # Need to discuss with 81Dojo people.
+        cmd = VoidCommand.new(str, player)
       else
         cmd = ErrorCommand.new(str, player)
       end
@@ -110,6 +114,18 @@ module ShogiServer
       @time   = Time.now # this should be replaced later with a real time
     end
     attr_accessor :time
+  end
+
+  # Dummy command which does nothing.
+  #
+  class VoidCommand < Command
+    def initialize(str, player)
+      super
+    end
+
+    def call
+      return :continue
+    end
   end
 
   # Application-level protocol for Keep-Alive.

@@ -1,8 +1,10 @@
 2010-07-25  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
-	  - shogi_server/command.rb: For an unknown error command log, an
-	    empty line is no longer logged.
+	  - shogi_server/command.rb: 
+	    + For an unknown error command log, an empty line is no longer logged.
+	    + Commands specific to 81Dojo, starting with '%%%', are just
+	      ignored instead of unknown command errors.
 
 2010-07-23  Daigo Moriwaki <daigo at debian dot org>
 

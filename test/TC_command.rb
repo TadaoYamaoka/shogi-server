@@ -202,6 +202,11 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::GetBuoyCountCommand, cmd)
   end
 
+  def test_void_command
+    cmd = ShogiServer::Command.factory("%%%HOGE", @p)
+    assert_instance_of(ShogiServer::VoidCommand, cmd)
+  end
+
   def test_error
     cmd = ShogiServer::Command.factory("should_be_error", @p)
     assert_instance_of(ShogiServer::ErrorCommand, cmd)
