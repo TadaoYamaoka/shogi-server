@@ -693,7 +693,7 @@ module ShogiServer
     end
 
     def call
-      msg = "##[ERROR] unknown command %s\n" % [@str]
+      msg = "##[ERROR] unknown command %s\n" % [@str.chomp]
       @player.write_safe(msg)
       log_error(msg)
       return :continue
