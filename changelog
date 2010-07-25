@@ -1,3 +1,9 @@
+2010-07-25  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server.rb: Refactoring. Added test/TC_logger.rb to test
+	    ShogiServer::Logger class.
+
 2010-07-23  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

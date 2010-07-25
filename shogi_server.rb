@@ -70,31 +70,54 @@ class Logger < ::Logger
     super
     class << @logdev
       def shift_log_period(now)
-        postfix = previous_period_end(now).strftime("%Y%m%d")	# YYYYMMDD
+        age_file = age_file_name(now)
+        move_age_file_in_the_way(age_file)
+
+        unless FileTest.directory?(File.dirname(age_file))
+          begin
+            FileUtils.mkdir_p File.dirname(age_file)
+          rescue
+            @dev.write("[ERROR] Could not create a directory: %s\n" % [File.dirname(age_file)])
+            raise RuntimeError.new("Could not create a directory: %s" % [File.dirname(age_file)])
+          end
+        end
+        @dev.close
+        rename_file(@filename, age_file)
+        @dev = create_logfile(@filename)
+        return true
+      end
+
+      def age_file_name(time)
+        postfix = previous_period_end(time).strftime("%Y%m%d")	# YYYYMMDD
         age_file = File.join(
                      File.dirname(@filename),
                      postfix[0..3], # YYYY
                      postfix[4..5], # MM
                      postfix[6..7], # DD
                      File.basename(@filename))
-        if FileTest.exist?(age_file)
-          raise RuntimeError.new("'#{ age_file }' already exists.")
-        end
-        unless FileTest.directory?(File.dirname(age_file))
-          begin
-            FileUtils.mkdir_p File.dirname(age_file)
-          rescue
-            raise RuntimeError.new("Could not create a directory: %s" % [File.dirname(age_file)])
-          end
-        end
-        @dev.close
-        File.rename("#{@filename}", age_file)
-        @dev = create_logfile(@filename)
-        return true
+        return age_file
+      end 
+
+      def age_file_exists?(age_file)
+        return FileTest.exist?(age_file)
+      end
+
+      def rename_file(old_file, new_file)
+        File.rename(old_file, new_file)
+      end
+
+      def move_age_file_in_the_way(age_file)
+        return unless age_file_exists?(age_file)
+        
+        now = Time.now
+        new_file = "%s.%s%06d"  % [age_file, now.strftime("%Y%m%d%H%M%S"), now.usec]
+        @dev.write("[WARN] An existing '#{age_file}' is beeing moved to '#{new_file}'\n")
+        rename_file(age_file, new_file)
       end
     end
   end
-end
+
+end # class Logger
 
 class Formatter < ::Logger::Formatter
   def initialize
