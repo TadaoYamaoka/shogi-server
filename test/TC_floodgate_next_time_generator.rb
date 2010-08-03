@@ -63,6 +63,17 @@ class TestNextTimeGenerator_900_0 < Test::Unit::TestCase
   def test_50_min_next_day
     now = Time.mktime(2009,12,25,23,50)
     assert_equal(Time.mktime(2009,12,26,0,0), @next.call(now))
+
+    now = Time.mktime(2010,7,25,23,30)
+    assert_equal(Time.mktime(2010,7,26,0,0), @next.call(now))
+    now = Time.mktime(2010,7,26,23,30)
+    assert_equal(Time.mktime(2010,7,27,0,0), @next.call(now))
+    now = Time.mktime(2010,7,27,23,30)
+    assert_equal(Time.mktime(2010,7,28,0,0), @next.call(now))
+    now = Time.mktime(2010,7,28,23,30)
+    assert_equal(Time.mktime(2010,7,29,0,0), @next.call(now))
+    now = Time.mktime(2010,7,29,23,30)
+    assert_equal(Time.mktime(2010,7,30,0,0), @next.call(now))
   end
 
   def test_50_min_next_month
