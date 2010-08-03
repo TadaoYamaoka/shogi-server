@@ -117,10 +117,9 @@ module ShogiServer
             log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
           end
         end # infinite loop
-
-        return @thread
       end # Thread
 
+      return @thread
     end # def start
 
     def kill
