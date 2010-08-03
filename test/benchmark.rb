@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'socket'
+require 'thread'
 
 class BenchPlayer
   def initialize(game_name, name, sente)
@@ -77,11 +78,15 @@ class BenchPlayer
 end
 
 class BenchGame
+  @@mutex = Mutex.new
+  @@count = 0
   def initialize(game_name, csa)
     @game_name = game_name
     @csa = csa
-    @p1 = BenchPlayer.new(@game_name, "bp1", true)
-    @p2 = BenchPlayer.new(@game_name, "bp2", false)
+    @@mutex.synchronize do 
+      @p1 = BenchPlayer.new(@game_name, "bp#{@@count+=1}", true)
+      @p2 = BenchPlayer.new(@game_name, "bp#{@@count+=1}", false)
+    end
   end
 
   def each_player
