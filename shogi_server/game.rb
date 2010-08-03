@@ -258,7 +258,7 @@ class Game
     @result.process if @result
     finish() if finish_flag
     @current_player, @next_player = @next_player, @current_player
-    @start_time = Time::new
+    @start_time = Time.now
     return finish_flag
   end
 
@@ -276,7 +276,7 @@ class Game
     @gote.write_safe(sprintf("START:%s\n", @game_id))
     @sente.mytime = @total_time
     @gote.mytime = @total_time
-    @start_time = Time::new
+    @start_time = Time.now
   end
 
   def propose
@@ -288,7 +288,7 @@ class Game
     @sente.write_safe(propose_message("+"))
     @gote.write_safe(propose_message("-"))
 
-    now = Time::new.strftime("%Y/%m/%d %H:%M:%S")
+    now = Time.now.strftime("%Y/%m/%d %H:%M:%S")
     @fh.puts("$START_TIME:#{now}")
     @fh.print <<EOM
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
@@ -387,7 +387,7 @@ EOM
   private
   
   def issue_current_time
-    time = Time::new.strftime("%Y%m%d%H%M%S").to_i
+    time = Time.now.strftime("%Y%m%d%H%M%S").to_i
     @@mutex.synchronize do
       while time <= @@time do
         time += 1
