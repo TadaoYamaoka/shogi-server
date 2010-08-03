@@ -1,3 +1,10 @@
+2010-08-03  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - sample/{check_file.rb,check_time.rb,check_time2.rb,test_time.rb}
+	    Added new files to test an issue where mtime of log files was
+	    earlier than system time.
+
 2010-07-25  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
