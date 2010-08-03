@@ -1,4 +1,5 @@
 $:.unshift File.join(File.dirname(__FILE__), "..")
+$topdir = File.expand_path File.dirname(__FILE__)
 require 'test/unit'
 require 'shogi_server/util'
 
@@ -32,6 +33,27 @@ class TestShogiServer < Test::Unit::TestCase
     assert_equal 4, ShogiServer.parse_dow("Thursday")
     assert_equal 5, ShogiServer.parse_dow("Friday")
     assert_equal 6, ShogiServer.parse_dow("Saturday")
+  end
+
+end
+
+
+class TestMkdir < Test::Unit::TestCase
+  def setup
+    @test_dir = File.join($topdir, "hoge", "hoo", "foo.txt")
+  end
+
+  def teardown
+    if FileTest.directory?(File.dirname(@test_dir))
+      Dir.rmdir(File.dirname(@test_dir))
+      Dir.rmdir(File.join($topdir, "hoge"))
+    end
+  end
+
+  def test_mkdir_for
+    assert !FileTest.directory?(File.dirname(@test_dir))
+    ShogiServer::Mkdir.mkdir_for(@test_dir)
+    assert FileTest.directory?(File.dirname(@test_dir))
   end
 
 end

@@ -66,7 +66,6 @@ end
 module_function :reload
 
 class Logger < ::Logger
-  @@mkdir_mutex = Mutex.new
 
   def initialize(logdev, shift_age = 0, shift_size = 1048576)
     super
@@ -74,7 +73,10 @@ class Logger < ::Logger
       def shift_log_period(now)
         age_file = age_file_name(now)
         move_age_file_in_the_way(age_file)
-        mkdir_for(age_file)
+        unless Mkdir.mkdir_for(age_file)
+          @dev.write("[ERROR] Could not create a directory: %s\n" % [File.dirname(age_file)])
+          return true
+        end
 
         @dev.close
         rename_file(@filename, age_file)
@@ -108,18 +110,6 @@ class Logger < ::Logger
         new_file = "%s.%s%06d"  % [age_file, now.strftime("%Y%m%d%H%M%S"), now.usec]
         @dev.write("[WARN] An existing '#{age_file}' is beeing moved to '#{new_file}'\n")
         rename_file(age_file, new_file)
-      end
-
-      def mkdir_for(path)
-        @@mkdir_mutex.synchronize do
-          unless FileTest.directory?(File.dirname(path))
-            begin
-              FileUtils.mkdir_p File.dirname(path)
-            rescue
-              @dev.write("[ERROR] Could not create a directory: %s\n" % [File.dirname(path)])
-            end
-          end
-        end # mutex
       end
 
     end # @logdev

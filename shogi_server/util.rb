@@ -20,6 +20,7 @@
 require 'date'
 require 'fileutils'
 require 'pathname'
+require 'thread'
 
 module ShogiServer
 
@@ -92,4 +93,30 @@ module ShogiServer
     return index == 0 ? 7 : index
   end
   module_function :parse_dow
+
+  # Mkdir in a thread-safe way.
+  #
+  class Mkdir
+    @@mutex = Mutex.new
+
+    # Return true if a directory is successfully created or a directory
+    # exists already; false otherwise.
+    #
+    # @param path a directory name of a path to be created. For example,
+    # given /hoge/hoo/foo.txt, aim to create /hoge/hoo.
+    def Mkdir.mkdir_for(path)
+      unless FileTest.directory?(File.dirname(path))
+        @@mutex.synchronize do
+          unless FileTest.directory?(File.dirname(path))
+            begin
+              FileUtils.mkdir_p File.dirname(path)
+            rescue
+              return false
+            end
+          end
+        end # mutex
+      end
+      return true
+    end
+  end # class Mkdir
 end

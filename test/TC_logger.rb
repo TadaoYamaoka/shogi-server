@@ -31,14 +31,6 @@ class TestLogger < Test::Unit::TestCase
     @logger.formatter = ShogiServer::Formatter.new
     @logger.level = TestableLogger::DEBUG
     @logger.datetime_format = "%Y-%m-%d %H:%M:%S"
-    @test_dir = File.join($topdir, "hoge", "hoo", "foo.txt")
-  end
-
-  def teardown
-    if FileTest.directory?(File.dirname(@test_dir))
-      Dir.rmdir(File.dirname(@test_dir))
-      Dir.rmdir(File.join($topdir, "hoge"))
-    end
   end
 
   def test_dummy
@@ -87,9 +79,4 @@ class TestLogger < Test::Unit::TestCase
         @logger.logdev.result_rename_file
   end
 
-  def test_mkdir_for
-    assert !FileTest.directory?(File.dirname(@test_dir))
-    @logger.logdev.mkdir_for(@test_dir)
-    assert FileTest.directory?(File.dirname(@test_dir))
-  end
 end
