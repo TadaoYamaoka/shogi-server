@@ -8,6 +8,8 @@
 	    now returns an instance correctly.
 	  - ../shogi_server.rb, ../shogi_server/util.rb: Refactored
 	    mkdir_for to Mkdir.mkdir_for.
+	  - ../shogi_server/game.rb: mkdir_p will be performed in a global
+	    mutex of ShogiServer::Mkdir.
 
 2010-07-25  Daigo Moriwaki <daigo at debian dot org>
 

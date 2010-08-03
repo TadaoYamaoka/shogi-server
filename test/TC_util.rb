@@ -56,4 +56,8 @@ class TestMkdir < Test::Unit::TestCase
     assert FileTest.directory?(File.dirname(@test_dir))
   end
 
+  def test_dirname
+    assert_equal "/hoge", File.dirname("/hoge/foo")
+  end
+
 end

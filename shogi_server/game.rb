@@ -19,6 +19,7 @@
 
 require 'shogi_server/league/floodgate'
 require 'shogi_server/game_result'
+require 'shogi_server/util'
 
 module ShogiServer # for a namespace
 
@@ -71,8 +72,8 @@ class Game
                              @prepared_time.strftime("%Y"),
                              @prepared_time.strftime("%m"),
                              @prepared_time.strftime("%d"))
-    FileUtils.mkdir_p(log_dir_name) unless File.exist?(log_dir_name)
     @logfile = File.join(log_dir_name, @game_id + ".csa")
+    Mkdir.mkdir_for(@logfile)
 
     $league.games[@game_id] = self
 
