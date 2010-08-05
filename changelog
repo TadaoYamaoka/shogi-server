@@ -1,3 +1,10 @@
+2010-08-05  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/command.rb: Prevent a possible password from be
+	    logged in a log file when players send invalid LOGIN-like commands.
+	    Thanks to Tomoyuki Kaneko for this idea.
+
 2010-08-03  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

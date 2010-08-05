@@ -706,12 +706,17 @@ module ShogiServer
   class ErrorCommand < Command
     def initialize(str, player)
       super
+      @msg = nil
     end
+    attr_reader :msg
 
     def call
-      msg = "##[ERROR] unknown command %s\n" % [@str.chomp]
-      @player.write_safe(msg)
-      log_error(msg)
+      cmd = @str.chomp
+      # Aim to hide a possible password
+      cmd.gsub!(/LOGIN\s*(\w+)\s+.*/i, 'LOGIN \1...')
+      @msg = "##[ERROR] unknown command %s\n" % [cmd]
+      @player.write_safe(@msg)
+      log_error(@msg)
       return :continue
     end
   end
