@@ -25,6 +25,22 @@ class WrongMoves < ArgumentError; end
 
 class Board
   
+  # Initial board setup. 
+  # The string ends with '+', not a line break.
+  #
+  INITIAL_POSITION = (<<-EOF).chomp
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 * +KA *  *  *  *  * +HI * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+EOF
+
   # Split a moves line into an array of a move string.
   # If it fails to parse the moves, it raises WrongMoves.
   # @param moves a moves line. Ex. "+776FU-3334Fu"
@@ -41,6 +57,7 @@ class Board
 
     return ret
   end
+
 
   def initialize(move_count=0)
     @sente_hands = Array::new

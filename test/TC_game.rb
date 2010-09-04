@@ -162,11 +162,12 @@ P2 * -HI *  *  *  *  * -KA *
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
 P4 *  *  *  *  *  *  *  *  * 
 P5 *  *  *  *  *  *  *  *  * 
-P6 *  * +FU *  *  *  *  *  * 
-P7+FU+FU * +FU+FU+FU+FU+FU+FU
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
 P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
--
++
++7776FU,T1
 END Position
 END Game_Summary
 EOF
@@ -196,11 +197,12 @@ P2 * -HI *  *  *  *  * -KA *
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
 P4 *  *  *  *  *  *  *  *  * 
 P5 *  *  *  *  *  *  *  *  * 
-P6 *  * +FU *  *  *  *  *  * 
-P7+FU+FU * +FU+FU+FU+FU+FU+FU
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
 P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
--
++
++7776FU,T1
 END Position
 END Game_Summary
 EOF
@@ -264,14 +266,16 @@ END Time
 BEGIN Position
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
-P3-FU-FU-FU-FU-FU-FU * -FU-FU
-P4 *  *  *  *  *  * -FU *  * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  * 
 P5 *  *  *  *  *  *  *  *  * 
-P6 *  * +FU *  *  *  *  *  * 
-P7+FU+FU * +FU+FU+FU+FU+FU+FU
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
 P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
++7776FU,T1
+-3334FU,T1
 END Position
 END Game_Summary
 EOF
@@ -298,14 +302,16 @@ END Time
 BEGIN Position
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
-P3-FU-FU-FU-FU-FU-FU * -FU-FU
-P4 *  *  *  *  *  * -FU *  * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  * 
 P5 *  *  *  *  *  *  *  *  * 
-P6 *  * +FU *  *  *  *  *  * 
-P7+FU+FU * +FU+FU+FU+FU+FU+FU
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
 P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
++7776FU,T1
+-3334FU,T1
 END Position
 END Game_Summary
 EOF

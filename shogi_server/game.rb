@@ -370,11 +370,14 @@ Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
-#{@board.to_s.chomp}
+#{Board::INITIAL_POSITION}
+#{@board.initial_moves.collect {|m| m + ",T1"}.join("\n")}
 END Position
 END Game_Summary
 EOM
-    return str
+    # An empty @board.initial_moves causes an empty line, which should be
+    # eliminated.
+    return str.gsub("\n\n", "\n")
   end
 
   def prepared_expire?

@@ -1,3 +1,12 @@
+2010-09-04  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/board.rb, shogi_server/game.rb: The Buoy behaivor
+	    is changed.
+	    + Starting a buoy game, players are notified a starting game
+	      position with the initial position and moves, instread of a
+	      targeting position.
+
 2010-08-05  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
