@@ -31,6 +31,36 @@ class Game
 
   @@mutex = Mutex.new
   @@time  = 0
+
+  # Decide turns of players according to their turn preferences.
+  # p2 is a rival player of the p1 player.
+  # p1_sente_string must be "*", "+" or "-".
+  #
+  def Game.decide_turns(p1, p1_sente_string, p2)
+    if ((p1_sente_string == "*") && (p2.sente == nil))
+      if (rand(2) == 0)
+        p1.sente = true
+        p2.sente = false
+      else
+        p1.sente = false
+        p2.sente = true
+      end
+    elsif (p2.sente == true) # rival has higher priority
+      p1.sente = false
+    elsif (p2.sente == false)
+      p1.sente = true
+    elsif (p1_sente_string == "+")
+      p1.sente = true
+      p2.sente = false
+    elsif (p1_sente_string == "-")
+      p1.sente = false
+      p2.sente = true
+    else
+      ## never reached
+    end
+  end
+
+
   def initialize(game_name, player0, player1, board)
     @monitors = Array::new # array of MonitorHandler*
     @game_name = game_name

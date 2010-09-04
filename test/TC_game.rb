@@ -368,5 +368,41 @@ EOF
     game.monitoroff(handler2)
     assert_equal(0, game.monitors.size)
   end
+
+  def test_decide_turns
+    p1 = MockPlayer.new
+    p1.name = "p1"
+    p2 = MockPlayer.new
+    p2.name = "p2"
+
+    p1.sente=nil; p2.sente=false
+    ShogiServer::Game::decide_turns(p1, "+", p2)
+    assert_equal true, p1.sente
+
+    p1.sente=nil; p2.sente=nil
+    ShogiServer::Game::decide_turns(p1, "+", p2)
+    assert_equal true, p1.sente
+
+    p1.sente=nil; p2.sente=true
+    ShogiServer::Game::decide_turns(p1, "-", p2)
+    assert_equal false, p1.sente
+
+    p1.sente=nil; p2.sente=nil
+    ShogiServer::Game::decide_turns(p1, "-", p2)
+    assert_equal false, p1.sente
+
+    p1.sente=nil; p2.sente=false
+    ShogiServer::Game::decide_turns(p1, "*", p2)
+    assert_equal true, p1.sente
+
+    p1.sente=nil; p2.sente=true
+    ShogiServer::Game::decide_turns(p1, "*", p2)
+    assert_equal false, p1.sente
+
+    p1.sente=nil; p2.sente=nil
+    ShogiServer::Game::decide_turns(p1, "*", p2)
+    assert (p1.sente == true  && p2.sente == false) ||
+           (p1.sente == false && p2.sente == true)
+  end
 end
 

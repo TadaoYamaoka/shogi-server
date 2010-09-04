@@ -490,14 +490,6 @@ module ShogiServer
       end
 
       rival = nil
-      if (Buoy.game_name?(@game_name))
-        if (@my_sente_str != "*")
-          @player.write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n", @my_sente_str, @game_name))
-          return :continue
-        end
-        @player.sente = nil
-      end # really end
-
       if (League::Floodgate.game_name?(@game_name))
         if (@my_sente_str != "*")
           @player.write_safe(sprintf("##[ERROR] You are not allowed to specify TEBAN %s for the game %s\n", @my_sente_str, @game_name))
@@ -505,42 +497,18 @@ module ShogiServer
         end
         @player.sente = nil
       else
-        if (@my_sente_str == "*") && !Login.handicapped_game_name?(@game_name)
-          rival = $league.get_player("game_waiting", @game_name, nil, @player) # no preference
-        elsif (@my_sente_str == "+")
-          rival = $league.get_player("game_waiting", @game_name, false, @player) # rival must be gote
-        elsif (@my_sente_str == "-")
-          rival = $league.get_player("game_waiting", @game_name, true, @player) # rival must be sente
-        else
-          @player.write_safe(sprintf("##[ERROR] bad game option\n"))
-          return :continue
+        rival = $league.find_rival(@player, @my_sente_str, @game_name)
+        if rival.instance_of?(Symbol)  
+          # An error happened. rival is not a player instance, but an error
+          # symobl that must be returned to the main routine immediately.
+          return rival
         end
       end
 
       if (rival)
         @player.game_name = @game_name
-        
-        if ((@my_sente_str == "*") && (rival.sente == nil))
-          if (rand(2) == 0)
-            @player.sente = true
-            rival.sente = false
-          else
-            @player.sente = false
-            rival.sente = true
-          end
-        elsif (rival.sente == true) # rival has higher priority
-          @player.sente = false
-        elsif (rival.sente == false)
-          @player.sente = true
-        elsif (@my_sente_str == "+")
-          @player.sente = true
-          rival.sente = false
-        elsif (@my_sente_str == "-")
-          @player.sente = false
-          rival.sente = true
-        else
-          ## never reached
-        end
+        Game::decide_turns(@player, @my_sente_str, rival)
+
         if (Buoy.game_name?(@game_name))
           buoy = Buoy.new # TODO config
           if buoy.is_new_game?(@game_name)

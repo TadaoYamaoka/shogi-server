@@ -98,6 +98,31 @@ class League
   def rated_players
     return @persistent.get_players
   end
+
+  # Find a rival for a player.
+  # Return,
+  #   1. symbol :continue for an error case
+  #   2. a rival player instance found
+  #   3. nil if rival not found 
+  #
+  def find_rival(player, my_sente_string, game_name)
+    case my_sente_string
+    when "*" # no preference
+      if Login.handicapped_game_name?(game_name)
+        player.write_safe("##[ERROR] Random turn preference is not allowed for handicapped games\n")
+        return :continue
+      end
+      return get_player("game_waiting", game_name, nil, player)
+    when "+" # rival must be gote
+      return get_player("game_waiting", game_name, false, player) 
+    when "-" # rival must be sente 
+      return get_player("game_waiting", game_name, true, player) 
+    else
+      write_safe("##[ERROR] bad game option: %s\n" % [my_sente_string])
+      return :continue
+    end
+  end
+
 end # class League
 
 end # ShogiServer
