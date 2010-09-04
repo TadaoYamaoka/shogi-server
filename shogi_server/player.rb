@@ -115,6 +115,16 @@ class BasicPlayer
       @player_id = @password = nil
     end
   end
+
+  def set_sente_from_str(str)
+    case str
+    when "+": @sente = true
+    when "-": @sente = false
+    else
+      # str should be "*"
+      @sente = nil
+    end
+  end
 end
 
 

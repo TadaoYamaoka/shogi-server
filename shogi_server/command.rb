@@ -543,13 +543,7 @@ module ShogiServer
         if (@command_name == "GAME")
           @player.status = "game_waiting"
           @player.game_name = @game_name
-          if (@my_sente_str == "+")
-            @player.sente = true
-          elsif (@my_sente_str == "-")
-            @player.sente = false
-          else
-            @player.sente = nil
-          end
+          @player.set_sente_from_str(@my_sente_str)
         else                # challenge
           @player.write_safe(sprintf("##[ERROR] can't find rival for %s\n", @game_name))
           @player.status = "connected"

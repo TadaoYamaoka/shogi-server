@@ -41,5 +41,11 @@ class TestPlayer < Test::Unit::TestCase
     assert(@p.is_human?)
     assert(!@p.is_computer?)
   end
+
+  def test_set_sente_from_str
+    assert_equal true,  @p.set_sente_from_str("+")
+    assert_equal false, @p.set_sente_from_str("-")
+    assert_nil          @p.set_sente_from_str("*")
+  end
 end
 
