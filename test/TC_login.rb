@@ -28,6 +28,8 @@ class TestLogin < Test::Unit::TestCase
     player = ShogiServer::BasicPlayer.new
     player.name = "hoge"
     login = ShogiServer::Login::factory("LOGIN hoge xyz x1", player)
+    assert_instance_of(ShogiServer::Loginx1, login)
+    assert_equal("xyz", player.password)
     assert_equal(@p_x1.player_id, player.player_id)
   end
 
@@ -35,7 +37,18 @@ class TestLogin < Test::Unit::TestCase
     player = ShogiServer::BasicPlayer.new
     player.name = "hoge"
     login = ShogiServer::Login::factory("LOGIN hoge floodagate-900-0,xyz", player)
+    assert_instance_of(ShogiServer::LoginCSA, login)
+    assert_equal("xyz", player.password)
     assert_equal(@p_csa.player_id, player.player_id)
+  end
+
+  def test_login_factory_csa_without_trip
+    player = ShogiServer::BasicPlayer.new
+    player.name = "hoge"
+    login = ShogiServer::Login::factory("LOGIN hoge floodagate-900-0", player)
+    assert_instance_of(ShogiServer::LoginCSA, login)
+    assert_nil(player.password)
+    assert_equal(nil, player.player_id)
   end
 end
 
