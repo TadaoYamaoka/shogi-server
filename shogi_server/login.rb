@@ -127,14 +127,40 @@ end
 class LoginCSA < Login
   PROTOCOL = "CSA"
 
+  attr_reader :gamename
+
+  # A turn preference string: "+", "-" or default "*"
+  attr_reader :turn_preference
+
   def initialize(player, password)
     @gamename = nil
+    @turn_preference = "*"
     super
     @player.protocol = PROTOCOL
   end
 
+  # Parse a gamename str and see if it includes an optional turn 
+  # preference. 
+  # ex. foo-1500-0-B for black
+  # ex. foo-1500-0-W for white
+  #
+  # Return an array of a valid gamename without an turn preference and a
+  # turn character "+" or "-"; false otherwise
+  #
+  def parse_gamename_turn(str)
+    if str =~ /^(.+)-\d+-\d+-(\w)$/
+      case $2
+      when "b","B"
+        return [str[0, str.length-2], "+"]
+      when "w","W"
+        return [str[0, str.length-2], "-"]
+      end
+    end
+    return false
+  end
+
   def parse_password(password)
-    if Login.good_game_name?(password)
+    if Login.good_game_name?(password) || parse_gamename_turn(password)
       @gamename = password
       @player.set_password(nil)
     elsif password.split(",").size > 1
@@ -144,12 +170,17 @@ class LoginCSA < Login
       @player.set_password(password)
       @gamename = Default_Game_Name
     end
-    @gamename = self.class.good_game_name?(@gamename) ? @gamename : Default_Game_Name
+    array = parse_gamename_turn(@gamename)
+    if array
+      @gamename = array.first
+      @turn_preference = array.last
+    end
+    @gamename = Login.good_game_name?(@gamename) ? @gamename : Default_Game_Name
   end
 
   def process
     super
-    @csa_1st_str = "%%GAME #{@gamename} *"
+    @csa_1st_str = "%%GAME #{@gamename} #{@turn_preference}"
   end
 end
 

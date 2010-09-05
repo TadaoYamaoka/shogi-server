@@ -1,3 +1,16 @@
+2010-09-05  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/login.rb: Enhanced the CSA Login mode.
+	    Logging in the server with the CSA mode, users are now allowed to
+	    specify a turn preference in an enhanced gamename string which
+	    looks like <gamename>-<time>-<time>-<turn>. The first three 
+	    parts are a regular game definition. The last "-<turn>"
+	    part is optional. 
+	    + Without -<turn> (i.e. same as the previous behavior), there
+	    is no turn preference. A user's turn will be defined randomly. 
+	    + <turn> is either "B" for black or "W" for white.
+
 2010-09-04  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
