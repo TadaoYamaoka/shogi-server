@@ -14,6 +14,19 @@ class MockLeague
   def initialize
     @games = {}
     @games["dummy_game_id"] = MockGame.new
+
+    reset_players
+  end
+
+  def reset_players
+    $p1 = MockPlayer.new
+    $p1.name = "p1"
+    $p1.status = "game_waiting"
+    $p1.sente = true
+    $p2 = MockPlayer.new
+    $p2.name = "p2"
+    $p2.status = "game_waiting"
+    $p2.sente = false
   end
 
   def games
@@ -38,17 +51,30 @@ class MockLeague
 
   def get_player(status, game_id, sente, searcher)
     if sente == true
-      $p1 = MockPlayer.new
-      $p1.name = "p1"
       return $p1
     elsif sente == false
-      $p2 = MockPlayer.new
-      $p2.name = "p2"
       return $p2
     elsif sente == nil
       return nil
     else
       return nil
+    end
+  end
+
+  def find_all_players
+    [$p1,$p2].each {|pp| yield pp}
+  end
+
+  def find_rival(player, game_name)
+    case player.sente
+    when nil # no preference
+      return get_player("game_waiting", game_name, nil, player)
+    when true # rival must be gote
+      return get_player("game_waiting", game_name, false, player) 
+    when false # rival must be sente 
+      return get_player("game_waiting", game_name, true, player) 
+    else
+      return :continue
     end
   end
 end
@@ -772,8 +798,7 @@ end
 class BaseTestBuoyCommand < Test::Unit::TestCase
   def setup
     @p = MockPlayer.new
-    $p1 = nil
-    $p2 = nil
+    $league = MockLeague.new
 
     delete_buoy_yaml
     @buoy = ShogiServer::Buoy.new
@@ -830,8 +855,8 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoyhoge-1500-0", "+7776FU", 1
     rt = cmd.call
     assert :continue, rt
-    assert !$p1
-    assert !$p2
+    assert $p1.out.empty?
+    assert $p2.out.empty?
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
   end
 
@@ -844,8 +869,8 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_duplicated-1500-0", "+7776FU", 1
     rt = cmd.call
     assert :continue, rt
-    assert !$p1
-    assert !$p2
+    assert $p1.out.empty?
+    assert $p2.out.empty?
     assert !@buoy.is_new_game?("buoy_duplicated-1500-0")
   end
 
@@ -854,8 +879,8 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_badmoves-1500-0", "+7776FU+8786FU", 1
     rt = cmd.call
     assert :continue, rt
-    assert !$p1
-    assert !$p2
+    assert $p1.out.empty?
+    assert $p2.out.empty?
     assert @buoy.is_new_game?("buoy_badmoves-1500-0")
   end
 
@@ -864,8 +889,8 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_badcounter-1500-0", "+7776FU", 0
     rt = cmd.call
     assert :continue, rt
-    assert !$p1
-    assert !$p2
+    assert $p1.out.empty?
+    assert $p2.out.empty?
     assert @buoy.is_new_game?("buoy_badcounter-1500-0")
   end
 end
@@ -882,8 +907,8 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
     cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
     rt = cmd.call
     assert :continue, rt
-    assert !$p1
-    assert !$p2
+    assert $p1.out.empty?
+    assert $p2.out.empty?
     assert @buoy.is_new_game?(buoy_game.game_name)
   end
 
@@ -893,8 +918,8 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
     cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
     rt = cmd.call
     assert :continue, rt
-    assert !$p1
-    assert !$p2
+    assert $p1.out.empty?
+    assert $p2.out.empty?
     assert @buoy.is_new_game?(buoy_game.game_name)
   end
 

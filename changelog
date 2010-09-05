@@ -6,6 +6,8 @@
 	    + Starting a buoy game, players are notified a starting game
 	      position with the initial position and moves, instread of a
 	      targeting position.
+	    + Players are allowed to start buoy games with specific turns.
+	      ex. %%GAME buoy_foo-1500-0 +
 
 2010-08-05  Daigo Moriwaki <daigo at debian dot org>
 
@@ -272,8 +274,8 @@
 	    New commands:
 	    + %%SETBUOY <game_name> <moves> [count]
 	      Set a new buoy game.
-	      ex. %%SETBUOYGAME buoy_foo-900-0 +7776FU 10
-	      ex. %%SETBUOYGAME buoy_foo-1500-0 +7776FU-3334FU
+	      ex. %%SETBUOY buoy_foo-900-0 +7776FU 10
+	      ex. %%SETBUOY buoy_foo-1500-0 +7776FU-3334FU
 	      - game_name is a valid game name with a prefix "buoy_".
 	      ex. buoy_foo-900-0
 	      - moves are initial moves from the Hirate position to a

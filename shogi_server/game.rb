@@ -32,9 +32,11 @@ class Game
   @@mutex = Mutex.new
   @@time  = 0
 
-  # Decide turns of players according to their turn preferences.
+  # Decide an actual turn of each player according to their turn preferences.
   # p2 is a rival player of the p1 player.
   # p1_sente_string must be "*", "+" or "-".
+  # After this call, the sente value of each player is always true or false, not
+  # nil.
   #
   def Game.decide_turns(p1, p1_sente_string, p2)
     if ((p1_sente_string == "*") && (p2.sente == nil))

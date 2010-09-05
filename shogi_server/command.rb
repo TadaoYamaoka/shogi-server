@@ -476,6 +476,7 @@ module ShogiServer
       @command_name = command_name
       @game_name    = game_name
       @my_sente_str = my_sente_str
+      player.set_sente_from_str(@my_sente_str)
     end
 
     def call
@@ -497,7 +498,7 @@ module ShogiServer
         end
         @player.sente = nil
       else
-        rival = $league.find_rival(@player, @my_sente_str, @game_name)
+        rival = $league.find_rival(@player, @game_name)
         if rival.instance_of?(Symbol)  
           # An error happened. rival is not a player instance, but an error
           # symobl that must be returned to the main routine immediately.
@@ -543,7 +544,6 @@ module ShogiServer
         if (@command_name == "GAME")
           @player.status = "game_waiting"
           @player.game_name = @game_name
-          @player.set_sente_from_str(@my_sente_str)
         else                # challenge
           @player.write_safe(sprintf("##[ERROR] can't find rival for %s\n", @game_name))
           @player.status = "connected"
@@ -726,15 +726,32 @@ module ShogiServer
       @player.write_safe(sprintf("##[SETBUOY] +OK\n"))
       log_info("A buoy game was created: %s by %s" % [@game_name, @player.name])
 
-      # if two players, who are not @player, are waiting for a new game, start it
-      p1 = $league.get_player("game_waiting", @game_name, true, @player)
-      return :continue unless p1
-      p2 = $league.get_player("game_waiting", @game_name, false, @player)
-      return :continue unless p2
-
+      # if two players are waiting for this buoy game, start it
+      candidates = $league.find_all_players do |player|
+        player.status == "game_waiting" && 
+        player.game_name == @game_name &&
+        player.name != @player.name
+      end
+      if candidates.empty?
+        log_info("No players found for a buoy game. Wait for players: %s" % [@game_name])
+        return :continue 
+      end
+      p1 = candidates.first
+      p2 = $league.find_rival(p1, @game_name)
+      if p2.nil?
+        log_info("No opponent found for a buoy game. Wait for the opponent: %s by %s" % [@game_name, p1.name])
+        return :continue
+      elsif p2.instance_of?(Symbol)  
+        # An error happened. rival is not a player instance, but an error
+        # symobl that must be returned to the main routine immediately.
+        return p2
+      end
+      # found two players: p1 and p2
+      log_info("Starting a buoy game: %s with %s and %s" % [@game_name, p1.name, p2.name])
       buoy.decrement_count(buoy_game)
       game = Game::new(@game_name, p1, p2, board)
       return :continue
+
     rescue WrongMoves => e
       @player.write_safe(sprintf("##[ERROR] wrong moves: %s\n", @moves))
       log_error "Received wrong moves: %s from %s. [%s]" % [@moves, @player.name, e.message]
