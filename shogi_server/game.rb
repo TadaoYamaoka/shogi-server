@@ -402,7 +402,7 @@ Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
-#{Board::INITIAL_POSITION}
+#{Board::INITIAL_HIRATE_POSITION}
 #{@board.initial_moves.collect {|m| m + ",T1"}.join("\n")}
 END Position
 END Game_Summary

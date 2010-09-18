@@ -28,7 +28,7 @@ class Board
   # Initial board setup. 
   # The string ends with '+', not a line break.
   #
-  INITIAL_POSITION = (<<-EOF).chomp
+  INITIAL_HIRATE_POSITION = (<<-EOF).chomp
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
