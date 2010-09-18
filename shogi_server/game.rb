@@ -323,18 +323,7 @@ class Game
 
     now = Time.now.strftime("%Y/%m/%d %H:%M:%S")
     @fh.puts("$START_TIME:#{now}")
-    @fh.print <<EOM
-P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
-P2 * -HI *  *  *  *  * -KA * 
-P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
-P4 *  *  *  *  *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
-P8 * +KA *  *  *  *  * +HI * 
-P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
-+
-EOM
+    @fh.print(@board.initial_string)
     if rated?
       black_name = @sente.rated? ? @sente.player_id : @sente.name
       white_name = @gote.rated?  ? @gote.player_id  : @gote.name
@@ -402,7 +391,7 @@ Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
-#{Board::INITIAL_HIRATE_POSITION}
+#{@board.initial_string.chomp}
 #{@board.initial_moves.collect {|m| m + ",T1"}.join("\n")}
 END Position
 END Game_Summary

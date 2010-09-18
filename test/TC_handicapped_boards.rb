@@ -24,6 +24,7 @@ P9 * +KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
   def test_hcbishop
@@ -44,6 +45,7 @@ P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
   def test_hcrook
@@ -64,6 +66,7 @@ P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
   def test_hcrooklance
@@ -84,6 +87,7 @@ P9 * +KE+GI+KI+OU+KI+GI+KE+KY
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
   def test_hc2p
@@ -124,6 +128,7 @@ P9 * +KE+GI+KI+OU+KI+GI+KE *
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
   def test_hc6p
@@ -164,6 +169,7 @@ P9 *  *  * +KI+OU+KI *  *  *
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
   def test_hc10p
@@ -184,6 +190,7 @@ P9 *  *  *  * +OU *  *  *  *
 +
 EOF
     assert_equal(answer, str)
+    assert_equal(answer, board.initial_string)
   end
 
 end

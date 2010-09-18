@@ -675,6 +675,8 @@ EOF
     return :normal
   end
 
+  # Return a CSA-styled string notation of the current position.
+  #
   def to_s
     a = Array::new
     y = 1
@@ -710,6 +712,14 @@ EOF
     end
     a.push("%s\n" % [@teban ? "+" : "-"])
     return a.join
+  end
+
+  # Return a CSA-styled string notation of the initial position.
+  #
+  def initial_string
+    tmp_board = self.class.new
+    tmp_board.initial
+    return tmp_board.to_s
   end
 end
 

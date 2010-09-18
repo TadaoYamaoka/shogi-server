@@ -1,3 +1,11 @@
+2010-09-18  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/board.rb, game.rb: For hadicapped games, wrong
+	    initial positions were delivered to players and monitors.  This
+	    issue has been fixed. (Closes: #23245) 
+	    Thanks to HIDETCHI for reporting the issue.
+
 2010-09-05  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

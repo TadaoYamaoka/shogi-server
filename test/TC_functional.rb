@@ -68,6 +68,73 @@ EOF
   end
 end
 
+class TestHandicappedGame < BaseClient
+  # login with trip
+  def set_name
+    super
+    @game_name = "hc2p_hoge"
+    @p1_name = "B"
+    @p2_name = "W"
+  end
+
+  def test_toryo
+    result, result2 = handshake do
+      @p1.toryo
+      wait_finish
+    end
+    assert(/#LOSE/ =~ result)
+    assert(/#WIN/  =~ result2)
+
+    now = Time.now
+    year  = now.strftime("%Y")
+    month = now.strftime("%m")
+    day   = now.strftime("%d")
+    path = File.join( File.dirname(__FILE__), "..", year, month, day, "*hc2p_hoge-1500-0*")
+    log_files = Dir.glob(path)
+    assert(!log_files.empty?) 
+    sleep 0.1
+    log_content = File.read(log_files.sort.last)
+
+    # "$EVENT", "$START_TIME" and "'$END_TIME" are removed since they vary dinamically.
+    should_be = <<-EOF
+V2
+N+hc2p_hoge_B
+N-hc2p_hoge_W
+P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+P2 * -HI *  *  *  *  * -KA * 
+P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
+P8 *  *  *  *  *  *  *  *  * 
+P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
++
+'rating:hc2p_hoge_B+275876e34cf609db118f3d84b799a790:hc2p_hoge_W+275876e34cf609db118f3d84b799a790
++2726FU
+T1
+-3334FU
+T1
+%TORYO
+'P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
+'P2 * -HI *  *  *  *  * -KA * 
+'P3-FU-FU-FU-FU-FU-FU * -FU-FU
+'P4 *  *  *  *  *  * -FU *  * 
+'P5 *  *  *  *  *  *  *  *  * 
+'P6 *  *  *  *  *  *  * +FU * 
+'P7+FU+FU+FU+FU+FU+FU+FU * +FU
+'P8 *  *  *  *  *  *  *  *  * 
+'P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
+'+
+'summary:toryo:hc2p_hoge_B lose:hc2p_hoge_W win
+EOF
+
+    log_content.gsub!(/^\$.*?\n/m, "")
+    log_content.gsub!(/^'\$.*?\n/m, "")
+    assert_equal(should_be, log_content)
+  end
+end
+
 
 class TestComment < BaseClient
   def test_toryo
