@@ -1,3 +1,9 @@
+2010-10-06  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - mk_rate: the usage was not updated.
+	    Thanks to Hoki-san to report this issue.  (Closes: #23358)
+
 2010-09-18  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
