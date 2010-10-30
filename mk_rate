@@ -346,6 +346,7 @@ class Rating
       old_f      = f
       old_f_nrm2 = old_f.nrm2
       deaccelrate(1.0, old_rate, a, old_f_nrm2)
+      #@rate -= a # Instead, do not deaccelerate
       @record.set(func_vector.nrm2, @rate)
 
       $stderr.printf "|error| : %5.2e\n", a.nrm2 if $DEBUG
@@ -362,6 +363,7 @@ class Rating
     @rate = @record.get
     $stderr.puts "resolved f: %s -> %f" %
       [func_vector.to_a.inspect, func_vector.nrm2] if $DEBUG
+    $stderr.puts "Count: %d" % [@count] if $DEBUG
 
     @rate *= 1.0/K
     finite!
