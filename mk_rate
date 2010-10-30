@@ -439,7 +439,7 @@ class WinLossMatrix
             0
           else
             p2 = keys[j]
-            v = p1_hash[p2] || Vector[0,0]
+            v = p1_hash[p2] || GSL::Vector[0,0]
             v[0]
           end
         end)
