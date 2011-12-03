@@ -2,7 +2,7 @@ $:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
 require 'shogi_server'
 require 'shogi_server/league/floodgate'
-require 'ftools'
+require 'fileutils'
 
 $topdir = File.expand_path File.dirname(__FILE__)
 
