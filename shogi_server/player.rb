@@ -206,7 +206,6 @@ class Player < BasicPlayer
           write_safe(nil)
           Thread.pass # help the write_thread to terminate
         end
-        @player_logger.close if @player_logger
         log_debug("done.")
       rescue
         log_message(sprintf("user %s finish failed", @name))    
@@ -245,6 +244,17 @@ class Player < BasicPlayer
       log_message("At least %d messages are not sent to the client." % 
                   [@write_queue.get_messages.size])
     end # thread
+  end
+
+  #
+  # Wait for the write thread to finish.
+  # This method should be called just before this instance will be freed.
+  #
+  def wait_write_thread_finish(msec=1000)
+    while msec > 0 && @write_thread && @write_thread.alive?
+      sleep 0.1; msec -= 0.1
+    end
+    @player_logger.close if @player_logger
   end
 
   #
