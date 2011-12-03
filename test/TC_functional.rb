@@ -1,3 +1,4 @@
+# -*- coding: windows-31j -*-
 require "baseclient"
 require "kconv"
 
