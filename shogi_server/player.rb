@@ -118,8 +118,8 @@ class BasicPlayer
 
   def set_sente_from_str(str)
     case str
-    when "+": @sente = true
-    when "-": @sente = false
+    when "+" then @sente = true
+    when "-" then @sente = false
     else
       # str should be "*"
       @sente = nil
