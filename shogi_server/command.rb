@@ -806,6 +806,7 @@ module ShogiServer
         @player.write_safe("##[GETBUOYCOUNT] %s\n" % [buoy_game.count])
       end
       @player.write_safe("##[GETBUOYCOUNT] +OK\n")
+      return :continue
     end
   end
 
