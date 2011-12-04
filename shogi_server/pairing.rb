@@ -285,7 +285,7 @@ module ShogiServer
     def match(players)
       super
       return if less_than_one?(players)
-      one = players.choice
+      one = players.sample
       log_message("Floodgate: Deleted %s at random" % [one.name])
       players.delete(one)
       log_players(players)
