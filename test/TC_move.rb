@@ -8,10 +8,10 @@ class TestMove < Test::Unit::TestCase
 
   def test_is_drop
     m = ShogiServer::Move.new 6,7,8,9,"FU",true
-    assert 6, m.x0
-    assert 7, m.y0
-    assert 8, m.x1
-    assert 9, m.y1
+    assert 6, m.x0.to_s
+    assert 7, m.y0.to_s
+    assert 8, m.x1.to_s
+    assert 9, m.y1.to_s
     assert_equal "FU", m.name
     assert m.sente
 
