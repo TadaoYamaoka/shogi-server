@@ -317,6 +317,7 @@ class Player < BasicPlayer
           # do nothing
         else
           # TODO never reach
+          log_error("Detected a wrong return value for %s" % [cmd])
         end
 
       ensure
