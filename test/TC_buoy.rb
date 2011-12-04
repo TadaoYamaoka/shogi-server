@@ -2,9 +2,9 @@ $:.unshift File.join(File.dirname(__FILE__), "..")
 $topdir = File.expand_path File.dirname(__FILE__)
 require 'test/unit'
 require 'shogi_server/buoy'
-require 'mock_game'
-require 'mock_player'
-require 'mock_log_message'
+require 'test/mock_game'
+require 'test/mock_player'
+require 'test/mock_log_message'
 
 
 class TestBuoyGame < Test::Unit::TestCase
