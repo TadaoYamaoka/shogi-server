@@ -136,36 +136,36 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
     now = DateTime.new(2010, 6, 10, 21, 20, 15) # Thu
     assert_equal DateTime.parse("10-06-2010 21:20:15"), now
 
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_instance_of Time, ntc.call(now)
     assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:15"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:15"]
     assert_equal Time.parse("10-06-2010 22:15"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Fri 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Fri 22:00"]
     assert_equal Time.parse("11-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Sat 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sat 22:00"]
     assert_equal Time.parse("12-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Sun 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sun 22:00"]
     assert_equal Time.parse("13-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Mon 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Mon 22:00"]
     assert_equal Time.parse("14-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 20:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 20:00"]
     assert_equal Time.parse("17-06-2010 20:00"), ntc.call(now)
   end
 
   def test_read_time
     now = Time.mktime(2010, 6, 10, 21, 20, 15)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_instance_of Time, ntc.call(now)
   end
 
   def test_read_change
     now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
 
     now = DateTime.new(2010, 6, 10, 22, 0, 0) # Thu
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_equal Time.parse("17-06-2010 22:00"), ntc.call(now)
   end
 end
