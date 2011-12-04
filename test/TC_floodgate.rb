@@ -24,12 +24,12 @@ class TestFloodgate < Test::Unit::TestCase
   end
 
   def test_instance_game_name
-    fg = ShogiServer::League::Floodgate.new(nil, "floodgate-900-0")
+    fg = ShogiServer::League::Floodgate.new(nil, {:game_name => "floodgate-900-0"})
     assert(fg.game_name?("floodgate-900-0"))
     assert(!fg.game_name?("floodgate-3600-0"))
-    fg = ShogiServer::League::Floodgate.new(nil, "floodgate-3600-0")
-    assert(fg.game_name?("floodgate-900-0"))
-    assert(!fg.game_name?("floodgate-3600-0"))
+    fg = ShogiServer::League::Floodgate.new(nil, {:game_name => "floodgate-3600-0"})
+    assert(!fg.game_name?("floodgate-900-0"))
+    assert(fg.game_name?("floodgate-3600-0"))
   end
 
 end
