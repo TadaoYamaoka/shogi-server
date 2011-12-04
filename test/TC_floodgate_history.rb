@@ -5,6 +5,9 @@ require 'shogi_server'
 require 'shogi_server/player'
 require 'shogi_server/league/floodgate'
 
+$league = ShogiServer::League.new(File.dirname(__FILE__))
+$league.event = "TC_floodgate_history"
+
 class MockGame
   attr_accessor :game_id, :game_name
 
