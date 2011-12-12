@@ -14,15 +14,23 @@ in order for computer shogi players to play games.
 
 === Pre-requires
 
-Ruby 1.8.7:: Ruby 1.8.6 or earlier are not supported.
+Ruby 1.9.3:: Ruby 1.9.2 or earlier are not supported.
+
+The Ruby community claimed that Ruby 1.8 had no future.
+
+As of December 2011, Shogi-server runs with Ruby 1.8.7. In future, however,
+incompatible changes may be incorporated in Shogi-server. It is
+recommended that you soon upgrade to Ruby 1.9.3.
 
 For Debian,
- $ sudo aptitude install ruby1.8
+ $ sudo aptitude install ruby1.9.1
+
+Note that in Debian the latest ruby1.9.1 package comes from Ruby 1.9.3.
+"1.9.1" in the package name is Ruby internal API version, not release version.
 
 === Install
 
- $ svn checkout \ 
-     http://svn.sourceforge.jp/svnroot/shogi-server/shogi-server/trunk shogi-server
+ $ git clone git://git.sourceforge.jp/gitroot/shogi-server/shogi-server.git
 
 The following files are required to run Shogi-server:
 
@@ -32,11 +40,11 @@ The following files are required to run Shogi-server:
 
 === Run
 
- $ ruby ./shogi-server --pid-file shogi-server.pid \
-                       --daemon . \
-                       --player-log-dir player-log-dir \
-                       --floodgate-history floodgate_history.yaml \
-                       floodgatetest 4000
+ $ ruby1.9.1 ./shogi-server --pid-file shogi-server.pid \
+                            --daemon . \
+                            --player-log-dir player-log-dir \
+                            --floodgate-history floodgate_history.yaml \
+                            floodgatetest 4000
 
 == Other tools
 

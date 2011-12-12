@@ -1,3 +1,23 @@
+2011-12-12  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Support Ruby 1.9.3.
+	  - Result of test/benchmark.rb
+	    - Environment:
+	      - CPU: AMD Athlon(tm) 64 X2 Dual Core Processor 4200+  
+	      - RAM: 4GB
+	      - OS: Debian Squeeze
+	      - ruby 1.8.7 (2011-06-30 patchlevel 352) [x86_64-linux]
+	      - ruby 1.9.3p0 (2011-10-30 revision 33570) [x86_64-linux]
+	    - Server:  ruby1.8 (or ruby1.9.1) ./shogi-server hoge 4000
+	    - Clients: ruby1.8 (or ruby1.9.1) -d ./benchmark.rb
+	      csa/wdoor+floodgate-900-0+gps_normal+gps_l+20100507120007.csa 20
+	    - Scores in seconds: (the smaller, the better)
+	                    clients
+		            1.8.7   1.9.3
+	      server 1.8.7  20 sec  21 sec
+	             1.9.3  26 sec  27 sec
+
 2010-10-06  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
