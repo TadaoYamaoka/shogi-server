@@ -420,7 +420,10 @@ def main
       client.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
         # Keepalive time can be set by /proc/sys/net/ipv4/tcp_keepalive_time
       player, login = login_loop(client) # loop
-      next unless player
+      unless player
+        log_error("Detected a timed out login attempt")
+        next
+      end
 
       log_message(sprintf("user %s login", player.name))
       login.process
