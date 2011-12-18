@@ -393,6 +393,7 @@ class PieceOU < Piece
     @name = "OU"
     @promoted_name = nil
     super
+    @board.add_ou(self)
   end
 end
 

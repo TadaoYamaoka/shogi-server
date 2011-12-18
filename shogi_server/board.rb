@@ -69,6 +69,7 @@ EOF
     @move_count = move_count
     @teban = nil # black => true, white => false
     @initial_moves = []
+    @ous = [nil, nil] # keep OU pieces of Sente and Gote
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history, :teban
   attr_reader :move_count
@@ -126,6 +127,17 @@ EOF
       PieceFU::new(self, i, 7, true)
     end
     @teban = true
+  end
+
+  # Cache OU piece.
+  # Piece#new will call back this method.
+  #
+  def add_ou(ou)
+    if ou.sente
+      @ous[0] = ou
+    else
+      @ous[1] = ou
+    end
   end
 
   # Set up a board with the strs.
@@ -324,22 +336,13 @@ EOF
   end
   
   # def each_reserved_square
-
+  
   def look_for_ou(sente)
-    x = 1
-    while (x <= 9)
-      y = 1
-      while (y <= 9)
-        if (@array[x][y] &&
-            (@array[x][y].name == "OU") &&
-            (@array[x][y].sente == sente))
-          return @array[x][y]
-        end
-        y = y + 1
-      end
-      x = x + 1
+    if sente
+      return @ous[0]
+    else
+      return @ous[1]
     end
-    raise "can't find ou"
   end
 
   # See if sente is checked (i.e. loosing) or not.

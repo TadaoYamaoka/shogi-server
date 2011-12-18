@@ -1,3 +1,10 @@
+2011-12-18  Daigo Moriwaki <daigo at debian dot org>
+
+	* [sohgi-server]
+	  - shogi_server/board.rb, piece.rb: Refactoring to cache OU pieces,
+	    which was inspired by 81SquareShogi-server's change
+	    (74b24b88c843f1dd767412475b117481d1d5e8eb).
+
 2011-12-12  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
