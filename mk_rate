@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 # $Id$
 #
 # Author:: Daigo Moriwaki
@@ -66,21 +66,17 @@
 #
 # Sample Command lines that isntall prerequires will work on Debian.
 #
-# * Ruby 1.8.7
+# * Ruby 1.9.3 (including Rubygems)
 #
-#   $ sudo aptitude install ruby1.8
-#
-# * Rubygems
-#
-#   $ sudo aptitude install rubygems
+#   $ sudo aptitude install ruby1.9.1
 #
 # * Ruby bindings for the GNU Scientific Library (GSL[http://rb-gsl.rubyforge.org/])
 #
-#   $ sudo aptitude install libgsl-ruby1.8
+#   $ sudo aptitude install ruby-gsl
 #
 # * RGL: {Ruby Graph Library}[http://rubyforge.org/projects/rgl/]
 #
-#   $ sudo gem install rgl
+#   $ sudo gem1.9.1 install rgl
 #
 # == Examples
 #

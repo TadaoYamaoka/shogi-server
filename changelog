@@ -4,6 +4,8 @@
 	  - shogi_server/board.rb, piece.rb: Refactoring to cache OU pieces,
 	    which was inspired by 81SquareShogi-server's change
 	    (74b24b88c843f1dd767412475b117481d1d5e8eb).
+	* [mk_rate] [mk_game_results]
+	  - Supports Ruby 1.9.3.
 
 2011-12-12  Daigo Moriwaki <daigo at debian dot org>
 
