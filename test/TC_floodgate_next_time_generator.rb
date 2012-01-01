@@ -85,6 +85,11 @@ class TestNextTimeGenerator_900_0 < Test::Unit::TestCase
     now = Time.mktime(2009,12,31,23,50)
     assert_equal(Time.mktime(2010,1,1,0,0), @next.call(now))
   end
+
+  def test_50_min_new_year
+    now = Time.mktime(2012,1,1,0,0)
+    assert_equal(Time.mktime(2012,1,1,0,30), @next.call(now))
+  end
 end
 
 class TestNextTimeGenerator_3600_0 < Test::Unit::TestCase
@@ -126,6 +131,11 @@ class TestNextTimeGenerator_3600_0 < Test::Unit::TestCase
     now = Time.mktime(2009,12,31,23,30)
     assert_equal(Time.mktime(2010,1,1,1,0), @next.call(now))
   end
+
+  def test_new_year
+    now = Time.mktime(2012,1,1,0,0)
+    assert_equal(Time.mktime(2012,1,1,1,0), @next.call(now))
+  end
 end
 
 class TestNextTimeGeneratorConfig < Test::Unit::TestCase
@@ -151,6 +161,22 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
     assert_equal Time.parse("14-06-2010 22:00"), ntc.call(now)
     ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 20:00"]
     assert_equal Time.parse("17-06-2010 20:00"), ntc.call(now)
+  end
+
+  def test_next_year01
+    now = DateTime.new(2011, 12, 30, 21, 20, 15) # Fri
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sun 00:00"]
+    assert_equal Time.parse("01-01-2012 00:00"), ntc.call(now)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sun 01:00"]
+    assert_equal Time.parse("01-01-2012 01:00"), ntc.call(now)
+  end
+
+  def test_next_year02
+    now = DateTime.new(2011, 12, 30, 21, 20, 15) # Fri
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Mon 00:00"]
+    assert_equal Time.parse("02-01-2012 00:00"), ntc.call(now)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Mon 01:00"]
+    assert_equal Time.parse("02-01-2012 01:00"), ntc.call(now)
   end
 
   def test_read_time
