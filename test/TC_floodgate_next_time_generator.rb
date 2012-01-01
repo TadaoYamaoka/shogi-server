@@ -179,6 +179,14 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
     assert_equal Time.parse("02-01-2012 01:00"), ntc.call(now)
   end
 
+  def test_new_year
+    now = DateTime.new(2012, 1, 1, 1) # Sun; cwyear=2011, cweek=52
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Mon 00:00"]
+    assert_equal Time.parse("02-01-2012 00:00"), ntc.call(now)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sat 00:00"]
+    assert_equal Time.parse("07-01-2012 00:00"), ntc.call(now)
+  end
+
   def test_read_time
     now = Time.mktime(2010, 6, 10, 21, 20, 15)
     ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]

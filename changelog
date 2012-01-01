@@ -1,3 +1,10 @@
+2012-01-01  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/floodgate.rb: Generating next time around the new
+	    year day by reading configuration files did not work correctly.
+	    This issue has been fixed.
+
 2011-12-18  Daigo Moriwaki <daigo at debian dot org>
 
 	* [sohgi-server]
