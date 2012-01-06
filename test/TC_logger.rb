@@ -74,8 +74,8 @@ class TestLogger < Test::Unit::TestCase
     @logger.info("test_shift_log_period")
     now =  Time.mktime(2010, 7, 25, 23, 59, 59)
     @logger.logdev.shift_log_period(now)
-    assert_equal [["/home/daigo/rubyprojects/shogi-server/test/TC_logger_test.log",
-        "/home/daigo/rubyprojects/shogi-server/test/2010/07/24/TC_logger_test.log"]], 
+    assert_equal [[File.join($topdir, "TC_logger_test.log"),
+                   File.join($topdir, "2010", "07", "24", "TC_logger_test.log")]],
         @logger.logdev.result_rename_file
   end
 
