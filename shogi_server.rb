@@ -29,6 +29,7 @@ require 'webrick'
 require 'fileutils'
 require 'logger'
 
+require 'shogi_server/compatible'
 require 'shogi_server/board'
 require 'shogi_server/game'
 require 'shogi_server/league'
