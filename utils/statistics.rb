@@ -10,7 +10,7 @@
 #   $ ./statistics.rb /dev/shm/floodgate
 #
 # Author::    Daigo Moriwaki <daigo at debian dot org>
-# Copyright:: Copyright (C) 2009  Daigo Moriwaki <daigo at debian dot org>
+# Copyright:: Copyright (C) 2009-2012 Daigo Moriwaki <daigo at debian dot org>
 #
 # $Id$
 #

@@ -15,6 +15,7 @@
 	  - Make their shebang consistent (/usr/bin/ruby1.9.1)
 	* README:
 	  - Both Ruby 1.9.3 and 1.8.7 are supported.
+	* Renewed year of copyright notice in each file.
 
 2012-01-06  Daigo Moriwaki <daigo at debian dot org>
 

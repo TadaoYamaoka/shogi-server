@@ -1,6 +1,6 @@
 #--
 # Copyright (c) 2006-2009 by Craig P Jolicoeur <cpjolicoeur at gmail dot com>
-# Copyright (C) 2009 Daigo Moriwaki <daigo at debian dot org>
+# Copyright (C) 2009-2012 Daigo Moriwaki <daigo at debian dot org>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
