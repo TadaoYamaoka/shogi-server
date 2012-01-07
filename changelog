@@ -9,6 +9,10 @@
 	    has been fixed.
 	  - test/TC_league.rb failed with Ruby 1.8.7. This issue has been
 	    fixed.
+	* csa-file-filter,mk_game_results,mk_html,mk_rate:
+	  - Updated documents in the command files.
+	    Both Ruby 1.9.3 and 1.8.7 are supported.
+	  - Make their shebang consistent (/usr/bin/ruby1.9.1)
 	* README:
 	  - Both Ruby 1.9.3 and 1.8.7 are supported.
 

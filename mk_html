@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 # $Id$
 #
 # Author:: Daigo Moriwaki
@@ -41,9 +41,9 @@
 #
 # == Prerequire
 #
-# * Ruby 1.8.7
+# * Ruby 1.9.3 or 1.8.7
 #
-#   $ sudo aptitude install ruby ruby1.8
+#   $ sudo aptitude install ruby ruby1.9.1
 #
 # == Example
 #

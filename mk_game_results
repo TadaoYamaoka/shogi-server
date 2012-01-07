@@ -35,7 +35,7 @@
 #
 # Sample Command lines that isntall prerequires will work on Debian.
 #
-# * Ruby 1.9.3
+# * Ruby 1.9.3 or 1.8.7
 #
 #   $ sudo aptitude install ruby1.9.1
 #
