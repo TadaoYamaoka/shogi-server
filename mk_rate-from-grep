@@ -1,0 +1,796 @@
+#!/usr/bin/ruby
+# $Id: mk_rate 316 2008-12-28 15:10:10Z beatles $
+#
+# Author:: Daigo Moriwaki
+# Homepage:: http://sourceforge.jp/projects/shogi-server/
+#
+#--
+# Copyright (C) 2006-2008 Daigo Moriwaki <daigo at debian dot org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#++
+#
+# == Synopsis
+#
+# mk_rate reads CSA files, calculates rating scores of each player, and then
+# outputs a yaml file (players.yaml) that Shogi-server can recognize.
+#
+# == Usage
+#
+# ./mk_rate [options] DIR..
+# 
+# DIR::
+#   CSA files are recursively looked up the directories.
+#
+# --half-life::
+#   n [days] (default 60)
+#   
+# --half-life-ignore::
+#   m [days] (default  7)
+#   after m days, the half-life effect works
+#
+# --ignore::
+#   m [days] (default  365*2)
+#   old files will be ignored
+#
+# --fixed-rate-player::
+#   player whose rate is fixed at the rate
+#
+# --fixed-rate::
+#   rate 
+#
+# --help::
+#   show this message
+#
+# == PREREQUIRE
+#
+# Sample Command lines that isntall prerequires will work on Debian.
+#
+# * Ruby 1.8.7
+#
+#   $ sudo aptitude install ruby1.8
+#
+# * Rubygems
+#
+#   $ sudo aptitude install rubygems
+#
+# * Ruby bindings for the GNU Scientific Library (GSL[http://rb-gsl.rubyforge.org/])
+#
+#   $ sudo aptitude install libgsl-ruby1.8
+#
+# * RGL: {Ruby Graph Library}[http://rubyforge.org/projects/rgl/]
+#
+#   $ sudo gem install rgl
+#
+# == Run
+#
+#   $ ./mk_rate . > players.yaml
+#
+# or, if you do not want the file to be update in case of errors, 
+#
+#   $ ./mk_rate . && ./mk_rate . > players.yaml
+#
+# == How players are rated
+#
+# The conditions that games and players are rated as following:
+#
+# * Rated games, which were played by both rated players.
+# * Rated players, who logged in the server with a name followed by a trip: "name,trip".
+# * (Rated) players, who played more than $GAMES_LIMIT [15] (rated) games. 
+#
+
+require 'yaml'
+require 'time'
+require 'getoptlong'
+require 'gsl'
+require 'rubygems'
+require 'rgl/adjacency'
+require 'rgl/connected_components'
+
+#################################################
+# Constants
+#
+
+# Count out players who play less games than $GAMES_LIMIT
+$GAMES_LIMIT = $DEBUG ? 0 : 15
+WIN_MARK  = "win"
+LOSS_MARK = "lose"
+DRAW_MARK = "draw"
+
+# Holds players
+$players = Hash.new
+# Holds the last time when a player gamed
+$players_time = Hash.new { Time.at(0) }
+
+
+#################################################
+# Keeps the value of the lowest key
+#
+class Record
+  def initialize
+    @lowest = []
+  end
+
+  def set(key, value)
+    if @lowest.empty? || key < @lowest[0]
+      @lowest = [key, value]
+    end
+  end
+
+  def get
+    if @lowest.empty?
+      nil
+    else
+      @lowest[1]
+    end
+  end
+end
+
+#################################################
+# Calculates rates of every player from a Win Loss GSL::Matrix
+#
+class Rating
+  include Math
+
+  # The model of the win possibility is 1/(1 + 10^(-d/400)).
+  # The equation in this class is 1/(1 + e^(-Kd)).
+  # So, K should be calculated like this.
+  K = Math.log(10.0) / 400.0
+  
+  # Convergence limit to stop Newton method.
+  ERROR_LIMIT = 1.0e-3
+  # Stop Newton method after this iterations.
+  COUNT_MAX = 500
+
+  # Average rate among the players
+  AVERAGE_RATE = 1000
+
+  
+  ###############
+  # Class methods
+  #  
+  
+  ##
+  # Calcurates the average of the vector.
+  #
+  def Rating.average(vector, mean=0.0)
+    sum = Array(vector).inject(0.0) {|sum, n| sum + n}
+    vector -= GSL::Vector[*Array.new(vector.size, sum/vector.size - mean)]
+    vector
+  end
+
+  ##################
+  # Instance methods
+  #
+  def initialize(win_loss_matrix)
+    @record = Record.new
+    @n = win_loss_matrix
+    case @n
+    when GSL::Matrix, GSL::Matrix::Int
+      @size = @n.size1
+    when ::Matrix
+      @size = @n.row_size
+    else
+      raise ArgumentError
+    end
+    initial_rate
+  end
+  attr_reader :rate, :n
+
+  def player_vector
+    GSL::Vector[*
+      (0...@size).collect {|k| yield k}
+    ]
+  end
+
+  def each_player
+    (0...@size).each {|k| yield k}
+  end
+
+  ##
+  # The possibility that the player k will beet the player i.
+  #
+  def win_rate(k,i)
+    1.0/(1.0 + exp(@rate[i]-@rate[k]))
+  end
+
+  ##
+  # Most possible equation
+  #
+  def func_vector
+    player_vector do|k| 
+      sum = 0.0
+      each_player do |i|
+        next if i == k
+        sum += @n[k,i] * win_rate(i,k) - @n[i,k] * win_rate(k,i) 
+      end
+      sum * 2.0
+    end
+  end
+
+  ##
+  #           / f0/R0 f0/R1 f0/R2 ... \
+  # dfk/dRj = | f1/R0 f1/R1 f1/R2 ... |
+  #           \ f2/R0 f2/R1 f2/R2 ... /
+  def d_func(k,j)
+    sum = 0.0
+    if k == j
+      each_player do |i|
+        next if i == k
+        sum += win_rate(i,k) * win_rate(k,i) * (@n[k,i] + @n[i,k])
+      end
+      sum *= -2.0
+    else # k != j
+      sum = 2.0 * win_rate(j,k) * win_rate(k,j) * (@n[k,j] + @n[j,k])
+    end
+    sum
+  end
+
+  ##
+  # Jacobi matrix of the func().
+  #   m00 m01
+  #   m10 m11
+  #
+  def j_matrix
+    GSL::Matrix[*
+      (0...@size).collect do |k|
+        (0...@size).collect do |j|
+          d_func(k,j)
+        end
+      end
+    ]
+  end
+
+  ##
+  # The initial value of the rate, which is of very importance for Newton
+  # method.  This is based on my huristics; the higher the win probablity of
+  # a player is, the greater points he takes.
+  #
+  def initial_rate
+    possibility = 
+      player_vector do |k|
+        v = GSL::Vector[0, 0]
+        each_player do |i|
+          next if k == i
+          v += GSL::Vector[@n[k,i], @n[i,k]]
+        end
+        v.nrm2 < 1 ? 0 : v[0] / (v[0] + v[1])
+      end
+    rank = possibility.sort_index
+    @rate = player_vector do |k|
+      K*500 * (rank[k]+1) / @size
+    end
+    average!
+  end
+
+  ##
+  # Resets @rate as the higher the current win probablity of a player is, 
+  # the greater points he takes. 
+  #
+  def initial_rate2
+    @rate = @record.get || @rate
+    rank = @rate.sort_index
+    @rate = player_vector do |k|
+      K*@count*1.5 * (rank[k]+1) / @size
+    end
+    average!
+  end
+
+  # mu is the deaccelrating parameter in Deaccelerated Newton method
+  def deaccelrate(mu, old_rate, a, old_f_nrm2)
+    @rate = old_rate - a * mu
+    if func_vector.nrm2 < (1 - mu / 4.0 ) * old_f_nrm2 then
+      return
+    end
+    if mu < 1e-4
+      @record.set(func_vector.nrm2, @rate)
+      initial_rate2
+      return
+    end
+    $stderr.puts "mu: %f " % [mu] if $DEBUG
+    deaccelrate(mu*0.5, old_rate, a, old_f_nrm2)
+  end
+
+  ##
+  # Main process to calculate ratings.
+  #
+  def rating
+    # Counter to stop the process. 
+    # Calulation in Newton method may fall in an infinite loop
+    @count = 0
+
+    # Main loop
+    begin
+      # Solve the equation: 
+      #   J*a=f
+      #   @rate_(n+1) = @rate_(n) - a
+      #
+      # f.nrm2 should approach to zero.
+      f = func_vector
+      j = j_matrix
+
+      # $stderr.puts "j: %s" % [j.inspect] if $DEBUG
+      $stderr.puts "f: %s -> %f" % [f.to_a.inspect, f.nrm2] if $DEBUG
+
+      # GSL::Linalg::LU.solve or GSL::Linalg::HH.solve would be available instead.
+      #a = GSL::Linalg::HH.solve(j, f)
+      a, = GSL::MultiFit::linear(j, f)
+      a = self.class.average(a)
+      # $stderr.puts "a: %s -> %f" % [a.to_a.inspect, a.nrm2] if $DEBUG
+      
+      # Deaccelerated Newton method
+      # GSL::Vector object should be immutable.
+      old_rate   = @rate
+      old_f      = f
+      old_f_nrm2 = old_f.nrm2
+      deaccelrate(1.0, old_rate, a, old_f_nrm2)
+      @record.set(func_vector.nrm2, @rate)
+
+      $stderr.printf "|error| : %5.2e\n", a.nrm2 if $DEBUG
+
+      @count += 1
+      if @count > COUNT_MAX
+        $stderr.puts "Values seem to oscillate. Stopped the process."
+        $stderr.puts "f: %s -> %f" % [func_vector.to_a.inspect, func_vector.nrm2]
+        break
+      end
+
+    end while (a.nrm2 > ERROR_LIMIT * @rate.nrm2)
+    
+    @rate = @record.get
+    $stderr.puts "resolved f: %s -> %f" %
+      [func_vector.to_a.inspect, func_vector.nrm2] if $DEBUG
+
+    @rate *= 1.0/K
+    finite!
+    self
+  end
+
+  ##
+  # Make the values of @rate finite.
+  #
+  def finite!
+    @rate = @rate.collect do |a|
+      if a.infinite?
+        a.infinite? * AVERAGE_RATE * 100
+      else
+        a
+      end
+    end
+  end
+
+  ##
+  # Flatten the values of @rate.
+  #
+  def average!(mean=0.0)
+    @rate = self.class.average(@rate, mean)
+  end
+
+  ##
+  # Translate by value
+  #
+  def translate!(value)
+    @rate += value
+  end
+
+  ##
+  # Make the values of @rate integer.
+  #
+  def integer!
+    @rate = @rate.collect do |a|
+      if a.finite?
+        a.to_i
+      elsif a.nan?
+        0
+      elsif a.infinite?
+        a.infinite? * AVERAGE_RATE * 100
+      end
+    end
+  end
+end
+
+#################################################
+# Encapsulate a pair of keys and win loss matrix.
+#   - keys is an array of player IDs; [gps+123, foo+234, ...]
+#   - matrix holds games # where player i (row index) beats player j (column index).
+#     The row and column indexes match with the keys.
+#
+# This object should be immutable. If an internal state is being modified, a
+# new object is always returned.
+#
+class WinLossMatrix
+
+  ###############
+  # Class methods
+  #  
+
+  def self.mk_matrix(players)
+    keys = players.keys.sort
+    size = keys.size
+    matrix =
+      GSL::Matrix[*
+      ((0...size).collect do |k|
+        p1 = keys[k]
+        p1_hash = players[p1]
+        ((0...size).collect do |j|
+          if k == j
+            0
+          else
+            p2 = keys[j]
+            v = p1_hash[p2] || Vector[0,0]
+            v[0]
+          end
+        end)
+      end)]
+    return WinLossMatrix.new(keys, matrix)
+  end
+
+  def self.mk_win_loss_matrix(players)
+    obj = mk_matrix(players)
+    return obj.filter
+  end
+
+  ##################
+  # Instance methods
+  #
+
+  # an array of player IDs; [gps+123, foo+234, ...]
+  attr_reader :keys
+
+  # matrix holds games # where player i (row index) beats player j (column index).
+  # The row and column indexes match with the keys.
+  attr_reader :matrix
+
+  def initialize(keys, matrix)
+    @keys   = keys
+    @matrix = matrix
+  end
+
+  ##
+  # Returns the size of the keys/matrix
+  #
+  def size
+    if @keys
+      @keys.size
+    else
+      nil
+    end
+  end
+
+  ##
+  # Removes players in a rows such as [1,3,5], and then returns a new
+  # object.
+  #
+  def delete_rows(rows)
+    rows = rows.sort.reverse
+
+    copied_cols = []
+    (0...size).each do |i|
+      next if rows.include?(i)
+      row = @matrix.row(i).clone
+      rows.each do |j|
+        row.delete_at(j)
+      end
+      copied_cols << row
+    end
+    if copied_cols.size == 0
+      new_matrix = GSL::Matrix.new
+    else
+      new_matrix = GSL::Matrix[*copied_cols]
+    end
+
+    new_keys = @keys.clone
+    rows.each do |j|
+      new_keys.delete_at(j)
+    end
+
+    return WinLossMatrix.new(new_keys, new_matrix)
+  end
+
+  ##
+  # Removes players who do not pass a criteria to be rated, and returns a
+  # new object.
+  # 
+  def filter
+    $stderr.puts @keys.inspect if $DEBUG
+    $stderr.puts @matrix.inspect if $DEBUG
+    delete = []  
+    (0...size).each do |i|
+      row = @matrix.row(i)
+      col = @matrix.col(i)
+      win  = row.sum
+      loss = col.sum
+      if win < 1 || loss < 1 || win + loss < $GAMES_LIMIT
+        delete << i
+      end
+    end
+
+    # The recursion ends if there is nothing to delete
+    return self if delete.empty?
+
+    new_obj = delete_rows(delete)
+    new_obj.filter
+  end
+
+  ##
+  # Cuts self into connecting groups such as each player in a group has at least
+  # one game with other players in the group. Returns them as an array.
+  #
+  def connected_subsets
+    g = RGL::AdjacencyGraph.new
+    (0...size).each do |k|
+      (0...size).each do |i|
+        next if k == i
+        if @matrix[k,i] > 0
+          g.add_edge(k,i)
+        end
+      end
+    end
+
+    subsets = []
+    g.each_connected_component do |c|
+      new_keys = []      
+      c.each do |v|
+        new_keys << keys[v.to_s.to_i]
+      end
+      subsets << new_keys
+    end
+
+    subsets = subsets.sort {|a,b| b.size <=> a.size}
+
+    result = subsets.collect do |keys|
+      matrix =
+        GSL::Matrix[*
+        ((0...keys.size).collect do |k|
+          p1 = @keys.index(keys[k])
+          ((0...keys.size).collect do |j|
+            if k == j
+              0
+            else
+              p2 = @keys.index(keys[j])
+              @matrix[p1,p2] + 0.001
+            end
+          end)
+        end)]
+      WinLossMatrix.new(keys, matrix)
+    end
+
+    return result
+  end
+
+  def to_s
+    "size : #{@keys.size}" + "\n" +
+    @keys.inspect + "\n" + 
+    @matrix.inspect
+  end
+
+end
+
+
+#################################################
+# Main methods
+#
+
+# Half-life effect
+# After NHAFE_LIFE days value will get half.
+# 0.693 is constant, where exp(0.693) ~ 0.5
+def half_life(days)
+  if days < $options["half-life-ignore"]
+    return 1.0
+  else
+    Math::exp(-0.693/$options["half-life"]*(days-$options["half-life-ignore"]))
+  end
+end
+
+def _add_win_loss(winner, loser, time)
+  how_long_days = (Time.now - time)/(3600*24)
+  $players[winner] ||= Hash.new { GSL::Vector[0,0] }
+  $players[loser]  ||= Hash.new { GSL::Vector[0,0] }
+  $players[winner][loser] += GSL::Vector[1.0*half_life(how_long_days),0]
+  $players[loser][winner] += GSL::Vector[0,1.0*half_life(how_long_days)]
+end
+
+def _add_time(player, time)
+  $players_time[player] = time if $players_time[player] < time
+end
+
+def add(black_mark, black_name, white_name, white_mark, time)
+  how_long_days = (Time.now - time)/(3600*24)
+  if (how_long_days > $options["ignore"])
+    return
+  end
+  if black_mark == WIN_MARK && white_mark == LOSS_MARK
+    _add_win_loss(black_name, white_name, time)
+  elsif black_mark == LOSS_MARK && white_mark == WIN_MARK
+    _add_win_loss(white_name, black_name, time)
+  elsif black_mark == DRAW_MARK && white_mark == DRAW_MARK
+    return
+  else
+    raise "Never reached!"
+  end
+  _add_time(black_name, time)
+  _add_time(white_name, time)
+end
+
+def identify_id(id)
+  if /@NORATE\+/ =~ id # the player having @NORATE in the name should not be rated
+    return nil
+  end
+  id.gsub(/@.*?\+/,"+")
+end
+
+def grep(str)
+  if /^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([0-9]+)$/ =~ str.strip then
+    add($1,$2,$3,$4,Time.at($5.to_i))
+  end
+end
+
+def usage
+  $stderr.puts <<-EOF
+USAGE: #{$0} dir [...]
+  EOF
+  exit 1
+end
+
+def validate(yaml)
+  yaml["players"].each do |group_key, group|
+    group.each do |player_key, player|
+      rate = player['rate']
+      next unless rate
+      if rate > 10000 || rate < -10000
+        return false
+      end
+    end
+  end
+  return true
+end
+
+def usage(io)
+    io.puts <<EOF
+USAGE: #{$0} [options] DIR..
+  DIR                where CSA files are looked up recursively
+OPTOINS:
+  --half-life         n [days] (default 60)
+  --half-life-ignore  m [days] (default  7)
+                      after m days, half-life effect works
+  --fixed-rate-player player whose rate is fixed at the rate
+  --fixed-rate        rate 
+  --help              show this message
+EOF
+end
+
+def main
+  $options = Hash::new
+  parser = GetoptLong.new(
+    ["--half-life",         GetoptLong::REQUIRED_ARGUMENT],
+    ["--half-life-ignore",  GetoptLong::REQUIRED_ARGUMENT],
+    ["--ignore",  GetoptLong::REQUIRED_ARGUMENT],
+    ["--help", "-h",        GetoptLong::NO_ARGUMENT],
+    ["--fixed-rate-player", GetoptLong::REQUIRED_ARGUMENT],
+    ["--fixed-rate",        GetoptLong::REQUIRED_ARGUMENT])
+  parser.quiet = true
+  begin
+    parser.each_option do |name, arg|
+      name.sub!(/^--/, '')
+      $options[name] = arg.dup
+    end
+    if ( $options["fixed-rate-player"] && !$options["fixed-rate"]) ||
+       (!$options["fixed-rate-player"] &&  $options["fixed-rate"]) ||
+       ( $options["fixed-rate-player"] &&  $options["fixed-rate"].to_i <= 0) 
+      usage($stderr)
+      exit 1
+    end
+  rescue
+    usage($stderr)
+    raise parser.error_message
+  end
+  if $options["help"]
+    usage($stdout) 
+    exit 0
+  end
+  $options["half-life"] ||= 60
+  $options["half-life"] = $options["half-life"].to_i
+  $options["half-life-ignore"] ||= 7
+  $options["half-life-ignore"] = $options["half-life-ignore"].to_i
+  $options["ignore"] ||= 365*2
+  $options["ignore"] = $options["ignore"].to_i
+  $options["fixed-rate"] = $options["fixed-rate"].to_i if $options["fixed-rate"]
+
+  while line = $stdin.gets do
+    grep line.strip
+  end
+
+  yaml = {} 
+  yaml["players"] = {}
+  rating_group = 0
+  if $players.size > 0
+    obj = WinLossMatrix::mk_win_loss_matrix($players)
+    obj.connected_subsets.each do |win_loss_matrix|
+      yaml["players"][rating_group] = {}
+
+      rating = Rating.new(win_loss_matrix.matrix)
+      rating.rating
+      rating.average!(Rating::AVERAGE_RATE)
+      rating.integer!
+
+      if $options["fixed-rate-player"]
+        # first, try exact match
+        index = win_loss_matrix.keys.index($options["fixed-rate-player"])
+        # second, try regular match
+        unless index
+          win_loss_matrix.keys.each_with_index do |p, i|
+            if %r!#{$options["fixed-rate-player"]}! =~ p
+              index = i
+            end
+          end
+        end
+        if index
+          the_rate = rating.rate[index]
+          rating.translate!($options["fixed-rate"] - the_rate)
+        end
+      end
+
+      win_loss_matrix.keys.each_with_index do |p, i| # player_id, index#
+        win  = win_loss_matrix.matrix.row(i).sum
+        loss = win_loss_matrix.matrix.col(i).sum
+
+        yaml["players"][rating_group][p] = 
+          { 'name' => p.split("+")[0],
+            'rating_group' => rating_group,
+            'rate' => rating.rate[i],
+            'last_modified' => $players_time[p].dup,
+            'win'  => win,
+            'loss' => loss}
+      end
+      rating_group += 1
+    end
+  end
+  rating_group -= 1
+  non_rated_group = 999 # large enough
+  yaml["players"][non_rated_group] = {}
+  $players.each_key do |id|
+    # skip players who have already been rated
+    found = false
+    (0..rating_group).each do |i|
+       found = true if yaml["players"][i][id]
+       break if found
+    end
+    next if found
+
+    v = GSL::Vector[0, 0]
+    $players[id].each_value {|value| v += value}
+    next if v[0] < 1 && v[1] < 1
+
+    yaml["players"][non_rated_group][id] =
+      { 'name' => id.split("+")[0],
+        'rating_group' => non_rated_group,
+        'rate' => 0,
+        'last_modified' => $players_time[id].dup,
+        'win'  => v[0],
+        'loss' => v[1]}
+  end
+  unless validate(yaml)
+    $stderr.puts "Aborted. It did not result in valid ratings."
+    $stderr.puts yaml.to_yaml if $DEBUG
+    exit 10
+  end
+  puts yaml.to_yaml
+end
+
+if __FILE__ == $0
+  main
+end
+
+# vim: ts=2 sw=2 sts=0
