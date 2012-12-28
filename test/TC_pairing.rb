@@ -144,6 +144,26 @@ class TestStartGameWithoutHumans < Test::Unit::TestCase
     @d.win  = 1000
     @d.loss = 2000
     @d.rate = 2000
+    @e = ShogiServer::BasicPlayer.new
+    @e.name = "e"
+    @e.win  = 3000
+    @e.loss = 3000
+    @e.rate = 3000
+    @f = ShogiServer::BasicPlayer.new
+    @f.name = "f"
+    @f.win  = 4000
+    @f.loss = 4000
+    @f.rate = 4000
+    @g = ShogiServer::BasicPlayer.new
+    @g.name = "g"
+    @g.win  = 5000
+    @g.loss = 5000
+    @g.rate = 5000
+    @h = ShogiServer::BasicPlayer.new
+    @h.name = "h"
+    @h.win  = 6000
+    @h.loss = 6000
+    @h.rate = 6000
   end
 
   def test_match_one_player
@@ -276,8 +296,8 @@ class TestStartGameWithoutHumans < Test::Unit::TestCase
     players = [@a,@b,@c,@d]
     @pairing.match(players)
     assert_equal(2, $paired.size)
-    assert(same_pair?([@a,@b], $paired[0]))
-    assert(same_pair?([@c,@d], $paired[1]))
+    assert(same_pair?([@a,@c], $paired[0]))
+    assert(same_pair?([@b,@d], $paired[1]))
   end
 
   def test_match_four_players_abcd_human
@@ -290,6 +310,20 @@ class TestStartGameWithoutHumans < Test::Unit::TestCase
     assert_equal(2, $paired.size)
     assert(same_pair?([@a,@b], $paired[0]))
     assert(same_pair?([@c,@d], $paired[1]))
+  end
+
+  def test_match_eight_players_efgh_human
+    @e.name += "_human"
+    @f.name += "_human"
+    @g.name += "_human"
+    @h.name += "_human"
+    players = [@a,@b,@c,@d,@e,@f,@g,@h]
+    @pairing.match(players)
+    assert_equal(4, $paired.size)
+    assert(same_pair?([@e,@c], $paired[0]))
+    assert(same_pair?([@d,@g], $paired[1]))
+    assert(same_pair?([@a,@f], $paired[2]))
+    assert(same_pair?([@b,@h], $paired[3]))
   end
 end
 
