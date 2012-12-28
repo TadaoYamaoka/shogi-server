@@ -1,3 +1,12 @@
+2012-12-28  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/pairing.rb:
+	    + There was a bug in the logic avoiding human-human match.
+	      This issue has been fixed.
+	    + Improved the logic avoiding human-human match. Human-human
+	      matches will less likely happen.
+
 2010-10-06  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
