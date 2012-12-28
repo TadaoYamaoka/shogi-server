@@ -163,7 +163,7 @@ module ShogiServer
         for i in 0..(humans.size-2)  # -2
           next if humans[i].odd?
           if humans[i]+1 == humans[i+1]
-            pairing_possible = i
+            pairing_possible = humans[i]
             break
           end
         end
@@ -173,7 +173,7 @@ module ShogiServer
         end
 
         current_index = pairing_possible
-        j = (current_index == 0 ? current_index : current_index-1)
+        j = [0, current_index - 2].max
         while j < players.size
           break if players[j].is_computer?
           j += 1
