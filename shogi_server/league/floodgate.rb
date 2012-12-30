@@ -120,7 +120,7 @@ class League
             next if dow_index.nil?
             next unless (0..23).include?(hour)
             next unless (0..59).include?(minute)
-            time = DateTime::commercial(now.year, now.cweek, dow_index, hour, minute) rescue next
+            time = DateTime::commercial(now.cwyear, now.cweek, dow_index, hour, minute) rescue next
             time += 7 if time <= now 
             candidates << time
           end
