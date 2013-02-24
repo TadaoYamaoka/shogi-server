@@ -63,7 +63,10 @@ class Game
   end
 
 
-  def initialize(game_name, player0, player1, board)
+  # options may or may not have follwing keys: :sente_time, :gote_time; they
+  # are used for %%FORK command to set remaining times at the restart.
+  #
+  def initialize(game_name, player0, player1, board, options={})
     @monitors = Array::new # array of MonitorHandler*
     @game_name = game_name
     if (@game_name =~ /-(\d+)-(\d+)$/)
@@ -115,6 +118,8 @@ class Game
     @fh = open(@logfile, "w")
     @fh.sync = true
     @result = nil
+
+    @options = options.dup
 
     propose
   end
@@ -307,8 +312,8 @@ class Game
     @gote.status  = "game"
     @sente.write_safe(sprintf("START:%s\n", @game_id))
     @gote.write_safe(sprintf("START:%s\n", @game_id))
-    @sente.mytime = @total_time
-    @gote.mytime = @total_time
+    @sente.mytime = @options[:sente_time] || @total_time
+    @gote.mytime  = @options[:gote_time]  || @total_time
     @start_time = Time.now
   end
 
@@ -372,6 +377,13 @@ EOM
   end
 
   def propose_message(sg_flag)
+    time = @total_time
+    if @options[:sente_time] && sg_flag == "+"
+      time = @options[:sente_time]
+    elsif @options[:gote_time] && sg_flag == "-"
+      time = @options[:gote_time]
+    end
+
     str = <<EOM
 BEGIN Game_Summary
 Protocol_Version:1.1
@@ -386,7 +398,7 @@ Rematch_On_Draw:NO
 To_Move:#{@board.teban ? "+" : "-"}
 BEGIN Time
 Time_Unit:1sec
-Total_Time:#{@total_time}
+Total_Time:#{time}
 Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
@@ -407,6 +419,19 @@ EOM
     end
 
     return false
+  end
+
+  # Read the .csa file and returns an array of moves.
+  # ex. ["+7776FU", "-3334FU"]
+  #
+  def read_moves
+    ret = []
+    IO.foreach(@logfile) do |line|
+      if /^[\+\-]\d{4}[A-Z]{2}/ =~ line
+        ret << line.chomp
+      end
+    end
+    return ret
   end
   
   private

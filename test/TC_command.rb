@@ -228,6 +228,11 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::GetBuoyCountCommand, cmd)
   end
 
+  def test_fork_command
+    cmd = ShogiServer::Command.factory("%%FORK server-denou-14400-60+p1+p2+20130223185013 buoy_denou-14400-60", @p)
+    assert_instance_of(ShogiServer::ForkCommand, cmd)
+  end
+
   def test_void_command
     cmd = ShogiServer::Command.factory("%%%HOGE", @p)
     assert_instance_of(ShogiServer::VoidCommand, cmd)
@@ -837,7 +842,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert !$p1.out.empty?
     assert !$p2.out.empty?
     buoy_game2 = @buoy.get_game("buoy_hoge-1500-0")
-    assert_equal ShogiServer::BuoyGame.new("buoy_hoge-1500-0", "+7776FU", @p.name, 1), buoy_game2
+    assert_equal ShogiServer::BuoyGame.new("buoy_hoge-1500-0", "+7776FU", @p.name, 1, nil, nil), buoy_game2
   end
 
   def test_call_1
@@ -862,7 +867,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
 
   def test_call_error_duplicated_game_name
     assert @buoy.is_new_game?("buoy_duplicated-1500-0")
-    bg = ShogiServer::BuoyGame.new("buoy_duplicated-1500-0", ["+7776FU"], @p.name, 1)
+    bg = ShogiServer::BuoyGame.new("buoy_duplicated-1500-0", ["+7776FU"], @p.name, 1, nil, nil)
     @buoy.add_game bg
     assert !@buoy.is_new_game?("buoy_duplicated-1500-0")
     
@@ -900,7 +905,7 @@ end
 #
 class TestDeleteBuoyCommand < BaseTestBuoyCommand
   def test_call
-    buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1)
+    buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1, nil, nil)
     assert @buoy.is_new_game?(buoy_game.game_name)
     @buoy.add_game buoy_game
     assert !@buoy.is_new_game?(buoy_game.game_name)
@@ -913,7 +918,7 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
   end
 
   def test_call_not_exist
-    buoy_game = ShogiServer::BuoyGame.new("buoy_notexist-1500-0", "+7776FU", @p.name, 1)
+    buoy_game = ShogiServer::BuoyGame.new("buoy_notexist-1500-0", "+7776FU", @p.name, 1, nil, nil)
     assert @buoy.is_new_game?(buoy_game.game_name)
     cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
     rt = cmd.call
@@ -924,7 +929,7 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
   end
 
   def test_call_another_player
-    buoy_game = ShogiServer::BuoyGame.new("buoy_anotherplayer-1500-0", "+7776FU", "another_player", 1)
+    buoy_game = ShogiServer::BuoyGame.new("buoy_anotherplayer-1500-0", "+7776FU", "another_player", 1, nil, nil)
     assert @buoy.is_new_game?(buoy_game.game_name)
     @buoy.add_game(buoy_game)
     assert !@buoy.is_new_game?(buoy_game.game_name)
@@ -941,7 +946,7 @@ end
 #
 class TestGetBuoyCountCommand < BaseTestBuoyCommand
   def test_call
-    buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1)
+    buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1, nil, nil)
     assert @buoy.is_new_game?(buoy_game.game_name)
     @buoy.add_game buoy_game
     assert !@buoy.is_new_game?(buoy_game.game_name)
@@ -952,7 +957,7 @@ class TestGetBuoyCountCommand < BaseTestBuoyCommand
   end
 
   def test_call_not_exist
-    buoy_game = ShogiServer::BuoyGame.new("buoy_notexist-1500-0", "+7776FU", @p.name, 1)
+    buoy_game = ShogiServer::BuoyGame.new("buoy_notexist-1500-0", "+7776FU", @p.name, 1, nil, nil)
     assert @buoy.is_new_game?(buoy_game.game_name)
     cmd = ShogiServer::GetBuoyCountCommand.new "%%GETBUOYCOUNT", @p, buoy_game.game_name
     rt = cmd.call

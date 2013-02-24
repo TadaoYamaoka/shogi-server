@@ -9,14 +9,32 @@ require 'mock_log_message'
 
 class TestBuoyGame < Test::Unit::TestCase
   def test_equal
-    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1)
-    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1)
+    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, nil, nil)
+    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, nil, nil)
+    assert_equal g1, g2
+  end
+
+  def test_equal2
+    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, 20)
+    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, 20)
     assert_equal g1, g2
   end
 
   def test_not_equal
-    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1)
-    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 2)
+    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, nil, nil)
+    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 2, nil, nil)
+    assert_not_equal g1, g2
+  end
+
+  def test_not_equal2
+    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, 20)
+    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, 200)
+    assert_not_equal g1, g2
+  end
+
+  def test_not_equal3
+    g1 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, nil)
+    g2 = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, 200)
     assert_not_equal g1, g2
   end
 end
@@ -49,7 +67,18 @@ class TestBuoy < Test::Unit::TestCase
   end
 
   def test_add_game
-    game = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1)
+    game = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, nil, nil)
+    @buoy.add_game(game)
+    assert !@buoy.is_new_game?("buoy_1234-900-0")
+    game2 = @buoy.get_game(game.game_name)
+    assert_equal game, game2
+
+    @buoy.delete_game game
+    assert @buoy.is_new_game?("buoy_1234-900-0")
+  end
+
+  def test_add_game2
+    game = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 1, 10, 20)
     @buoy.add_game(game)
     assert !@buoy.is_new_game?("buoy_1234-900-0")
     game2 = @buoy.get_game(game.game_name)
@@ -60,9 +89,9 @@ class TestBuoy < Test::Unit::TestCase
   end
 
   def test_update_game
-    game = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 2)
+    game = ShogiServer::BuoyGame.new("buoy_1234-900-0", [], "p1", 2, nil, nil)
     @buoy.add_game(game)
-    g2 = ShogiServer::BuoyGame.new(game.game_name, game.moves, game.owner, game.count-1)
+    g2 = ShogiServer::BuoyGame.new(game.game_name, game.moves, game.owner, game.count-1, nil, nil)
     @buoy.update_game(g2)
     
     get = @buoy.get_game(g2.game_name)
