@@ -74,8 +74,8 @@ class TestFork < BaseClient
     @p1.agree
     @p2.agree
     sleep 1
-    assert /^Total_Time:1499/ =~ @p1.message
-    assert /^Total_Time:1499/ =~ @p2.message
+    assert /^Total_Time:1500/ =~ @p1.message
+    assert /^Total_Time:1500/ =~ @p2.message
     @p2.move("-3334FU")
     sleep 1
     @p1.toryo

@@ -63,10 +63,7 @@ class Game
   end
 
 
-  # options may or may not have follwing keys: :sente_time, :gote_time; they
-  # are used for %%FORK command to set remaining times at the restart.
-  #
-  def initialize(game_name, player0, player1, board, options={})
+  def initialize(game_name, player0, player1, board)
     @monitors = Array::new # array of MonitorHandler*
     @game_name = game_name
     if (@game_name =~ /-(\d+)-(\d+)$/)
@@ -90,7 +87,16 @@ class Game
     @sente.game = self
     @gote.game  = self
 
-    @last_move = @board.initial_moves.empty? ? "" : "%s,T1" % [@board.initial_moves.last]
+    @last_move = ""
+    unless @board.initial_moves.empty?
+      last_move = @board.initial_moves.last
+      case last_move
+      when Array
+        @last_move = last_move.join(",")
+      when String
+        @last_move = "%s,T1" % [last_move]
+      end
+    end
     @current_turn = @board.initial_moves.size
 
     @sente.status = "agree_waiting"
@@ -118,8 +124,6 @@ class Game
     @fh = open(@logfile, "w")
     @fh.sync = true
     @result = nil
-
-    @options = options.dup
 
     propose
   end
@@ -312,8 +316,8 @@ class Game
     @gote.status  = "game"
     @sente.write_safe(sprintf("START:%s\n", @game_id))
     @gote.write_safe(sprintf("START:%s\n", @game_id))
-    @sente.mytime = @options[:sente_time] || @total_time
-    @gote.mytime  = @options[:gote_time]  || @total_time
+    @sente.mytime = @total_time
+    @gote.mytime = @total_time
     @start_time = Time.now
   end
 
@@ -337,8 +341,14 @@ class Game
     unless @board.initial_moves.empty?
       @fh.puts "'buoy game starting with %d moves" % [@board.initial_moves.size]
       @board.initial_moves.each do |move|
-        @fh.puts move
-        @fh.puts "T1"
+        case move
+        when Array
+          @fh.puts move[0]
+          @fh.puts move[1]
+        when String
+          @fh.puts move
+          @fh.puts "T1"
+        end
       end
     end
   end
@@ -377,13 +387,6 @@ EOM
   end
 
   def propose_message(sg_flag)
-    time = @total_time
-    if @options[:sente_time] && sg_flag == "+"
-      time = @options[:sente_time]
-    elsif @options[:gote_time] && sg_flag == "-"
-      time = @options[:gote_time]
-    end
-
     str = <<EOM
 BEGIN Game_Summary
 Protocol_Version:1.1
@@ -398,13 +401,20 @@ Rematch_On_Draw:NO
 To_Move:#{@board.teban ? "+" : "-"}
 BEGIN Time
 Time_Unit:1sec
-Total_Time:#{time}
+Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
 END Time
 BEGIN Position
 #{@board.initial_string.chomp}
-#{@board.initial_moves.collect {|m| m + ",T1"}.join("\n")}
+#{@board.initial_moves.collect do |m|
+  case m
+  when Array
+    m.join(",")
+  when String
+    m + ",T1"
+  end
+end.join("\n")}
 END Position
 END Game_Summary
 EOM
@@ -421,14 +431,16 @@ EOM
     return false
   end
 
-  # Read the .csa file and returns an array of moves.
-  # ex. ["+7776FU", "-3334FU"]
+  # Read the .csa file and returns an array of moves and times.
+  # ex. [["+7776FU","T2"], ["-3334FU","T5"]]
   #
   def read_moves
     ret = []
     IO.foreach(@logfile) do |line|
       if /^[\+\-]\d{4}[A-Z]{2}/ =~ line
-        ret << line.chomp
+        ret << [line.chomp]
+      elsif /^T\d*/ =~ line
+        ret[-1] << line.chomp
       end
     end
     return ret

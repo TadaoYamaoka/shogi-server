@@ -540,9 +540,7 @@ module ShogiServer
               return :continue
             end
             buoy.decrement_count(buoy_game)
-            options = {:sente_time => buoy_game.sente_time,
-                       :gote_time  => buoy_game.gote_time}
-            Game::new(@player.game_name, @player, rival, board, options)
+            Game::new(@player.game_name, @player, rival, board)
           end
         else
           klass = Login.handicapped_game_name?(@game_name) || Board
@@ -702,16 +700,6 @@ module ShogiServer
       @game_name = game_name
       @moves     = moves
       @count     = count
-      @sente_time = nil
-      @gote_time  = nil
-    end
-
-    # ForkCommand may call this method to set remaining time of both
-    # players.
-    #
-    def set_initial_time(sente_time, gote_time)
-      @sente_time = sente_time
-      @gote_time  = gote_time
     end
 
     def call
@@ -741,7 +729,7 @@ module ShogiServer
         raise WrongMoves
       end
 
-      buoy_game = BuoyGame.new(@game_name, @moves, @player.name, @count, @sente_time, @gote_time)
+      buoy_game = BuoyGame.new(@game_name, @moves, @player.name, @count)
       buoy.add_game(buoy_game)
       @player.write_safe(sprintf("##[SETBUOY] +OK\n"))
       log_info("A buoy game was created: %s by %s" % [@game_name, @player.name])
@@ -769,11 +757,7 @@ module ShogiServer
       # found two players: p1 and p2
       log_info("Starting a buoy game: %s with %s and %s" % [@game_name, p1.name, p2.name])
       buoy.decrement_count(buoy_game)
-
-      # remaining time for ForkCommand
-      options = {:sente_time => buoy_game.sente_time,
-                 :gote_time  => buoy_game.gote_time}
-      game = Game::new(@game_name, p1, p2, board, options)
+      game = Game::new(@game_name, p1, p2, board)
       return :continue
 
     rescue WrongMoves => e
@@ -855,17 +839,18 @@ module ShogiServer
         return :continue
       end
 
-      moves = game.read_moves
+      moves = game.read_moves # [["+7776FU","T2"],["-3334FU","T5"]]
       @nth_move = moves.size - 1 unless @nth_move
       if @nth_move > moves.size or @nth_move < 1
         @player.write_safe(sprintf("##[ERROR] number of moves to fork is out of range: %s.\n", moves.size))
         log_error "Number of moves to fork is out of range: %s [%s]" % [@nth_move, @player.name]
         return :continue
       end
-      new_moves = moves[0...@nth_move]
-
-      buoy_cmd = SetBuoyCommand.new(@str, @player, @new_buoy_game, new_moves.join(""), 1)
-      buoy_cmd.set_initial_time(game.sente.mytime, game.gote.mytime)
+      new_moves_str = ""
+      moves[0...@nth_move].each do |m|
+        new_moves_str << m.join(",")
+      end
+      buoy_cmd = SetBuoyCommand.new(@str, @player, @new_buoy_game, new_moves_str, 1)
       return buoy_cmd.call
     end
   end

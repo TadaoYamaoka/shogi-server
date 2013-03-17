@@ -10,12 +10,10 @@ module ShogiServer
     attr_reader :moves
     attr_reader :owner
     attr_reader :count
-    attr_reader :sente_time
-    attr_reader :gote_time
 
-    def initialize(game_name, moves, owner, count, sente_time, gote_time)
+    def initialize(game_name, moves, owner, count)
       raise "owner name is required" if owner && !owner.instance_of?(String)
-      @game_name, @moves, @owner, @count, @sente_time, @gote_time = game_name, moves, owner, count, sente_time, gote_time
+      @game_name, @moves, @owner, @count = game_name, moves, owner, count
     end
 
     def decrement_count
@@ -23,18 +21,16 @@ module ShogiServer
     end
 
     def ==(rhs)
-      return (@game_name  == rhs.game_name &&
-              @moves      == rhs.moves &&
-              @owner      == rhs.owner &&
-              @count      == rhs.count &&
-              @sente_time == rhs.sente_time &&
-              @gote_time  == rhs.gote_time)
+      return (@game_name == rhs.game_name &&
+              @moves == rhs.moves &&
+              @owner == rhs.owner &&
+              @count == rhs.count)
     end
   end
 
   class NilBuoyGame < BuoyGame
     def initialize
-      super(nil, nil, nil, 0, nil, nil)
+      super(nil, nil, nil, 0)
     end
   end
 
@@ -66,11 +62,9 @@ module ShogiServer
         if @db.root?(buoy_game.game_name)
           # error
         else
-          hash = {'moves'      => buoy_game.moves,
-                  'owner'      => buoy_game.owner,
-                  'count'      => buoy_game.count,
-                  'sente_time' => buoy_game.sente_time,
-                  'gote_time'  => buoy_game.gote_time}
+          hash = {'moves' => buoy_game.moves,
+                  'owner' => buoy_game.owner,
+                  'count' => buoy_game.count}
           @db[buoy_game.game_name] = hash
         end
       end
@@ -79,11 +73,9 @@ module ShogiServer
     def update_game(buoy_game)
       @db.transaction do
         if @db.root?(buoy_game.game_name)
-          hash = {'moves'     => buoy_game.moves,
-                  'owner'     => buoy_game.owner,
-                  'count'     => buoy_game.count,
-                  'sene_time' => buoy_game.sente_time,
-                  'gote_time' => buoy_game.gote_time}
+          hash = {'moves' => buoy_game.moves,
+                  'owner' => buoy_game.owner,
+                  'count' => buoy_game.count}
           @db[buoy_game.game_name] = hash
         else
           # error
@@ -101,12 +93,10 @@ module ShogiServer
       @db.transaction(true) do
         hash = @db[game_name]
         if hash
-          moves      = hash['moves']
-          owner      = hash['owner']
-          count      = hash['count'].to_i
-          sente_time = hash['sente_time'] ? hash['sente_time'].to_i : nil
-          gote_time  = hash['gote_time']  ? hash['gote_time'].to_i  : nil
-          return BuoyGame.new(game_name, moves, owner, count, sente_time, gote_time)
+          moves = hash['moves']
+          owner = hash['owner']
+          count = hash['count'].to_i
+          return BuoyGame.new(game_name, moves, owner, count)
         else
           return NilBuoyGame.new
         end
