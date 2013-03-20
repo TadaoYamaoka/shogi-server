@@ -257,6 +257,18 @@ class League
         return rc[:loser] == player_id
       end
 
+      def last_opponent(player_id)
+        rc = last_valid_game(player_id)
+        return nil unless rc
+        if rc[:black] == player_id
+          return rc[:white]
+        elsif rc[:white] == player_id
+          return rc[:black]
+        else
+          return nil
+        end
+      end
+
       def last_valid_game(player_id)
         records = nil
         @@mutex.synchronize do
@@ -266,6 +278,28 @@ class League
           rc[:winner] && 
           rc[:loser]  && 
           (rc[:black] == player_id || rc[:white] == player_id)
+        end
+        return rc
+      end
+
+      def win_games(player_id)
+        records = nil
+        @@mutex.synchronize do
+          records = @records.reverse
+        end
+        rc = records.find_all do |rc|
+          rc[:winner] == player_id && rc[:loser]
+        end
+        return rc
+      end
+
+      def loss_games(player_id)
+        records = nil
+        @@mutex.synchronize do
+          records = @records.reverse
+        end
+        rc = records.find_all do |rc|
+          rc[:winner] && rc[:loser] == player_id
         end
         return rc
       end

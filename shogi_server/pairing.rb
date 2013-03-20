@@ -25,7 +25,7 @@ module ShogiServer
 
     class << self
       def default_factory
-        return swiss_pairing
+        return least_diff_pairing
       end
 
       def sort_by_rate_with_randomness
@@ -52,6 +52,14 @@ module ShogiServer
                 StartGameWithoutHumans.new]
       end
 
+      def least_diff_pairing
+        return [LogPlayers.new,
+                ExcludeSacrificeGps500.new,
+                MakeEven.new,
+                LeastDiff.new,
+                StartGameWithoutHumans.new]
+      end
+
       def match(players)
         logics = default_factory
         logics.inject(players) do |result, item|
@@ -62,6 +70,10 @@ module ShogiServer
     end # class << self
 
 
+    # Make matches among players.
+    # @param players an array of players, which should be updated destructively
+    #        to pass the new list to subsequent logics.
+    #
     def match(players)
       # to be implemented
       log_message("Floodgate: %s" % [self.class.to_s])
@@ -232,17 +244,18 @@ module ShogiServer
   end
 
   class SortByRateWithRandomness < Pairing
-    def initialize(rand1, rand2)
+    def initialize(rand1, rand2, desc=false)
       super()
       @rand1, @rand2 = rand1, rand2
+      @desc = desc
     end
 
-    def match(players, desc=false)
+    def match(players)
       super(players)
       cur_rate = Hash.new
       players.each{|a| cur_rate[a] = a.rate ? a.rate + rand(@rand1) : rand(@rand2)}
       players.sort!{|a,b| cur_rate[a] <=> cur_rate[b]}
-      players.reverse! if desc
+      players.reverse! if @desc
       log_players(players) do |one|
         "%s %d (+ randomness %d)" % [one.name, one.rate, cur_rate[one] - one.rate]
       end
@@ -267,12 +280,12 @@ module ShogiServer
       rest = players - winners
 
       log_message("Floodgate: Ordering %d winners..." % [winners.size])
-      sbrwr_winners = SortByRateWithRandomness.new(800, 2500)
-      sbrwr_winners.match(winners, true)
+      sbrwr_winners = SortByRateWithRandomness.new(800, 2500, true)
+      sbrwr_winners.match(winners)
 
       log_message("Floodgate: Ordering the rest (%d)..." % [rest.size])
-      sbrwr_losers = SortByRateWithRandomness.new(200, 400)
-      sbrwr_losers.match(rest, true)
+      sbrwr_losers = SortByRateWithRandomness.new(200, 400, true)
+      sbrwr_losers.match(rest)
 
       players.clear
       [winners, rest].each do |group|
@@ -361,6 +374,139 @@ module ShogiServer
       log_message("Floodgate: There are odd players (%d). Deleting one of them..." % 
                   [players.size])
       DeletePlayerAtRandom.new.match(players)
+    end
+  end
+
+  # This pairing algorithm aims to minimize the total differences of
+  # matching players' rates. It also includes penalyties when a match is
+  # same as the previous one or a match is between human players.
+  # It is based on a discussion with Yamashita-san on
+  # http://www.sgtpepper.net/kaneko/diary/20120511.html.
+  #
+  class LeastDiff < Pairing
+    def random_match(players)
+      players.shuffle
+    end
+
+    def average_rate(players)
+      n=0
+      sum=0
+      players.find_all{|p| p.rate}.each do |p|
+        n += 1
+        sum += p.rate
+      end
+
+      return n > 0 ? sum/n : 2150 # interger
+    end
+
+    # Returns a player's rate value.
+    # 1. If it has a valid rate, return the rate.
+    # 2. If it has no valid rate, return average of the following values:
+    #   a. For games it won, the opponent's rate + 100
+    #   b. For games it lost, the opponent's rate - 100
+    #   (if the opponent has no valid rate, count out the game)
+    #   (if there are not such games, return 2150 (default value)
+    #
+    def get_player_rate(player, history)
+      return player.rate if player.rate != 0
+      return 2150 unless history
+
+      count = 0
+      sum = 0
+
+      history.win_games(player.player_id).each do |g|
+        next unless g[:loser]
+        name = g[:loser].split("+")[0]
+        p = $league.find(name)
+        if p && p.rate != 0
+          count += 1
+          sum += p.rate + 100
+        end
+      end
+      history.loss_games(player.player_id).each do |g|
+        next unless g[:winner]
+        name = g[:winner].split("+")[0]
+        p = $league.find(name)
+        if p && p.rate != 0
+          count += 1
+          sum += p.rate - 100
+        end
+      end
+
+      estimate = (count == 0 ? 2150 : sum/count)
+      log_message("Floodgate: Estimated rate of %s is %d" % [player.name, estimate])
+      return estimate
+    end
+
+    def calculate_diff_with_penalty(players, history)
+      pairs = []
+      players.each_slice(2) do |pair|
+        if pair.size == 2
+          pairs << pair
+        end
+      end
+
+      ret = 0
+
+      # 1. Diff of players rate
+      pairs.each do |p1,p2|
+        ret += (get_player_rate(p1,history) - get_player_rate(p2,history)).abs
+      end
+
+      # 2. Penalties
+      pairs.each do |p1,p2|
+        # 2.1. same match
+        if (history &&
+            (history.last_opponent(p1.player_id) == p2.player_id ||
+             history.last_opponent(p2.player_id) == p1.player_id))
+          ret += 400
+        end
+
+        # 2.2 Human vs Human
+        if p1.is_human? && p2.is_human?
+          ret += 800
+        end
+      end
+
+      ret
+    end
+
+    def match(players)
+      super
+      if players.size < 3
+        log_message("Floodgate: players are small enough to skip LeastDiff pairing: %d" % [players.size])
+        return players
+      end
+
+      # 10 trials
+      matches = []
+      scores  = []
+      path = ShogiServer::League::Floodgate.history_file_path(players.first.game_name)
+      history = ShogiServer::League::Floodgate::History.factory(path)
+      10.times do 
+        m = random_match(players)
+        matches << m
+        scores << calculate_diff_with_penalty(m, history)
+      end
+
+      # Debug
+      #scores.each_with_index do |s,i|
+      #  puts
+      #  print s, ": ", matches[i].map{|p| p.name}.join(", "), "\n"
+      #end
+
+      # Select a match of the least score
+      min_index = 0
+      min_score = scores.first
+      scores.each_with_index do |s,i|
+        if s < min_score
+          min_index = i
+          min_score = s
+        end
+      end
+      log_message("Floodgate: the least score %d (%d per player)" % [min_score, min_score/players.size])
+
+      players = matches[min_index]
     end
   end
 
