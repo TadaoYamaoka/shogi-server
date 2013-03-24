@@ -475,11 +475,12 @@ class TestLeastDiff < Test::Unit::TestCase
   end
 
   def test_match_three_players
-    players = [@a,@b,@h]
+    players = [@h,@a,@b]
     assert_equal(300,  @pairing.calculate_diff_with_penalty([@a,@b,@h],nil))
     assert_equal(2200, @pairing.calculate_diff_with_penalty([@b,@h,@a],nil))
     r = @pairing.match(players)
     assert_pairs([@a,@b,@h], r)
+    assert_pairs([@a,@b,@h], players)
   end
 
   def test_calculate_diff_with_penalty

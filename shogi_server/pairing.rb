@@ -388,17 +388,6 @@ module ShogiServer
       players.shuffle
     end
 
-    def average_rate(players)
-      n=0
-      sum=0
-      players.find_all{|p| p.rate}.each do |p|
-        n += 1
-        sum += p.rate
-      end
-
-      return n > 0 ? sum/n : 2150 # interger
-    end
-
     # Returns a player's rate value.
     # 1. If it has a valid rate, return the rate.
     # 2. If it has no valid rate, return average of the following values:
@@ -504,9 +493,9 @@ module ShogiServer
           min_score = s
         end
       end
-      log_message("Floodgate: the least score %d (%d per player)" % [min_score, min_score/players.size])
+      log_message("Floodgate: the least score %d (%d per player) [%s]" % [min_score, min_score/players.size, scores.join(" ")])
 
-      players = matches[min_index]
+      players.replace(matches[min_index])
     end
   end
 
