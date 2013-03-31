@@ -69,6 +69,9 @@ module ShogiServer
         my_sente_str = $3
         cmd = GameChallengeCommand.new(str, player, 
                                        command_name, game_name, my_sente_str)
+      when /^%%(GAME|CHALLENGE)\s+(\S+)/
+        msg = "A turn identifier is required"
+        cmd = ErrorCommand.new(str, player, msg)
       when /^%%CHAT\s+(.+)/
         message = $1
         cmd = ChatCommand.new(str, player, message, $league.players)
@@ -494,7 +497,16 @@ module ShogiServer
 
     def call
       if (! Login::good_game_name?(@game_name))
-        @player.write_safe(sprintf("##[ERROR] bad game name\n"))
+        @player.write_safe(sprintf("##[ERROR] bad game name: %s.\n", @game_name))
+        if (/^(.+)-\d+-\d+$/ =~ @game_name)
+          if Login::good_identifier?($1)
+            # do nothing
+          else
+            @player.write_safe(sprintf("##[ERROR] invalid identifiers are found or too many characters are used.\n"))
+          end
+        else
+          @player.write_safe(sprintf("##[ERROR] game name should consist of three parts like game-1500-60.\n"))
+        end
         return :continue
       elsif ((@player.status == "connected") || (@player.status == "game_waiting"))
         ## continue
@@ -679,9 +691,9 @@ module ShogiServer
   # Command for an error
   #
   class ErrorCommand < Command
-    def initialize(str, player)
-      super
-      @msg = nil
+    def initialize(str, player, msg=nil)
+      super(str, player)
+      @msg = msg || "unknown command"
     end
     attr_reader :msg
 
@@ -689,7 +701,7 @@ module ShogiServer
       cmd = @str.chomp
       # Aim to hide a possible password
       cmd.gsub!(/LOGIN\s*(\w+)\s+.*/i, 'LOGIN \1...')
-      @msg = "##[ERROR] unknown command %s\n" % [cmd]
+      @msg = "##[ERROR] %s: %s\n" % [@msg, cmd]
       @player.write_safe(@msg)
       log_error(@msg)
       return :continue
