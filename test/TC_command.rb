@@ -247,29 +247,29 @@ class TestFactoryMethod < Test::Unit::TestCase
     cmd = ShogiServer::Command.factory("should_be_error", @p)
     assert_instance_of(ShogiServer::ErrorCommand, cmd)
     cmd.call
-    assert_match /unknown command should_be_error/, cmd.msg
+    assert_match /unknown command: should_be_error/, cmd.msg
   end
 
   def test_error_login
     cmd = ShogiServer::Command.factory("LOGIN hoge foo", @p)
     assert_instance_of(ShogiServer::ErrorCommand, cmd)
     cmd.call
-    assert_no_match /unknown command LOGIN hoge foo/, cmd.msg
+    assert_no_match /unknown command: LOGIN hoge foo/, cmd.msg
 
     cmd = ShogiServer::Command.factory("LOGin hoge foo", @p)
     assert_instance_of(ShogiServer::ErrorCommand, cmd)
     cmd.call
-    assert_no_match /unknown command LOGIN hoge foo/, cmd.msg
+    assert_no_match /unknown command: LOGIN hoge foo/, cmd.msg
 
     cmd = ShogiServer::Command.factory("LOGIN  hoge foo", @p)
     assert_instance_of(ShogiServer::ErrorCommand, cmd)
     cmd.call
-    assert_no_match /unknown command LOGIN hoge foo/, cmd.msg
+    assert_no_match /unknown command: LOGIN hoge foo/, cmd.msg
 
     cmd = ShogiServer::Command.factory("LOGINhoge foo", @p)
     assert_instance_of(ShogiServer::ErrorCommand, cmd)
     cmd.call
-    assert_no_match /unknown command LOGIN hoge foo/, cmd.msg
+    assert_no_match /unknown command: LOGIN hoge foo/, cmd.msg
   end
 end
 
