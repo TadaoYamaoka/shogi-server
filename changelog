@@ -1,3 +1,11 @@
+2013-03-31  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - %%FORK command: %%FORK <source_game> [<new_buoy_game>] [<nth-move>]
+	    The new_buoy_game parameter is now optional. If it is not
+	    supplied, Shogi-server generates a new buoy game name from
+	    source_game.
+
 2013-02-23  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

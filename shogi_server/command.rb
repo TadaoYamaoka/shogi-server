@@ -102,6 +102,11 @@ module ShogiServer
           nth_move = $3.to_i
         end
         cmd = ForkCommand.new(str, player, source_game, new_buoy_game, nth_move)
+      when /^%%FORK\s+(\S+)$/
+        source_game   = $1
+        new_buoy_game = nil
+        nth_move      = nil
+        cmd = ForkCommand.new(str, player, source_game, new_buoy_game, nth_move)
       when /^\s*$/
         cmd = SpaceCommand.new(str, player)
       when /^%%%[^%]/
@@ -830,6 +835,28 @@ module ShogiServer
       @new_buoy_game = new_buoy_game
       @nth_move      = nth_move # may be nil
     end
+    attr_reader :new_buoy_game
+
+    def decide_new_buoy_game_name
+      name       = nil
+      total_time = nil
+      byo_time   = nil
+
+      if @source_game.split("+").size >= 2 &&
+         /^([^-]+)-(\d+)-(\d+)/ =~ @source_game.split("+")[1]
+        name       = $1
+        total_time = $2
+        byo_time   = $3
+      end
+      if name == nil || total_time == nil || byo_time == nil
+        @player.write_safe(sprintf("##[ERROR] wrong source game name to make a new buoy game name: %s\n", @source_game))
+        log_error "Received a wrong source game name to make a new buoy game name: %s from %s." % [@source_game, @player.name]
+        return :continue
+      end
+      @new_buoy_game = "buoy_%s_%d-%s-%s" % [name, @nth_move, total_time, byo_time]
+      @player.write_safe(sprintf("##[FORK]: new buoy game name: %s\n", @new_buoy_game))
+      @player.write_safe("##[FORK] +OK\n")
+    end
 
     def call
       game = $league.games[@source_game]
@@ -850,6 +877,11 @@ module ShogiServer
       moves[0...@nth_move].each do |m|
         new_moves_str << m.join(",")
       end
+
+      unless @new_buoy_game
+        decide_new_buoy_game_name
+      end
+
       buoy_cmd = SetBuoyCommand.new(@str, @player, @new_buoy_game, new_moves_str, 1)
       return buoy_cmd.call
     end

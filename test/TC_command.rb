@@ -233,6 +233,11 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::ForkCommand, cmd)
   end
 
+  def test_fork_command2
+    cmd = ShogiServer::Command.factory("%%FORK server-denou-14400-60+p1+p2+20130223185013", @p)
+    assert_instance_of(ShogiServer::ForkCommand, cmd)
+  end
+
   def test_void_command
     cmd = ShogiServer::Command.factory("%%%HOGE", @p)
     assert_instance_of(ShogiServer::VoidCommand, cmd)
@@ -944,6 +949,21 @@ end
 
 #
 #
+class TestForkCommand < Test::Unit::TestCase
+  def setup
+    @player = MockPlayer.new
+  end
+
+  def test_new_buoy_game_name
+    src = "%%FORK server+denou-14400-60+p1+p2+20130223185013"
+    c = ShogiServer::ForkCommand.new src, @player, "server+denou-14400-60+p1+p2+20130223185013", nil, 13
+    c.decide_new_buoy_game_name
+    assert_equal "buoy_denou_13-14400-60", c.new_buoy_game
+  end
+end
+
+#
+#
 class TestGetBuoyCountCommand < BaseTestBuoyCommand
   def test_call
     buoy_game = ShogiServer::BuoyGame.new("buoy_testdeletebuoy-1500-0", "+7776FU", @p.name, 1)
@@ -1056,4 +1076,3 @@ class TestMonitorHandler2 < Test::Unit::TestCase
                  @player.out.join)
   end
 end
-

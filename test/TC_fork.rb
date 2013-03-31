@@ -85,4 +85,47 @@ class TestFork < BaseClient
 
     @admin.logout
   end
+
+  def test_fork2
+    buoy = ShogiServer::Buoy.new
+    
+    @admin = SocketPlayer.new "dummy", "admin", "*"
+    @admin.connect
+    @admin.reader
+    @admin.login
+
+    result, result2 = handshake do
+      source_game = parse_game_name(@admin)
+      @admin.puts "%%FORK #{source_game}" # nil for new_buoy_game name
+      sleep 1
+      assert /##\[FORK\]: new buoy game name: buoy_TestFork_1-1500-0/ =~ @admin.message
+    end
+
+    assert buoy.is_new_game?("buoy_TestFork_1-1500-0")
+    @p1 = SocketPlayer.new "buoy_TestFork_1", "p1", true
+    @p2 = SocketPlayer.new "buoy_TestFork_1", "p2", false
+    @p1.connect
+    @p2.connect
+    @p1.reader
+    @p2.reader
+    @p1.login
+    @p2.login
+    sleep 1
+    @p1.game
+    @p2.game
+    sleep 1
+    @p1.agree
+    @p2.agree
+    sleep 1
+    assert /^Total_Time:1500/ =~ @p1.message
+    assert /^Total_Time:1500/ =~ @p2.message
+    @p2.move("-3334FU")
+    sleep 1
+    @p1.toryo
+    sleep 1
+    @p2.logout
+    @p1.logout
+
+    @admin.logout
+  end
 end
