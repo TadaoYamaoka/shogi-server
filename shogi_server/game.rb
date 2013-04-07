@@ -19,6 +19,7 @@
 
 require 'shogi_server/league/floodgate'
 require 'shogi_server/game_result'
+require 'shogi_server/time_clock'
 require 'shogi_server/util'
 
 module ShogiServer # for a namespace
@@ -69,6 +70,8 @@ class Game
     if (@game_name =~ /-(\d+)-(\d+)$/)
       @total_time = $1.to_i
       @byoyomi = $2.to_i
+
+      @time_clock = TimeClock::factory(Least_Time_Per_Move, @game_name)
     end
 
     if (player0.sente)
@@ -119,6 +122,7 @@ class Game
     $league.games[@game_id] = self
 
     log_message(sprintf("game created %s", @game_id))
+    log_message("    " + @time_clock.to_s)
 
     @start_time = nil
     @fh = open(@logfile, "w")
@@ -127,7 +131,7 @@ class Game
 
     propose
   end
-  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors
+  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors, :time_clock
   attr_accessor :last_move, :current_turn
   attr_reader   :result, :prepared_time
 
@@ -227,22 +231,16 @@ class Game
       return nil
     end
 
-    finish_flag = true
     @end_time = end_time
-    t = [(@end_time - @start_time).floor, Least_Time_Per_Move].max
-    
+    finish_flag = true
     move_status = nil
-    if ((@current_player.mytime - t <= -@byoyomi) && 
-        ((@total_time > 0) || (@byoyomi > 0)))
+
+    if (@time_clock.timeout?(@current_player, @start_time, @end_time))
       status = :timeout
     elsif (str == :timeout)
       return false            # time isn't expired. players aren't swapped. continue game
     else
-      @current_player.mytime -= t
-      if (@current_player.mytime < 0)
-        @current_player.mytime = 0
-      end
-
+      t = @time_clock.process_time(@current_player, @start_time, @end_time)
       move_status = @board.handle_one_move(str, @sente == @current_player)
       # log_debug("move_status: %s for %s's %s" % [move_status, @sente == @current_player ? "BLACK" : "WHITE", str])
 

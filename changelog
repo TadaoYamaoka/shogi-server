@@ -1,3 +1,15 @@
+2013-04-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/{game,time_clock}.rb:
+	    Adds variations of thinking time calculation: ChessClock
+	    (current) and StopWatchClock (new).
+	    StopWatchClock, which is usually used at official games of human
+	    professional players, is a clock where thiking time less than a
+	    miniute is regarded as zero.
+	    To select StopWatchClock, use a special game name with "060"
+	    byoyomi time. ex. "gamename_1500_060".
+
 2013-03-31  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

@@ -960,6 +960,13 @@ class TestForkCommand < Test::Unit::TestCase
     c.decide_new_buoy_game_name
     assert_equal "buoy_denou_13-14400-60", c.new_buoy_game
   end
+
+  def test_new_buoy_game_name2
+    src = "%%FORK server+denou-14400-060+p1+p2+20130223185013"
+    c = ShogiServer::ForkCommand.new src, @player, "server+denou-14400-060+p1+p2+20130223185013", nil, 13
+    c.decide_new_buoy_game_name
+    assert_equal "buoy_denou_13-14400-060", c.new_buoy_game
+  end
 end
 
 #
