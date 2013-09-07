@@ -69,6 +69,9 @@ module ShogiServer
         my_sente_str = $3
         cmd = GameChallengeCommand.new(str, player, 
                                        command_name, game_name, my_sente_str)
+      when /^%%(GAME|CHALLENGE)\s+(\S+)/
+        msg = "A turn identifier is required"
+        cmd = ErrorCommand.new(str, player, msg)
       when /^%%CHAT\s+(.+)/
         message = $1
         cmd = ChatCommand.new(str, player, message, $league.players)
@@ -94,6 +97,19 @@ module ShogiServer
       when /^%%GETBUOYCOUNT\s+(\S+)/
         game_name = $1
         cmd = GetBuoyCountCommand.new(str, player, game_name)
+      when /^%%FORK\s+(\S+)\s+(\S+)(.*)/
+        source_game   = $1
+        new_buoy_game = $2
+        nth_move      = nil
+        if $3 && /^\s+(\d+)/ =~ $3
+          nth_move = $3.to_i
+        end
+        cmd = ForkCommand.new(str, player, source_game, new_buoy_game, nth_move)
+      when /^%%FORK\s+(\S+)$/
+        source_game   = $1
+        new_buoy_game = nil
+        nth_move      = nil
+        cmd = ForkCommand.new(str, player, source_game, new_buoy_game, nth_move)
       when /^\s*$/
         cmd = SpaceCommand.new(str, player)
       when /^%%%[^%]/
@@ -481,7 +497,16 @@ module ShogiServer
 
     def call
       if (! Login::good_game_name?(@game_name))
-        @player.write_safe(sprintf("##[ERROR] bad game name\n"))
+        @player.write_safe(sprintf("##[ERROR] bad game name: %s.\n", @game_name))
+        if (/^(.+)-\d+-\d+$/ =~ @game_name)
+          if Login::good_identifier?($1)
+            # do nothing
+          else
+            @player.write_safe(sprintf("##[ERROR] invalid identifiers are found or too many characters are used.\n"))
+          end
+        else
+          @player.write_safe(sprintf("##[ERROR] game name should consist of three parts like game-1500-60.\n"))
+        end
         return :continue
       elsif ((@player.status == "connected") || (@player.status == "game_waiting"))
         ## continue
@@ -666,9 +691,9 @@ module ShogiServer
   # Command for an error
   #
   class ErrorCommand < Command
-    def initialize(str, player)
-      super
-      @msg = nil
+    def initialize(str, player, msg=nil)
+      super(str, player)
+      @msg = msg || "unknown command"
     end
     attr_reader :msg
 
@@ -676,7 +701,7 @@ module ShogiServer
       cmd = @str.chomp
       # Aim to hide a possible password
       cmd.gsub!(/LOGIN\s*(\w+)\s+.*/i, 'LOGIN \1...')
-      @msg = "##[ERROR] unknown command %s\n" % [cmd]
+      @msg = "##[ERROR] %s: %s\n" % [@msg, cmd]
       @player.write_safe(@msg)
       log_error(@msg)
       return :continue
@@ -806,6 +831,71 @@ module ShogiServer
         @player.write_safe("##[GETBUOYCOUNT] %s\n" % [buoy_game.count])
       end
       @player.write_safe("##[GETBUOYCOUNT] +OK\n")
+    end
+  end
+
+  # %%FORK <source_game> <new_buoy_game> [<nth-move>]
+  # Fork a new game from the posistion where the n-th (starting from 1) move
+  # of a source game is played. The new game should be a valid buoy game
+  # name. The default value of n is the position where the previous position
+  # of the last one.
+  #
+  class ForkCommand < Command
+    def initialize(str, player, source_game, new_buoy_game, nth_move)
+      super(str, player)
+      @source_game   = source_game
+      @new_buoy_game = new_buoy_game
+      @nth_move      = nth_move # may be nil
+    end
+    attr_reader :new_buoy_game
+
+    def decide_new_buoy_game_name
+      name       = nil
+      total_time = nil
+      byo_time   = nil
+
+      if @source_game.split("+").size >= 2 &&
+         /^([^-]+)-(\d+)-(\d+)/ =~ @source_game.split("+")[1]
+        name       = $1
+        total_time = $2
+        byo_time   = $3
+      end
+      if name == nil || total_time == nil || byo_time == nil
+        @player.write_safe(sprintf("##[ERROR] wrong source game name to make a new buoy game name: %s\n", @source_game))
+        log_error "Received a wrong source game name to make a new buoy game name: %s from %s." % [@source_game, @player.name]
+        return :continue
+      end
+      @new_buoy_game = "buoy_%s_%d-%s-%s" % [name, @nth_move, total_time, byo_time]
+      @player.write_safe(sprintf("##[FORK]: new buoy game name: %s\n", @new_buoy_game))
+      @player.write_safe("##[FORK] +OK\n")
+    end
+
+    def call
+      game = $league.games[@source_game]
+      unless game
+        @player.write_safe(sprintf("##[ERROR] wrong source game name: %s\n", @source_game))
+        log_error "Received a wrong source game name: %s from %s." % [@source_game, @player.name]
+        return :continue
+      end
+
+      moves = game.read_moves # [["+7776FU","T2"],["-3334FU","T5"]]
+      @nth_move = moves.size - 1 unless @nth_move
+      if @nth_move > moves.size or @nth_move < 1
+        @player.write_safe(sprintf("##[ERROR] number of moves to fork is out of range: %s.\n", moves.size))
+        log_error "Number of moves to fork is out of range: %s [%s]" % [@nth_move, @player.name]
+        return :continue
+      end
+      new_moves_str = ""
+      moves[0...@nth_move].each do |m|
+        new_moves_str << m.join(",")
+      end
+
+      unless @new_buoy_game
+        decide_new_buoy_game_name
+      end
+
+      buoy_cmd = SetBuoyCommand.new(@str, @player, @new_buoy_game, new_moves_str, 1)
+      return buoy_cmd.call
     end
   end
 
