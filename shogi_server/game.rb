@@ -364,7 +364,7 @@ Name-:#{@gote.name}
 Rematch_On_Draw:NO
 To_Move:+
 BEGIN Time
-Time_Unit:1sec
+Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}
@@ -398,7 +398,7 @@ Your_Turn:#{sg_flag}
 Rematch_On_Draw:NO
 To_Move:#{@board.teban ? "+" : "-"}
 BEGIN Time
-Time_Unit:1sec
+Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
 Least_Time_Per_Move:#{Least_Time_Per_Move}

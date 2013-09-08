@@ -1,3 +1,10 @@
+2013-09-08  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/{game,time_clock}.rb:
+	    When StopWatchClock is used, "Time_Unit:" of starting messages
+	    in CSA protocol supplies "1min".
+
 2013-04-07  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

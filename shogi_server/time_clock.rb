@@ -53,6 +53,12 @@ class TimeClock
     return 9999999
   end
 
+  # Returns what "Time_Unit:" in CSA protocol should provide.
+  #
+  def time_unit
+    return "1sec"
+  end
+
   # If thinking time runs out, returns true; false otherwise.
   #
   def timeout?(player, start_time, end_time)
@@ -104,6 +110,10 @@ end
 class StopWatchClock < TimeClock
   def initialize(least_time_per_move, total_time, byoyomi)
     super
+  end
+
+  def time_unit
+    return "1min"
   end
 
   def time_duration(start_time, end_time)
