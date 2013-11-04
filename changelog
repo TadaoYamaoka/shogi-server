@@ -32,6 +32,16 @@
 	    source_game.
 	  - command.rb: More elaborate error messages for the %%GAME command.
 
+2013-03-20  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - New pairing algorithm: ShogiServer::Pairing::LeastDiff
+	    This pairing algorithm aims to minimize the total differences of
+	    matching players' rates. It also includes penalyties when a match
+	    is same as the previous one or a match is between human players.
+	    It is based on a discussion with Yamashita-san on
+	    http://www.sgtpepper.net/kaneko/diary/20120511.html.
+
 2013-02-23  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
