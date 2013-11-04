@@ -49,6 +49,10 @@
 #   m [days] (default  7)
 #   after m days, the half-life effect works
 #
+# --ignore::
+#   m [days] (default  365*2)
+#   old results will be ignored
+#
 # --fixed-rate-player::
 #   player whose rate is fixed at the rate
 #
@@ -664,6 +668,11 @@ def parse(line)
   return if state == "abnormal"
   time = Time.parse(time)
   return if $options["base-date"] < time
+  how_long_days = ($options["base-date"] - time)/(3600*24)
+  if (how_long_days > $options["ignore"])
+    return
+  end
+
   black_id = identify_id(black_id)
   white_id = identify_id(white_id)
 
@@ -701,6 +710,8 @@ OPTOINS:
   --half-life         n [days] (default 60)
   --half-life-ignore  m [days] (default  7)
                       after m days, half-life effect works
+  --ignore            n [days] (default 730 [=365*2]).
+                      Results older than n days from the 'base-date' are ignored.
   --fixed-rate-player player whose rate is fixed at the rate
   --fixed-rate        rate 
   --skip-draw-games   skip draw games. [default: draw games are counted in
@@ -716,6 +727,7 @@ def main
     ["--half-life",         GetoptLong::REQUIRED_ARGUMENT],
     ["--half-life-ignore",  GetoptLong::REQUIRED_ARGUMENT],
     ["--help", "-h",        GetoptLong::NO_ARGUMENT],
+    ["--ignore",            GetoptLong::REQUIRED_ARGUMENT],
     ["--fixed-rate-player", GetoptLong::REQUIRED_ARGUMENT],
     ["--fixed-rate",        GetoptLong::REQUIRED_ARGUMENT],
     ["--skip-draw-games",   GetoptLong::NO_ARGUMENT])
@@ -748,6 +760,8 @@ def main
   $options["half-life"] = $options["half-life"].to_i
   $options["half-life-ignore"] ||= 7
   $options["half-life-ignore"] = $options["half-life-ignore"].to_i
+  $options["ignore"] ||= 365*2
+  $options["ignore"] = $options["ignore"].to_i
   $options["fixed-rate"] = $options["fixed-rate"].to_i if $options["fixed-rate"]
 
   if ARGV.empty?
