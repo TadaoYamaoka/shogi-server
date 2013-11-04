@@ -3,6 +3,8 @@
 	* [mk_rate]
 	  - Added a new option, --ignore, which is imported from
 	    mk_rate-from-grep.
+	* [mk_game_results]
+	  - Flush after each output line.
 
 2013-09-08  Daigo Moriwaki <daigo at debian dot org>
 
