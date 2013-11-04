@@ -50,8 +50,7 @@ Default_Game_Name = "default-1500-0"
 One_Time = 10
 Least_Time_Per_Move = 1
 Login_Time = 300                # time for LOGIN
-Release  = "$Id$"
-Revision = (r = /Revision: (\d+)/.match("$Revision$") ? r[1] : 0)
+Revision = "20131104"
 
 RELOAD_FILES = ["shogi_server/league/floodgate.rb",
                 "shogi_server/league/persistent.rb",
