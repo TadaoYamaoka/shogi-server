@@ -21,7 +21,7 @@ module ShogiServer
     end
 
     def ==(rhs)
-      return (@game_name == rhs.game_name && 
+      return (@game_name == rhs.game_name &&
               @moves == rhs.moves &&
               @owner == rhs.owner &&
               @count == rhs.count)

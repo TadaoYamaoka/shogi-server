@@ -1,3 +1,78 @@
+2013-11-04  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Added a new option, --ignore, which is imported from
+	    mk_rate-from-grep.
+	* [mk_game_results]
+	  - Flush after each output line.
+	* Rleased: Revision "20131104"
+
+2013-09-08  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/{game,time_clock}.rb:
+	    When StopWatchClock is used, "Time_Unit:" of starting messages
+	    in CSA protocol supplies "1min".
+
+2013-04-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/{game,time_clock}.rb:
+	    Adds variations of thinking time calculation: ChessClock
+	    (current) and StopWatchClock (new).
+	    StopWatchClock, which is usually used at official games of human
+	    professional players, is a clock where thiking time less than a
+	    miniute is regarded as zero.
+	    To select StopWatchClock, use a special game name with "060"
+	    byoyomi time. ex. "gamename_1500_060".
+
+2013-03-31  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - %%FORK command: %%FORK <source_game> [<new_buoy_game>] [<nth-move>]
+	    The new_buoy_game parameter is now optional. If it is not
+	    supplied, Shogi-server generates a new buoy game name from
+	    source_game.
+	  - command.rb: More elaborate error messages for the %%GAME command.
+
+2013-03-20  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - New pairing algorithm: ShogiServer::Pairing::LeastDiff
+	    This pairing algorithm aims to minimize the total differences of
+	    matching players' rates. It also includes penalyties when a match
+	    is same as the previous one or a match is between human players.
+	    It is based on a discussion with Yamashita-san on
+	    http://www.sgtpepper.net/kaneko/diary/20120511.html.
+
+2013-02-23  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - New command: %%FORK <source_game> <new_buoy_game> [<nth-move>]
+	    Fork a new game from the posistion where the n-th (starting from
+	    one) move of a source game is played. The new game should be a
+	    valid buoy game name. The default value of n is the position
+	    where the previous position of the last one.
+	    - The objective of this command: The shogi-server may be used as
+	    the back end server of computer-human match where a human player
+	    plays with a real board and someone, or a proxy, inputs moves to
+	    the shogi-server. If the proxy happens to enter a wrong move,
+	    with this command you can restart a new buoy game from the
+	    previous stable position.
+	    ex. %%FORK server-denou-14400-60+p1+p2+20130223185013 buoy_denou-14400-60
+
+2012-12-30  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Backported a5c94012656902e73e00f46e7a4c7004b24d4578:
+	    test/TC_logger.rb depeneded on a specific directory where it was
+	    running on. This issues has been fixed.
+	  - Backported 87d145bd1f1a14a33f5f6fbc78b63a1952f1ca90 and
+	    2df8c798aeb7f0e77735e893fd1370c2c6f15c4d:
+	    shogi_server/floodgate.rb: Generating next time around the new
+	    year day by reading configuration files did not work correctly.
+	    This issue has been fixed.
+
 2012-12-28  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

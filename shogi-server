@@ -143,9 +143,6 @@ LICENSE
 
 SEE ALSO
 
-RELEASE
-        #{ShogiServer::Release}
-
 REVISION
         #{ShogiServer::Revision}
 

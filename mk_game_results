@@ -89,6 +89,7 @@ def grep(file)
       puts [time, state, black_mark, black_id, white_id, white_mark, file].join("\t")
     end
   end
+  $stdout.flush
 end
 
 # Show Usage

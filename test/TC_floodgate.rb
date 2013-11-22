@@ -395,6 +395,22 @@ class TestFloodgateHistory < Test::Unit::TestCase
     assert !@history.last_win?("foo")
     assert !@history.last_lose?("hoge")
     assert @history.last_lose?("foo")
+
+    assert_equal("foo", @history.last_opponent("hoge"))
+    assert_equal("hoge", @history.last_opponent("foo"))
+
+    games = @history.win_games("hoge")
+    assert_equal(1, games.size )
+    assert_equal("wdoor+floodgate-900-0-hoge-foo-2", games[0][:game_id])
+    games = @history.win_games("foo")
+    assert_equal(1, games.size )
+    assert_equal("wdoor+floodgate-900-0-hoge-foo-1", games[0][:game_id])
+    games = @history.loss_games("hoge")
+    assert_equal(1, games.size )
+    assert_equal("wdoor+floodgate-900-0-hoge-foo-1", games[0][:game_id])
+    games = @history.loss_games("foo")
+    assert_equal(1, games.size )
+    assert_equal("wdoor+floodgate-900-0-hoge-foo-2", games[0][:game_id])
   end
 end
 

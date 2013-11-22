@@ -43,17 +43,42 @@ EOF
 
   # Split a moves line into an array of a move string.
   # If it fails to parse the moves, it raises WrongMoves.
-  # @param moves a moves line. Ex. "+776FU-3334Fu"
-  # @return an array of a move string. Ex. ["+7776FU", "-3334FU"]
+  # @param moves a moves line. Ex. "+776FU-3334FU" or
+  #              moves with times. Ex "+776FU,T2-3334FU,T5"
+  # @return an array of a move string. Ex. ["+7776FU", "-3334FU"] or
+  #         an array of arrays. Ex. [["+7776FU","T2"], ["-3334FU", "T5"]]
   #
   def Board.split_moves(moves)
     ret = []
 
-    rs = moves.gsub %r{[\+\-]\d{4}\w{2}} do |s|
-           ret << s
-           ""
-         end
-    raise WrongMoves, rs unless rs.empty?
+    i=0
+    tmp = ""
+    while i<moves.size
+      if moves[i,1] == "+" ||
+         moves[i,1] == "-" ||
+         i == moves.size - 1
+        if i == moves.size - 1
+          tmp << moves[i,1]
+        end
+        unless tmp.empty?
+          a = tmp.split(",")
+          if a[0].size != 7
+            raise WrongMoves, a[0]
+          end
+          if a.size == 1 # "+7776FU"
+            ret << a[0]
+          else           # "+7776FU,T2"
+            unless /^T\d+/ =~ a[1] 
+              raise WrongMoves, a[1]
+            end
+            ret << a
+          end
+          tmp = ""
+        end
+      end
+      tmp << moves[i,1]
+      i += 1
+    end
 
     return ret
   end
@@ -242,14 +267,21 @@ EOF
 
   # Set up a board starting with a position after the moves.
   # Failing to parse the moves raises an ArgumentError.
-  # @param moves an array of moves. ex. ["+7776FU", "-3334FU"]
+  # @param moves an array of moves. ex. ["+7776FU", "-3334FU"] or
+  #        an array of arrays. ex. [["+7776FU","T2"], ["-3334FU","T5"]]
   #
   def set_from_moves(moves)
     initial()
     return :normal if moves.empty?
     rt = nil
     moves.each do |move|
-      rt = handle_one_move(move, @teban)
+      rt = nil
+      case move
+      when Array
+        rt = handle_one_move(move[0], @teban)
+      when String
+        rt = handle_one_move(move, @teban)
+      end
       raise ArgumentError, "bad moves: #{moves}" unless rt == :normal
     end
     @initial_moves = moves.dup
