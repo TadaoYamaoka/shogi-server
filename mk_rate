@@ -104,6 +104,7 @@
 require 'yaml'
 require 'time'
 require 'getoptlong'
+require 'set'
 require 'rubygems'
 require 'gsl'
 require 'rgl/adjacency'
@@ -123,6 +124,8 @@ DRAW_MARK = "draw"
 $players = Hash.new
 # Holds the last time when a player gamed
 $players_time = Hash.new { Time.at(0) }
+# Holds history of input lines to check duplicated inputs
+$history = Set.new
 
 
 #################################################
@@ -654,6 +657,12 @@ end
 # Parse a game result line
 #
 def parse(line)
+  if $history.include? line
+    $stderr.puts "[WARNING] Duplicated: #{line}"
+    return
+  end
+  $history.add line
+
   time, state, black_mark, black_id, white_id, white_mark, file = line.split("\t")
   unless time && state && black_mark && black_id &&
          white_id && white_mark && file

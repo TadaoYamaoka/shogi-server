@@ -2,6 +2,7 @@
 
 	* [mk_rate]
 	  - gsl library may be provided as a gem
+	  - Now duplicated inputs are checked and skipped.
 	* test/TC_floodgate.rb
 	  - Improved randomness check so that it works on Ruby 2.0.0 as well
 
