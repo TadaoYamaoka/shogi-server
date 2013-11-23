@@ -1,3 +1,8 @@
+2013-11-23  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - gsl library may be provided as a gem
+
 2013-11-04  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]

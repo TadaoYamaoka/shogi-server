@@ -104,8 +104,8 @@
 require 'yaml'
 require 'time'
 require 'getoptlong'
-require 'gsl'
 require 'rubygems'
+require 'gsl'
 require 'rgl/adjacency'
 require 'rgl/connected_components'
 
