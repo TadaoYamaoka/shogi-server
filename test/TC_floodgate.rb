@@ -88,7 +88,8 @@ class TestMakeEven < Test::Unit::TestCase
  def test_match_odd
     players = [@a, @b, @c]
     @pairing.match(players)
-    assert_equal([@a, @b], players)
+    assert_equal(2, players.size)
+    assert(players[0] != players[1])
   end
 end
 
@@ -137,7 +138,10 @@ class TestRandomize < Test::Unit::TestCase
   def test_match
     players = [@a, @b, @c]
     @pairing.match(players)
-    assert_equal([@b,@a,@c], players)
+    assert_equal(3, players.size)
+    assert(players.include? @a)
+    assert(players.include? @b)
+    assert(players.include? @c)
   end
 end
 
