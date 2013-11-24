@@ -27,11 +27,13 @@ class League
     #
     attr_reader :next_time
     attr_reader :league, :game_name
+    attr_reader :pairing_factory
 
     def initialize(league, hash={})
       @league = league
       @next_time = hash[:next_time] || nil
       @game_name = hash[:game_name] || "floodgate-900-0"
+      @pairing_factory = "default_factory" # will be updated by NextTimeGenerator
       charge if @next_time.nil?
     end
 
@@ -41,6 +43,7 @@ class League
 
     def charge
       ntg = NextTimeGenerator.factory(@game_name)
+      @pairing_factory = ntg.pairing_factory
       if ntg
         @next_time = ntg.call(Time.now)
       else
@@ -49,12 +52,14 @@ class League
     end
 
     def match_game
+      log_message("Starting Floodgate games...: %s, %s" % [@game_name, @pairing_factory])
       players = @league.find_all_players do |pl|
         pl.status == "game_waiting" &&
         game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      Pairing.match(players)
+      logics = Pairing.send(@pairing_factory)
+      Pairing.match(players, logics)
     end
     
     #
@@ -80,10 +85,22 @@ class League
       end
     end
 
+    class AbstructNextTimeGenerator
+
+      attr_reader :pairing_factory
+
+      # Constructor. 
+      #
+      def initialize
+        @pairing_factory = "default_factory"
+      end
+    end
+
     # Schedule the next time from configuration files.
     #
     # Line format: 
     #   # This is a comment line
+    #   set <parameter_name> <value>
     #   DoW Time
     #   ...
     # where
@@ -97,12 +114,20 @@ class League
     #   Sat 22:00
     #   Sun 13:00
     #
-    class NextTimeGeneratorConfig
+    # Set parameters:
+    #
+    # * pairing_factory:
+    #   Specifies a factory function name generating a pairing
+    #   method which will be used in a specific Floodgate game.
+    #   ex. floodgate_zyunisen 
+    #
+    class NextTimeGeneratorConfig < AbstructNextTimeGenerator
       
       # Constructor. 
       # Read configuration contents.
       #
       def initialize(lines)
+        super()
         @lines = lines
       end
 
@@ -114,7 +139,10 @@ class League
         # now.cweek 1-53
         # now.cwday 1(Monday)-7
         @lines.each do |line|
-          if %r!^\s*(\w+)\s+(\d{1,2}):(\d{1,2})! =~ line
+          case line
+          when %r!^\s*set\s+pairing_factory\s+(\w+)!
+            @pairing_factory = $1
+          when %r!^\s*(\w+)\s+(\d{1,2}):(\d{1,2})!
             dow, hour, minute = $1, $2.to_i, $3.to_i
             dow_index = ::ShogiServer::parse_dow(dow)
             next if dow_index.nil?
@@ -132,7 +160,14 @@ class League
 
     # Schedule the next time for floodgate-900-0: each 30 minutes
     #
-    class NextTimeGenerator_Floodgate_900_0
+    class NextTimeGenerator_Floodgate_900_0 < AbstructNextTimeGenerator
+
+      # Constructor. 
+      #
+      def initialize
+        super
+      end
+
       def call(now)
         if now.min < 30
           return Time.mktime(now.year, now.month, now.day, now.hour, 30)
@@ -144,7 +179,14 @@ class League
 
     # Schedule the next time for floodgate-3600-0: each 2 hours (odd hour)
     #
-    class NextTimeGenerator_Floodgate_3600_0
+    class NextTimeGenerator_Floodgate_3600_0 < AbstructNextTimeGenerator
+
+      # Constructor. 
+      #
+      def initialize
+        super
+      end
+
       def call(now)
         return Time.mktime(now.year, now.month, now.day, now.hour) + ((now.hour%2)+1)*3600
       end
@@ -152,7 +194,14 @@ class League
 
     # Schedule the next time for debug: each 30 seconds.
     #
-    class NextTimeGenerator_Debug
+    class NextTimeGenerator_Debug < AbstructNextTimeGenerator
+
+      # Constructor. 
+      #
+      def initialize
+        super
+      end
+
       def call(now)
         if now.sec < 30
           return Time.mktime(now.year, now.month, now.day, now.hour, now.min, 30)

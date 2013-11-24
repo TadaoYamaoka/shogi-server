@@ -571,3 +571,58 @@ class TestLeastDiff < Test::Unit::TestCase
   end
 end
 
+class TestExcludeUnratedPlayers < Test::Unit::TestCase
+  def setup
+    @pairing= ShogiServer::ExcludeUnratedPlayers.new
+    @a = ShogiServer::BasicPlayer.new
+    @a.name = "a"
+    @a.win  = 1
+    @a.loss = 2
+    @a.rate = 0
+    @b = ShogiServer::BasicPlayer.new
+    @b.name = "b"
+    @b.win  = 10
+    @b.loss = 20
+    @b.rate = 1500
+    @c = ShogiServer::BasicPlayer.new
+    @c.name = "c"
+    @c.win  = 100
+    @c.loss = 200
+    @c.rate = 1000
+    @d = ShogiServer::BasicPlayer.new
+    @d.name = "d"
+    @d.win  = 1000
+    @d.loss = 2000
+    @d.rate = 2000
+  end
+
+  def test_match_without_any_players
+    players = []
+    @pairing.match(players)
+    assert_equal([], players)
+  end
+
+  def test_match_without_unrated_player_1
+    players = [@b, @c, @d]
+    @pairing.match(players)
+    assert_equal([@b, @c, @d], players)
+  end
+
+  def test_match_without_unrated_player_2
+    players = [@b]
+    @pairing.match(players)
+    assert_equal([@b], players)
+  end
+
+  def test_match_with_unrated_player_1
+    players = [@a, @b, @c, @d]
+    @pairing.match(players)
+    assert_equal([@b, @c, @d], players)
+  end
+
+  def test_match_with_unrated_player_2
+    players = [@a]
+    @pairing.match(players)
+    assert_equal([], players)
+  end
+end

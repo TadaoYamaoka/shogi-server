@@ -1,3 +1,14 @@
+2013-12-05  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added a new pairing method, ShogiServer::ExcludeUnratedPlayers,
+	    which filters out unrated players.
+	  - Enhanced syntax of Floodgate time configuration file.
+	    Now it supports "set pairing_factory <function_name>"; it sets a
+	    factory function name generating a pairing method which will be
+	    used in a specific Floodgate game.
+	    ex. set pairing_factory floodgate_zyunisen 
+
 2013-11-24  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

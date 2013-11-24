@@ -64,7 +64,6 @@ module ShogiServer
     end
 
     def start_games(floodgate)
-      log_message("Starting Floodgate games...: %s" % [floodgate.game_name])
       $league.reload
       floodgate.match_game
     end

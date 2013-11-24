@@ -60,8 +60,16 @@ module ShogiServer
                 StartGameWithoutHumans.new]
       end
 
-      def match(players)
-        logics = default_factory
+      def floodgate_zyunisen
+        return [LogPlayers.new,
+                ExcludeUnratedPlayers.new,
+                ExcludeSacrificeGps500.new,
+                MakeEven.new,
+                LeastDiff.new,
+                StartGameWithoutHumans.new]
+      end
+
+      def match(players, logics)
         logics.inject(players) do |result, item|
           item.match(result)
           result
@@ -498,5 +506,18 @@ module ShogiServer
       players.replace(matches[min_index])
     end
   end
+
+  # This pairing method excludes unrated players
+  #
+  class ExcludeUnratedPlayers < Pairing
+
+    def match(players)
+      super
+
+      log_message("Floodgate: Deleting unrated players...")
+      players.delete_if{|a| a.rate == 0}
+      log_players(players)
+    end
+  end # class ExcludeUnratedPlayers
 
 end # ShogiServer

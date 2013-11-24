@@ -202,4 +202,20 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
     ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_equal Time.parse("17-06-2010 22:00"), ntc.call(now)
   end
+
+  def test_default_pairing_factory
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal("default_factory", ntc.pairing_factory)
+  end
+
+  def test_read_pairing_factory
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(set\ pairing_factory\ least_diff_pairing Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal("least_diff_pairing", ntc.pairing_factory)
+  end
 end
