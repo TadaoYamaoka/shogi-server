@@ -58,7 +58,11 @@ require 'getoptlong'
 # @parameter file an absolute path of a csa file
 #
 def grep(file)
-  str = File.open(file).read
+  if RUBY_VERSION >= "1.9.1"
+    str = File.open(file, "r:EUC-JP").read
+  else
+    str = File.open(file, "r").read
+  end
 
   if /^N\+(.*)$/ =~ str then black_name = $1.strip end
   if /^N\-(.*)$/ =~ str then white_name = $1.strip end
