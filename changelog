@@ -13,6 +13,8 @@
 	      already in use - bind(2)".
 	* [mk_game_results]
 	  - Fixed for reading Japanese comments under ruby1.9.3p194.
+	* mk_rate-from-grep, mk_rate-grep:
+	  - Removed files that are no longer used.
 
 2013-11-23  Daigo Moriwaki <daigo at debian dot org>
 
