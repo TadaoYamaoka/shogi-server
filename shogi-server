@@ -29,7 +29,7 @@ $topdir = nil
 $league = nil
 $logger = nil
 $config = nil
-$:.unshift File.dirname(__FILE__)
+$:.unshift(File.dirname(File.expand_path(__FILE__)))
 require 'shogi_server'
 require 'shogi_server/config'
 require 'shogi_server/util'
