@@ -3,8 +3,14 @@
 	* [shogi-server]
 	  - shogi_server/league/floodgate.rb: Improved robustness against
 	    empty file under ruby 1.9.3p194
-	  - shogi-server: Previously, reloading in daemon mode failed on
-	    ruby 1.9.3p194. This issue has been fixed.
+	  - shogi-server:
+	    - Previously, reloading in daemon mode failed on
+	      ruby 1.9.3p194. This issue has been fixed.
+	    - Listen on only IPv4 explicitly. Under ruby 1.9.3p194, without
+	      any bind addresses, ruby attempts to listen on both "0.0.0.0"
+	      and "::". Specifying "::" on Linux leads to listen on both IPv4
+	      and IPv6, which results in a warning message saying "Address
+	      already in use - bind(2)".
 	* [mk_game_results]
 	  - Fixed for reading Japanese comments under ruby1.9.3p194.
 
