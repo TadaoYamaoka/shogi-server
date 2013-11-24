@@ -216,8 +216,13 @@ class League
       def load
         return unless @file.exist?
 
-        @records = YAML.load_file(@file)
-        unless @records && @records.instance_of?(Array)
+        begin
+          @records = YAML.load_file(@file)
+          unless @records && @records.instance_of?(Array)
+            $logger.error "%s is not a valid yaml file. Instead, an empty array will be used and updated." % [@file]
+            @records = []
+          end
+        rescue
           $logger.error "%s is not a valid yaml file. Instead, an empty array will be used and updated." % [@file]
           @records = []
         end
