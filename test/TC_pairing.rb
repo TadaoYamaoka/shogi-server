@@ -551,6 +551,7 @@ class TestLeastDiff < Test::Unit::TestCase
   def test_get_player_rate_0
     assert_equal(2150, @pairing.get_player_rate(@x, @history))
 
+    @x.estimated_rate = 0
     dummy = nil
     def @history.make_record(game_result)
       {:game_id => "wdoor+floodgate-900-0-x-a-1", 
@@ -558,8 +559,9 @@ class TestLeastDiff < Test::Unit::TestCase
        :winner => "x", :loser => "a"}
     end
     @history.update(dummy)
-    assert_equal(@a.rate+100, @pairing.get_player_rate(@x, @history))
+    assert_equal(@a.rate+200, @pairing.get_player_rate(@x, @history))
 
+    @x.estimated_rate = 0
     def @history.make_record(game_result)
       {:game_id => "wdoor+floodgate-900-0-x-b-1", 
        :black => "x",  :white => "b",
@@ -567,7 +569,7 @@ class TestLeastDiff < Test::Unit::TestCase
     end
     @history.update(dummy)
 
-    assert_equal((@a.rate+100+@b.rate-100)/2, @pairing.get_player_rate(@x, @history))
+    assert_equal(@b.rate-200, @pairing.get_player_rate(@x, @history))
   end
 end
 

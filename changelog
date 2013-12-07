@@ -1,3 +1,9 @@
+2013-12-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/pairing.rb, player.rb:
+	    Simplify estimated rate of unrated players (less memory).
+
 2013-12-05  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

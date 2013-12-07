@@ -396,43 +396,74 @@ module ShogiServer
       players.shuffle
     end
 
-    # Returns a player's rate value.
+    # Update estimated rate of a player.
     # 1. If it has a valid rate, return the rate.
-    # 2. If it has no valid rate, return average of the following values:
-    #   a. For games it won, the opponent's rate + 100
-    #   b. For games it lost, the opponent's rate - 100
-    #   (if the opponent has no valid rate, count out the game)
-    #   (if there are not such games, return 2150 (default value)
+    # 2. If it has no valid rate, return:
+    #   a. If it won the last game, the opponent's rate + 200
+    #   b. If it lost the last game, the opponent's rate - 200
+    #   c. otherwise, return 2150 (default value)
+    #
+    def estimate_rate(player, history)
+      player.estimated_rate = 2150 # default value
+
+      unless history
+        log_message("Floodgate: Without game history, estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      g = history.last_valid_game(player.player_id)
+      unless g
+        log_message("Floodgate: Without any valid games in history, estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      opponent_id = nil
+      win         = true
+      case player.player_id
+      when g[:winner]
+        opponent_id = g[:loser]
+        win = true
+      when g[:loser]
+        opponent_id = g[:winner]
+        win = false
+      else
+        log_warning("Floodgate: The last valid game is invalid for %s!" % [player.name])
+        log_message("Floodgate: Estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      opponent_name = opponent_id.split("+")[0]
+      p = $league.find(opponent_name)
+      unless p
+        log_message("Floodgate: No active opponent found. Estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      opponent_rate = 0
+      if p.rate != 0
+        opponent_rate = p.rate
+      elsif p.estimated_rate != 0
+        opponent_rate = p.estimated_rate
+      end
+
+      if opponent_rate != 0
+        player.estimated_rate = opponent_rate + (win ? 200 : -200)
+      end
+
+      log_message("Floodgate: Estimated %s's rate: %d" % [player.name, player.estimated_rate])
+    end
+
+    # Return a player's rate based on its actual rate or estimated rate.
     #
     def get_player_rate(player, history)
-      return player.rate if player.rate != 0
-      return 2150 unless history
-
-      count = 0
-      sum = 0
-
-      history.win_games(player.player_id).each do |g|
-        next unless g[:loser]
-        name = g[:loser].split("+")[0]
-        p = $league.find(name)
-        if p && p.rate != 0
-          count += 1
-          sum += p.rate + 100
-        end
+      if player.rate != 0
+        return player.rate
+      elsif player.estimated_rate != 0
+        return player.estimated_rate 
+      else
+        estimate_rate(player, history)
+        return player.estimated_rate
       end
-      history.loss_games(player.player_id).each do |g|
-        next unless g[:winner]
-        name = g[:winner].split("+")[0]
-        p = $league.find(name)
-        if p && p.rate != 0
-          count += 1
-          sum += p.rate - 100
-        end
-      end
-
-      estimate = (count == 0 ? 2150 : sum/count)
-      log_message("Floodgate: Estimated rate of %s is %d" % [player.name, estimate])
-      return estimate
     end
 
     def calculate_diff_with_penalty(players, history)
@@ -474,6 +505,9 @@ module ShogiServer
         log_message("Floodgate: players are small enough to skip LeastDiff pairing: %d" % [players.size])
         return players
       end
+
+      # Reset estimated rate
+      players.each {|p| p.estimated_rate = 0}
 
       # 10 trials
       matches = []
