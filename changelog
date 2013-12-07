@@ -3,6 +3,10 @@
 	* [shogi-server]
 	  - shogi_server/pairing.rb, player.rb:
 	    Simplify estimated rate of unrated players (less memory).
+	  - Enhanced syntax of Floodgate time configuration file.
+	    Now it supports "set sacrifice <player_id>"; it sets a
+	    sacrificed player for a specific Floodgate game.
+	    ex. set sacrifice gps500+e293220e3f8a3e59f79f6b0efffaa931
 
 2013-12-05  Daigo Moriwaki <daigo at debian dot org>
 

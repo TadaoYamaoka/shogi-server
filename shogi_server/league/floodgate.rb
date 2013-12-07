@@ -28,12 +28,15 @@ class League
     attr_reader :next_time
     attr_reader :league, :game_name
     attr_reader :pairing_factory
+    attr_reader :options
 
     def initialize(league, hash={})
       @league = league
       @next_time = hash[:next_time] || nil
       @game_name = hash[:game_name] || "floodgate-900-0"
       @pairing_factory = "default_factory" # will be updated by NextTimeGenerator
+      # Options will be updated by NextTimeGenerator
+      @options = {:sacrifice => "gps500+e293220e3f8a3e59f79f6b0efffaa931"}
       charge if @next_time.nil?
     end
 
@@ -44,6 +47,7 @@ class League
     def charge
       ntg = NextTimeGenerator.factory(@game_name)
       @pairing_factory = ntg.pairing_factory
+      @options[:sacrifice] = ntg.sacrifice
       if ntg
         @next_time = ntg.call(Time.now)
       else
@@ -58,7 +62,7 @@ class League
         game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      logics = Pairing.send(@pairing_factory)
+      logics = Pairing.send(@pairing_factory, @options)
       Pairing.match(players, logics)
     end
     
@@ -88,11 +92,13 @@ class League
     class AbstructNextTimeGenerator
 
       attr_reader :pairing_factory
+      attr_reader :sacrifice
 
       # Constructor. 
       #
       def initialize
         @pairing_factory = "default_factory"
+        @sacrifice       = "gps500+e293220e3f8a3e59f79f6b0efffaa931"
       end
     end
 
@@ -119,7 +125,10 @@ class League
     # * pairing_factory:
     #   Specifies a factory function name generating a pairing
     #   method which will be used in a specific Floodgate game.
-    #   ex. floodgate_zyunisen 
+    #   ex. set pairing_factory floodgate_zyunisen
+    # * sacrifice:
+    #   Specifies a sacrificed player.
+    #   ex. set sacrifice gps500+e293220e3f8a3e59f79f6b0efffaa931
     #
     class NextTimeGeneratorConfig < AbstructNextTimeGenerator
       
@@ -142,6 +151,8 @@ class League
           case line
           when %r!^\s*set\s+pairing_factory\s+(\w+)!
             @pairing_factory = $1
+          when %r!^\s*set\s+sacrifice\s+(.*)!
+            @sacrifice = $1
           when %r!^\s*(\w+)\s+(\d{1,2}):(\d{1,2})!
             dow, hour, minute = $1, $2.to_i, $3.to_i
             dow_index = ::ShogiServer::parse_dow(dow)
@@ -151,6 +162,12 @@ class League
             time = DateTime::commercial(now.cwyear, now.cweek, dow_index, hour, minute) rescue next
             time += 7 if time <= now 
             candidates << time
+          when %r!^\s*#!
+            # Skip comment line
+          when %r!^\s*$!
+            # Skip empty line
+          else
+            log_warning("Floodgate: Unsupported syntax in a next time generator config file: %s" % [line]) 
           end
         end
         candidates.map! {|dt| ::ShogiServer::datetime2time(dt)}

@@ -24,46 +24,46 @@ module ShogiServer
   class Pairing
 
     class << self
-      def default_factory
-        return least_diff_pairing
+      def default_factory(options)
+        return least_diff_pairing(options)
       end
 
-      def sort_by_rate_with_randomness
+      def sort_by_rate_with_randomness(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 SortByRateWithRandomness.new(1200, 2400),
                 StartGameWithoutHumans.new]
       end
 
-      def random_pairing
+      def random_pairing(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 Randomize.new,
                 StartGameWithoutHumans.new]
       end
 
-      def swiss_pairing
+      def swiss_pairing(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 Swiss.new,
                 StartGameWithoutHumans.new]
       end
 
-      def least_diff_pairing
+      def least_diff_pairing(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 LeastDiff.new,
                 StartGameWithoutHumans.new]
       end
 
-      def floodgate_zyunisen
+      def floodgate_zyunisen(options)
         return [LogPlayers.new,
                 ExcludeUnratedPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 LeastDiff.new,
                 StartGameWithoutHumans.new]
@@ -354,7 +354,7 @@ module ShogiServer
     # @sacrifice a player id to be eliminated
     def initialize(sacrifice)
       super()
-      @sacrifice = sacrifice
+      @sacrifice = sacrifice || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
     end
 
     def match(players)

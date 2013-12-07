@@ -138,6 +138,20 @@ FLOODGATE SCHEDULE CONFIGURATIONS
 	        Sat 22:00
 	        Sun 13:00
 
+            PAREMETER SETTING
+
+            In addition, this configuration file allows to set parameters
+            for the specific Floodaget group. A list of parameters is the
+            following:
+
+            * pairing_factory:
+              Specifies a factory function name generating a pairing
+              method which will be used in a specific Floodgate game.
+              ex. set pairing_factory floodgate_zyunisen
+            * sacrifice:
+              Specifies a sacrificed player.
+              ex. set sacrifice gps500+e293220e3f8a3e59f79f6b0efffaa931
+
 LICENSE
         GPL versoin 2 or later
 
