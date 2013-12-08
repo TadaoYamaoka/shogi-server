@@ -1,3 +1,9 @@
+2013-12-08  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi-server/shogi_server/pairing.rb: Modified comment for
+	    LeastDiff match.
+
 2013-12-07  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

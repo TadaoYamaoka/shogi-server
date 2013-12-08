@@ -535,7 +535,7 @@ module ShogiServer
           min_score = s
         end
       end
-      log_message("Floodgate: the least score %d (%d per player) [%s]" % [min_score, min_score/players.size, scores.join(" ")])
+      log_message("Floodgate: the least score %d (%d per game) [%s]" % [min_score, min_score/players.size*2, scores.join(" ")])
 
       players.replace(matches[min_index])
     end
