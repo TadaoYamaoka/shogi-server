@@ -144,7 +144,7 @@ module ShogiServer
     def match(players)
       super
       if players.size < 2
-        log_warning("Floodgate: There should be more than one player (%d)." % [players.size])
+        log_message("Floodgate: There are less than two players: %d" % [players.size])
         return
       end
       if players.size.odd?
@@ -167,7 +167,7 @@ module ShogiServer
       super
       log_players(players)
       if players.size < 2
-        log_warning("Floodgate: There should be more than one player (%d)." % [players.size])
+        log_message("Floodgate: There are less than two players: %d" % [players.size])
         return
       elsif players.size == 2
         start_game_shuffle(players)
