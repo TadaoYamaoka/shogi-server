@@ -27,6 +27,7 @@ class BasicPlayer
     @name = nil
     @password = nil
     @rate = 0
+    @estimated_rate = 0
     @win  = 0
     @loss = 0
     @last_game_win = false
@@ -47,6 +48,10 @@ class BasicPlayer
 
   # Score in the rating sysem
   attr_accessor :rate
+
+  # Estimated rate for unrated player (rate == 0)
+  # But this value is not persisted and cleared when player logs off.
+  attr_accessor :estimated_rate
 
   # Number of games for win and loss in the rating system
   attr_accessor :win, :loss

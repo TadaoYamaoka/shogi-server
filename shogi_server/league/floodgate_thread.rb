@@ -64,7 +64,6 @@ module ShogiServer
     end
 
     def start_games(floodgate)
-      log_message("Starting Floodgate games...: %s" % [floodgate.game_name])
       $league.reload
       floodgate.match_game
     end
@@ -74,6 +73,7 @@ module ShogiServer
     #
     def regenerate_leagues(next_array)
       leagues = next_array.collect do |game_name, next_time|
+        log_message("Regenerating a floodgate league...: %s %s" % [game_name, next_time])
         floodgate = ShogiServer::League::Floodgate.new($league, 
                                                        {:game_name => game_name,
                                                         :next_time => next_time})
