@@ -1,3 +1,9 @@
+2013-12-13  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Implemented conversion of move representation between CSA format
+	    and USI one.
+
 2013-11-24  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

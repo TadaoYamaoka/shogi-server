@@ -94,6 +94,7 @@ EOF
     @move_count = move_count
     @teban = nil # black => true, white => false
     @initial_moves = []
+    @move = nil
     @ous = [nil, nil] # keep OU pieces of Sente and Gote
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history, :teban
@@ -103,6 +104,11 @@ EOF
   # normal with the initial setting; otherwise, the game is started after the
   # moves.
   attr_reader :initial_moves
+
+  # A move parsed by handle_one_move. If the move is not :normal, the board
+  # position may or may not be rolled back.
+  #
+  attr_reader :move
 
   # See if self equals rhs, including a logical board position (i.e.
   # not see object IDs) and sennichite stuff.
@@ -678,18 +684,18 @@ EOF
       return :illegal           # can't put on existing piece
     end
 
-    move = Move.new(x0, y0, x1, y1, name, sente)
-    result = move_to(move)
+    @move = Move.new(x0, y0, x1, y1, name, sente)
+    result = move_to(@move)
     if (result == :illegal)
       # self is unchanged
       return :illegal 
     end
     if (checkmated?(sente))
-      move_back(move)
+      move_back(@move)
       return :oute_kaihimore 
     end
     if ((x0 == 0) && (y0 == 0) && (name == "FU") && uchifuzume?(sente))
-      move_back(move)
+      move_back(@move)
       return :uchifuzume
     end
 
@@ -697,12 +703,12 @@ EOF
     update_sennichite(sente)
     os_result = oute_sennichite?(sente)
     if os_result # :oute_sennichite_sente_lose or :oute_sennichite_gote_lose
-      move_back(move)
+      move_back(@move)
       restore_sennichite_stuff(*sennichite_stuff)
       return os_result 
     end
     if sennichite?
-      move_back(move)
+      move_back(@move)
       restore_sennichite_stuff(*sennichite_stuff)
       return :sennichite 
     end
