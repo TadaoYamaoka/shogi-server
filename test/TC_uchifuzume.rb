@@ -1,9 +1,11 @@
-require "baseclient"
+$:.unshift File.join(File.dirname(__FILE__), "..")
+$topdir = File.expand_path File.dirname(__FILE__)
+require "test/baseclient"
 include Socket::Constants
 
 class UchifuzumeTest < ReadFileClient
   def test_uchifuzume
-    csa = File.open(filepath("uchifuzume.csa")) {|f| f.read}
+    csa = File.open(filepath("uchifuzume.csa"), "r+:shift_jis"){|f| f.read}
     handshake(csa)
     @p2.puts "-0064FU"
     @p1.puts "%TORYO"
@@ -14,7 +16,7 @@ class UchifuzumeTest < ReadFileClient
   end
 
   def test_not_uchifuzume
-    csa = File.open(filepath("not_uchifuzume.csa")) {|f| f.read}
+    csa = File.open(filepath("not_uchifuzume.csa"), "r+:shift_jis"){|f| f.read}
     handshake(csa)
     @p2.puts "-0092FU"
     @p1.puts "%TORYO"

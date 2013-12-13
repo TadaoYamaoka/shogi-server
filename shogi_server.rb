@@ -1,7 +1,7 @@
 ## $Id$
 
 ## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
-## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+## Copyright (C) 2007-2012 Daigo Moriwaki (daigo at debian dot org)
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ require 'webrick'
 require 'fileutils'
 require 'logger'
 
+require 'shogi_server/compatible'
 require 'shogi_server/board'
 require 'shogi_server/game'
 require 'shogi_server/league'

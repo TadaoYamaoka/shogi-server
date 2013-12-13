@@ -1,7 +1,7 @@
 ## $Id$
 
 ## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
-## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+## Copyright (C) 2007-2012 Daigo Moriwaki (daigo at debian dot org)
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ class BasicPlayer
     @name = nil
     @password = nil
     @rate = 0
+    @estimated_rate = 0
     @win  = 0
     @loss = 0
     @last_game_win = false
@@ -47,6 +48,10 @@ class BasicPlayer
 
   # Score in the rating sysem
   attr_accessor :rate
+
+  # Estimated rate for unrated player (rate == 0)
+  # But this value is not persisted and cleared when player logs off.
+  attr_accessor :estimated_rate
 
   # Number of games for win and loss in the rating system
   attr_accessor :win, :loss
@@ -118,8 +123,8 @@ class BasicPlayer
 
   def set_sente_from_str(str)
     case str
-    when "+": @sente = true
-    when "-": @sente = false
+    when "+" then @sente = true
+    when "-" then @sente = false
     else
       # str should be "*"
       @sente = nil
@@ -206,7 +211,6 @@ class Player < BasicPlayer
           write_safe(nil)
           Thread.pass # help the write_thread to terminate
         end
-        @player_logger.close if @player_logger
         log_debug("done.")
       rescue
         log_message(sprintf("user %s finish failed", @name))    
@@ -245,6 +249,17 @@ class Player < BasicPlayer
       log_message("At least %d messages are not sent to the client." % 
                   [@write_queue.get_messages.size])
     end # thread
+  end
+
+  #
+  # Wait for the write thread to finish.
+  # This method should be called just before this instance will be freed.
+  #
+  def wait_write_thread_finish(msec=1000)
+    while msec > 0 && @write_thread && @write_thread.alive?
+      sleep 0.1; msec -= 0.1
+    end
+    @player_logger.close if @player_logger
   end
 
   #
@@ -307,6 +322,7 @@ class Player < BasicPlayer
           # do nothing
         else
           # TODO never reach
+          log_error("Detected a wrong return value for %s" % [cmd])
         end
 
       ensure

@@ -1,3 +1,63 @@
+2013-12-13  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/league/floodgate_thread.rb:
+	    - Added a log message.
+
+2013-12-08  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi-server/shogi_server/pairing.rb:
+	    - Modified comment for LeastDiff match.
+	    - Changed log messages and levels. 
+
+2013-12-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/pairing.rb, player.rb:
+	    Simplify estimated rate of unrated players (less memory).
+	  - Enhanced syntax of Floodgate time configuration file.
+	    Now it supports "set sacrifice <player_id>"; it sets a
+	    sacrificed player for a specific Floodgate game.
+	    ex. set sacrifice gps500+e293220e3f8a3e59f79f6b0efffaa931
+
+2013-12-05  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added a new pairing method, ShogiServer::ExcludeUnratedPlayers,
+	    which filters out unrated players.
+	  - Enhanced syntax of Floodgate time configuration file.
+	    Now it supports "set pairing_factory <function_name>"; it sets a
+	    factory function name generating a pairing method which will be
+	    used in a specific Floodgate game.
+	    ex. set pairing_factory floodgate_zyunisen 
+
+2013-11-24  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/league/floodgate.rb: Improved robustness against
+	    empty file under ruby 1.9.3p194
+	  - shogi-server:
+	    - Previously, reloading in daemon mode failed on
+	      ruby 1.9.3p194. This issue has been fixed.
+	    - Listen on only IPv4 explicitly. Under ruby 1.9.3p194, without
+	      any bind addresses, ruby attempts to listen on both "0.0.0.0"
+	      and "::". Specifying "::" on Linux leads to listen on both IPv4
+	      and IPv6, which results in a warning message saying "Address
+	      already in use - bind(2)".
+	* [mk_game_results]
+	  - Fixed for reading Japanese comments under ruby1.9.3p194.
+	* mk_rate-from-grep, mk_rate-grep:
+	  - Removed files that are no longer used.
+
+2013-11-23  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - gsl library may be provided as a gem
+	  - Now duplicated inputs are checked and skipped.
+	* test/TC_floodgate.rb
+	  - Improved randomness check so that it works on Ruby 2.0.0 as well
+
 2013-11-04  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
@@ -82,6 +142,68 @@
 	    + Improved the logic avoiding human-human match. Human-human
 	      matches will less likely happen.
 
+2012-01-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Added shogi_server/compatible.rb, which implements compatible
+	    methods and allows Ruby 1.8.7 to run the server.
+	  - test/TC_floodgate.rb failed with Ruby 1.8.7. This issue has
+	    been fixed.
+	  - test/TC_uchifuzume.rb did not run with Ruby 1.8.7. This issue
+	    has been fixed.
+	  - test/TC_league.rb failed with Ruby 1.8.7. This issue has been
+	    fixed.
+	* csa-file-filter,mk_game_results,mk_html,mk_rate:
+	  - Updated documents in the command files.
+	    Both Ruby 1.9.3 and 1.8.7 are supported.
+	  - Make their shebang consistent (/usr/bin/ruby1.9.1)
+	* README:
+	  - Both Ruby 1.9.3 and 1.8.7 are supported.
+	* Renewed year of copyright notice in each file.
+
+2012-01-06  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - test/TC_logger.rb depeneded on a specific directory where it was
+	    running on. This issues has been fixed.
+
+2012-01-01  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/floodgate.rb: Generating next time around the new
+	    year day by reading configuration files did not work correctly.
+	    This issue has been fixed.
+
+2011-12-18  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/board.rb, piece.rb: Refactoring to cache OU pieces,
+	    which was inspired by 81SquareShogi-server's change
+	    (74b24b88c843f1dd767412475b117481d1d5e8eb).
+	  - Added shogi-server-profile to take profile of shogi-server.
+	* [mk_rate] [mk_game_results]
+	  - Supports Ruby 1.9.3.
+
+2011-12-12  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Support Ruby 1.9.3.
+	  - Result of test/benchmark.rb
+	    - Environment:
+	      - CPU: AMD Athlon(tm) 64 X2 Dual Core Processor 4200+  
+	      - RAM: 4GB
+	      - OS: Debian Squeeze
+	      - ruby 1.8.7 (2011-06-30 patchlevel 352) [x86_64-linux]
+	      - ruby 1.9.3p0 (2011-10-30 revision 33570) [x86_64-linux]
+	    - Server:  ruby1.8 (or ruby1.9.1) ./shogi-server hoge 4000
+	    - Clients: ruby1.8 (or ruby1.9.1) -d ./benchmark.rb
+	      csa/wdoor+floodgate-900-0+gps_normal+gps_l+20100507120007.csa 20
+	    - Scores in seconds: (the smaller, the better)
+	                    clients
+		            1.8.7   1.9.3
+	      server 1.8.7  20 sec  21 sec
+	             1.9.3  26 sec  27 sec
+
 2010-10-06  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
@@ -113,9 +235,9 @@
 
 	* [shogi-server]
 	  - shogi_server/{board,command,game,league,player}.rb
-	    The Buoy behaivor is changed.
+	    The Buoy behavior is changed.
 	    + Starting a buoy game, players are notified a starting game
-	      position with the initial position and moves, instread of a
+	      position with the initial position and moves, instead of a
 	      targeting position.
 	    + Players are allowed to start buoy games with specific turns.
 	      ex. %%GAME buoy_foo-1500-0 +
@@ -168,7 +290,7 @@
 	* [shogi-server]
 	  - shogi_server.rb, shogi_server/board.rb, shogi_server/move.rb
 	    - Refactoring: Board can now move_to() and move_back() a move
-	      instread of deep_copy().
+	      instead of deep_copy().
 
 2010-07-11  Daigo Moriwaki <daigo at debian dot org>
 
@@ -190,12 +312,12 @@
 	    .
 	    Note: Without this option, no floodgate games are started. If
 	    you want floodgate-900-0 to run, which was default enabled in
-	    previous versions, you need to spefify the game name in this new
+	    previous versions, you need to specify the game name in this new
 	    option.
 	  - Floodgate time configuration file:
 	    You need to set starting times of floodgate groups in
-	    configuration files under the top directory. Each floodgat
-	    e group requires a correspoding configuration file named
+	    configuration files under the top directory. Each floodgate
+	    group requires a corresponding configuration file named
 	    "<game_name>.conf". The file will be re-read once just after a
 	    game starts. 
 	    .
@@ -203,7 +325,7 @@
 	    floodgate-3600-30.conf.  However, for floodgate-900-0 and
 	    floodgate-3600-0, which were default enabled in previous
 	    versions, configuration files are optional if you are happy with
-	    defualt time settings.
+	    default time settings.
 	    File format is:
 	      Line format: 
 	        # This is a comment line
@@ -267,7 +389,7 @@
 2010-02-27  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
-	  - The server now provides more accurate time control. Previouslly,
+	  - The server now provides more accurate time control. Previously,
 	    a player's thinking time included a time waiting to get the giant
 	    lock. This may have caused games to time up, especially, during
 	    byo-yomi etc.
@@ -316,7 +438,7 @@
 
 	* [shogi-server]
 	  - shogi-server: The command line option --floodgate-history has
-	    been deprectated. The server will decide history file names such
+	    been deprecated. The server will decide history file names such
 	    as 'floodgate_history_900_0.yaml' and
 	    'floodgate_history_3600_0.yaml', and then put them in the top
 	    directory.
@@ -326,11 +448,11 @@
 	* [shogi-server]
 	  - shogi_server/player.rb: Added new methods: is_human? and
 	    is_computer?. 
-	    A human player is recommened to use a name ending with '_human'.  
+	    A human player is recommended to use a name ending with '_human'.  
 	    ex. 'hoge_human', 'hoge_human@p1'
 	  - shogi_server/pairing.rb: Added a new class:
 	    StartGameWithoutHumans, which tries to make pairs trying to
-	    avoid a human-human match. This is now enabled instread of the
+	    avoid a human-human match. This is now enabled instead of the
 	    previous class: StartGame.
 	  - shogi-server, shogi_server/league/floodgate.rb:
 	    Changed the argument of Floodgate.new.
@@ -354,7 +476,7 @@
 	    which will be used to generate players.yaml. If the file does
 	    not exist, the server will create one automatically.
 	    Instruction to use the game result list file:
-	    1. Make a list of game results from exisiting CSA files with
+	    1. Make a list of game results from existing CSA files with
 	       mk_game_results
 	       % ./mk_game_results dir_of_csa_files > 00LIST
 	    2. Run the server. It appends a result of each game to
@@ -390,7 +512,7 @@
 	      - game_name is a valid game name with a prefix "buoy_".
 	      ex. buoy_foo-900-0
 	      - moves are initial moves from the Hirate position to a
-	      spcific position that you want to start with.
+	      specific position that you want to start with.
 	      ex. +7776FU-3334FU+8786FU
 	      - count is an optional attribute to tell how many times the
 	      game can be played (default 1). The count is decremented
@@ -415,7 +537,7 @@
 2009-06-18 Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
-	  - An emtpy floodgate_history.yaml caused a server error. This
+	  - An empty floodgate_history.yaml caused a server error. This
 	    issue has been fixed. 
 	    (Closes: #15124)
 
@@ -496,7 +618,7 @@
 
 	* [mk_html]
 	  - Added a new option: --footer filename, which inserts contents of 
-	    the filename at the bottom of a genrated page. A text specific to 
+	    the filename at the bottom of a generated page. A text specific to 
 	    wdoor should be written by using this option. 
 	    (Closes: #14470)
 	  - It does no more depend on RDoc. RDoc::usage does not work well
@@ -519,9 +641,9 @@
 
 	* [shogi-server]
 	  - Improved an existance check and etc. of directories specified
-	    by command line options, expecially in case of the daemon mode. 
+	    by command line options, especially in case of the daemon mode. 
 	    (Closes: #14244)
-	  - A lotated log file is moved to $topdir/YYYY/MM/DD.
+	  - A rotated log file is moved to $topdir/YYYY/MM/DD.
 	    (Closes: #14245)
 
 2008-11-27 Daigo Moriwaki <daigo at debian dot org>
@@ -632,7 +754,7 @@
 
 	* [shogi-server]
 	  - .csa files will be located in a sub directory such as
-	    "2008/05/05/*.csa". Thease days, we have many games in a day. 
+	    "2008/05/05/*.csa". These days, we have many games in a day. 
 	    This change will help users browse a file list.
 
 2008-05-03 Daigo Moriwaki <daigo at debian dot org>

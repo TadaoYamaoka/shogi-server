@@ -6,6 +6,7 @@ class MockPlayer < ShogiServer::BasicPlayer
   attr_accessor :game, :status, :protocol
   attr_accessor :game_name
   attr_reader :socket_buffer
+  attr_reader :rate
 
   def initialize
     @name     = "mock_player"
@@ -15,6 +16,7 @@ class MockPlayer < ShogiServer::BasicPlayer
     @protocol = nil
     @game_name = "dummy_game_name"
     @socket_buffer = []
+    @rate = 1500
   end
 
   def write_safe(str)

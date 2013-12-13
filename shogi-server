@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#! /usr/bin/ruby1.9.1
 # $Id$
 #
 # Author:: NABEYA Kenichi, Daigo Moriwaki
@@ -6,7 +6,7 @@
 #
 #--
 # Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
-# Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+# Copyright (C) 2007-2012 Daigo Moriwaki (daigo at debian dot org)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ $topdir = nil
 $league = nil
 $logger = nil
 $config = nil
-$:.unshift File.dirname(__FILE__)
+$:.unshift(File.dirname(File.expand_path(__FILE__)))
 require 'shogi_server'
 require 'shogi_server/config'
 require 'shogi_server/util'
@@ -137,6 +137,20 @@ FLOODGATE SCHEDULE CONFIGURATIONS
 	        Sat 13:00
 	        Sat 22:00
 	        Sun 13:00
+
+            PAREMETER SETTING
+
+            In addition, this configuration file allows to set parameters
+            for the specific Floodaget group. A list of parameters is the
+            following:
+
+            * pairing_factory:
+              Specifies a factory function name generating a pairing
+              method which will be used in a specific Floodgate game.
+              ex. set pairing_factory floodgate_zyunisen
+            * sacrifice:
+              Specifies a sacrificed player.
+              ex. set sacrifice gps500+e293220e3f8a3e59f79f6b0efffaa931
 
 LICENSE
         GPL versoin 2 or later
@@ -372,6 +386,7 @@ def main
   $league.dir = $topdir
 
   config = {}
+  config[:BindAddress] = "0.0.0.0"
   config[:Port]       = port
   config[:ServerType] = WEBrick::Daemon if $options["daemon"]
   config[:Logger]     = $logger
@@ -417,7 +432,10 @@ def main
       client.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
         # Keepalive time can be set by /proc/sys/net/ipv4/tcp_keepalive_time
       player, login = login_loop(client) # loop
-      next unless player
+      unless player
+        log_error("Detected a timed out login attempt")
+        next
+      end
 
       log_message(sprintf("user %s login", player.name))
       login.process
@@ -428,12 +446,13 @@ def main
         if (player.game)
           player.game.kill(player)
         end
-        player.finish # socket has been closed
+        player.finish
         $league.delete(player)
         log_message(sprintf("user %s logout", player.name))
       ensure
         $mutex.unlock
       end
+      player.wait_write_thread_finish(1000) # milliseconds
     rescue Exception => ex
       log_error("server.start: #{ex.class}: #{ex.message}\n\t#{ex.backtrace[0]}")
     end

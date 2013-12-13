@@ -1,2094 +1,2094 @@
---- 
-players: 
-  5: 
-    gps2_k7p+5426a28d8a75cd7ed662b2090ca881c9: 
+---
+players:
+  5:
+    gps2_k7p+5426a28d8a75cd7ed662b2090ca881c9:
       name: gps2_k7p
       rate: 1051.0
       win: 11.8352784293642
       loss: 7.89360618372286
       rating_group: 5
-      last_modified: 2008-05-01 03:37:26 +09:00
-    gps2_rg+6a8be1bf7a75b6f75ee31f8c1c0c489a: 
+      last_modified: 2008-05-01 03:37:26.000000000 +09:00
+    gps2_rg+6a8be1bf7a75b6f75ee31f8c1c0c489a:
       name: gps2_rg
       rate: 1051.0
       win: 12.0
       loss: 8.0
       rating_group: 5
-      last_modified: 2008-05-04 12:19:51 +09:00
-    gps2_k7p4+e5f61cad57b66e6483b0ac3933564168: 
+      last_modified: 2008-05-04 12:19:51.000000000 +09:00
+    gps2_k7p4+e5f61cad57b66e6483b0ac3933564168:
       name: gps2_k7p4
       rate: 897.0
       win: 8.0
       loss: 13.0
       rating_group: 5
-      last_modified: 2008-05-03 08:03:56 +09:00
-    gps2_k7p3+2ee3afcc1fda4ce87023a575102da0b5: 
+      last_modified: 2008-05-03 08:03:56.000000000 +09:00
+    gps2_k7p3+2ee3afcc1fda4ce87023a575102da0b5:
       name: gps2_k7p3
       rate: 981.0
       win: 9.0
       loss: 9.0
       rating_group: 5
-      last_modified: 2008-05-02 15:35:04 +09:00
-    gps2_k7p2+fc2919b6df6578ce4b4a6a449fd73346: 
+      last_modified: 2008-05-02 15:35:04.000000000 +09:00
+    gps2_k7p2+fc2919b6df6578ce4b4a6a449fd73346:
       name: gps2_k7p2
       rate: 1036.0
       win: 10.9621929140671
       loss: 7.96664156541485
       rating_group: 5
-      last_modified: 2008-05-01 23:28:07 +09:00
-    gps2+2dd0aa2d841f508edc69bb113f70642b: 
+      last_modified: 2008-05-01 23:28:07.000000000 +09:00
+    gps2+2dd0aa2d841f508edc69bb113f70642b:
       name: gps2
       rate: 981.0
       win: 45.8602477491377
       loss: 51.7974713434314
       rating_group: 5
-      last_modified: 2008-05-04 12:19:51 +09:00
-  0: 
-    gps_pp+1e5a182134af18b0c64843196e2b4e81: 
+      last_modified: 2008-05-04 12:19:51.000000000 +09:00
+  0:
+    gps_pp+1e5a182134af18b0c64843196e2b4e81:
       name: gps_pp
       rate: 2866.0
       win: 19.0
       loss: 21.0
       rating_group: 0
-      last_modified: 2008-05-07 22:52:24 +09:00
-    gps_ppa2+6c5dc86d68f9130735e60b0fe9a2ea96: 
+      last_modified: 2008-05-07 22:52:24.000000000 +09:00
+    gps_ppa2+6c5dc86d68f9130735e60b0fe9a2ea96:
       name: gps_ppa2
       rate: 2840.0
       win: 13.9897623400963
       loss: 17.9879456013727
       rating_group: 0
-      last_modified: 2008-05-02 13:11:30 +09:00
-    gps_do2+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-05-02 13:11:30.000000000 +09:00
+    gps_do2+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_do2
       rate: 2912.0
       win: 53.986531798629
       loss: 45.9909614051652
       rating_group: 0
-      last_modified: 2008-05-03 20:38:24 +09:00
-    gps_normal+e293220e3f8a3e59f79f6b0efffaa931: 
+      last_modified: 2008-05-03 20:38:24.000000000 +09:00
+    gps_normal+e293220e3f8a3e59f79f6b0efffaa931:
       name: gps_normal
       rate: -1752.0
       win: 3384.04877829976
       loss: 906.949084230512
       rating_group: 0
-      last_modified: 2008-05-08 23:50:54 +09:00
-    gps_qtsee+d094a7c36b2c59d9cd7fcd2231505f8a: 
+      last_modified: 2008-05-08 23:50:54.000000000 +09:00
+    gps_qtsee+d094a7c36b2c59d9cd7fcd2231505f8a:
       name: gps_qtsee
       rate: 2991.0
       win: 18.9090769183675
       loss: 10.1784071014068
       rating_group: 0
-      last_modified: 2008-04-04 22:25:14 +09:00
-    gps_cc+503016c7f3e9d55687099f632e7b7dff: 
+      last_modified: 2008-04-04 22:25:14.000000000 +09:00
+    gps_cc+503016c7f3e9d55687099f632e7b7dff:
       name: gps_cc
       rate: 2802.0
       win: 9.23774550873844
       loss: 14.8077130398311
       rating_group: 0
-      last_modified: 2008-04-25 13:43:00 +09:00
-    gps_cc3+9aff337746cbc96eccaef09f45a17765: 
+      last_modified: 2008-04-25 13:43:00.000000000 +09:00
+    gps_cc3+9aff337746cbc96eccaef09f45a17765:
       name: gps_cc3
       rate: 2936.0
       win: 21.8292497973772
       loss: 16.1510769520277
       rating_group: 0
-      last_modified: 2008-04-28 00:53:35 +09:00
-    gps500+e293220e3f8a3e59f79f6b0efffaa931: 
+      last_modified: 2008-04-28 00:53:35.000000000 +09:00
+    gps500+e293220e3f8a3e59f79f6b0efffaa931:
       name: gps500
       rate: -2423.0
       win: 475.931766690695
       loss: 1720.65416034238
       rating_group: 0
-      last_modified: 2008-05-08 23:40:19 +09:00
-    usa_test+0c6049789d5fa11db9785155258b93b5: 
+      last_modified: 2008-05-08 23:40:19.000000000 +09:00
+    usa_test+0c6049789d5fa11db9785155258b93b5:
       name: usa_test
       rate: -2303.0
       win: 596.726845953427
       loss: 1486.33022716432
       rating_group: 0
-      last_modified: 2008-05-02 16:15:29 +09:00
-    tomi900+ff3ccfad330a8731a7a1100d2c081489: 
+      last_modified: 2008-05-02 16:15:29.000000000 +09:00
+    tomi900+ff3ccfad330a8731a7a1100d2c081489:
       name: tomi900
       rate: -2376.0
       win: 8.10630245430416
       loss: 13.8584073745703
       rating_group: 0
-      last_modified: 2008-02-14 23:24:09 +09:00
-    gps_kf+3301824de7e4a161724564abf32f0363: 
+      last_modified: 2008-02-14 23:24:09.000000000 +09:00
+    gps_kf+3301824de7e4a161724564abf32f0363:
       name: gps_kf
       rate: 2884.0
       win: 20.0
       loss: 19.9995076024558
       rating_group: 0
-      last_modified: 2008-05-03 01:24:13 +09:00
-    gps_qtseemc+1706abae91c059ba3ffed3dc9c9cfe1d: 
+      last_modified: 2008-05-03 01:24:13.000000000 +09:00
+    gps_qtseemc+1706abae91c059ba3ffed3dc9c9cfe1d:
       name: gps_qtseemc
       rate: 2763.0
       win: 8.07708612911955
       loss: 16.1424457840462
       rating_group: 0
-      last_modified: 2008-04-05 15:57:36 +09:00
-    usapyon-on-note+0c6049789d5fa11db9785155258b93b5: 
+      last_modified: 2008-04-05 15:57:36.000000000 +09:00
+    usapyon-on-note+0c6049789d5fa11db9785155258b93b5:
       name: usapyon-on-note
       rate: -2375.0
       win: 229.550829494412
       loss: 672.106457095826
       rating_group: 0
-      last_modified: 2008-04-23 20:45:22 +09:00
-    gps_cpu2+7641d40a2d4d4af7ddc9def42529ea9b: 
+      last_modified: 2008-04-23 20:45:22.000000000 +09:00
+    gps_cpu2+7641d40a2d4d4af7ddc9def42529ea9b:
       name: gps_cpu2
       rate: 3114.0
       win: 30.0789895320084
       loss: 23.2771098034858
       rating_group: 0
-      last_modified: 2008-04-02 16:29:35 +09:00
-    gps_lt3b+70dddf5a3ebd35efa71468c2e5e53691: 
+      last_modified: 2008-04-02 16:29:35.000000000 +09:00
+    gps_lt3b+70dddf5a3ebd35efa71468c2e5e53691:
       name: gps_lt3b
       rate: 2893.0
       win: 10.5484879004933
       loss: 10.0211511265367
       rating_group: 0
-      last_modified: 2008-03-08 03:11:48 +09:00
-    Nanoha2008+667f27d411182c654c12a55edc01460b: 
+      last_modified: 2008-03-08 03:11:48.000000000 +09:00
+    Nanoha2008+667f27d411182c654c12a55edc01460b:
       name: Nanoha2008
       last_game_win: false
       rate: -2786.0
       win: 3.0
       loss: 62.0
       rating_group: 0
-      last_modified: 2008-05-08 23:36:36 +09:00
-    tacos+282db3bc7edc88e4f182382c8b5cc147: 
+      last_modified: 2008-05-08 23:36:36.000000000 +09:00
+    tacos+282db3bc7edc88e4f182382c8b5cc147:
       name: tacos
       rate: -1818.0
       win: 657.754164439212
       loss: 355.565692600649
       rating_group: 0
-      last_modified: 2008-05-08 09:39:25 +09:00
-    ssp+21f52837bcc36952291e3ca14b75c1e8: 
+      last_modified: 2008-05-08 09:39:25.000000000 +09:00
+    ssp+21f52837bcc36952291e3ca14b75c1e8:
       name: ssp
       rate: -2535.0
       win: 50.2719100204888
       loss: 249.512660733661
       rating_group: 0
-      last_modified: 2008-04-30 20:48:33 +09:00
-    imai+81dc9bdb52d04dc20036dbd8313ed055: 
+      last_modified: 2008-04-30 20:48:33.000000000 +09:00
+    imai+81dc9bdb52d04dc20036dbd8313ed055:
       name: imai
       last_game_win: false
       rate: -2301.0
       win: 6.0
       loss: 20.0
       rating_group: 0
-      last_modified: 2008-05-08 22:36:40 +09:00
-    gps_tm+83f57ee9b210d4247a5ceb2e20bfbff8: 
+      last_modified: 2008-05-08 22:36:40.000000000 +09:00
+    gps_tm+83f57ee9b210d4247a5ceb2e20bfbff8:
       name: gps_tm
       rate: 2883.0
       win: 8.89521993921137
       loss: 8.90554984628389
       rating_group: 0
-      last_modified: 2008-02-26 23:49:17 +09:00
-    gps_cpu4rs+b0530c15c38c0d10e4d1e3ac00dba352: 
+      last_modified: 2008-02-26 23:49:17.000000000 +09:00
+    gps_cpu4rs+b0530c15c38c0d10e4d1e3ac00dba352:
       name: gps_cpu4rs
       rate: 3236.0
       win: 15.5527424717879
       loss: 14.7893992317924
       rating_group: 0
-      last_modified: 2008-04-10 15:49:03 +09:00
-    gps_newopening6_2dan+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-04-10 15:49:03.000000000 +09:00
+    gps_newopening6_2dan+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_newopening6_2dan
       rate: 2921.0
       win: 56.9834509073819
       loss: 45.987385502195
       rating_group: 0
-      last_modified: 2008-05-03 20:55:08 +09:00
-    coredump+8c0b2e8281d25adfb3a6bd4fdcae6e57: 
+      last_modified: 2008-05-03 20:55:08.000000000 +09:00
+    coredump+8c0b2e8281d25adfb3a6bd4fdcae6e57:
       name: coredump
       rate: -1984.0
       win: 459.776797445082
       loss: 337.429375313976
       rating_group: 0
-      last_modified: 2008-05-02 11:00:08 +09:00
-    Lesserkai+d800b2b8e356f4559ea3ba4519f11eff: 
+      last_modified: 2008-05-02 11:00:08.000000000 +09:00
+    Lesserkai+d800b2b8e356f4559ea3ba4519f11eff:
       name: Lesserkai
       rate: -3035.0
       win: 1.36585588490053
       loss: 93.0862283848441
       rating_group: 0
-      last_modified: 2008-04-12 18:08:04 +09:00
-    gps_kachi3+d4a19b7839aea28259fbb1071b5b352c: 
+      last_modified: 2008-04-12 18:08:04.000000000 +09:00
+    gps_kachi3+d4a19b7839aea28259fbb1071b5b352c:
       name: gps_kachi3
       rate: 2910.0
       win: 20.3186016436094
       loss: 17.4368835954953
       rating_group: 0
-      last_modified: 2008-04-29 20:47:48 +09:00
-    gps_mc+226caf236915aa9ae9a98b16514f9871: 
+      last_modified: 2008-04-29 20:47:48.000000000 +09:00
+    gps_mc+226caf236915aa9ae9a98b16514f9871:
       name: gps_mc
       rate: 2939.0
       win: 15.7890995446369
       loss: 11.4835823075585
       rating_group: 0
-      last_modified: 2008-04-03 19:11:21 +09:00
-    gps+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-04-03 19:11:21.000000000 +09:00
+    gps+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps
       rate: 2884.0
       win: 1175.66739199111
       loss: 1203.22715879058
       rating_group: 0
-      last_modified: 2008-05-08 23:31:31 +09:00
-    gps_pr8+5592a0e99b70a051fedcdbf5810334ef: 
+      last_modified: 2008-05-08 23:31:31.000000000 +09:00
+    gps_pr8+5592a0e99b70a051fedcdbf5810334ef:
       name: gps_pr8
       rate: 2950.0
       win: 13.9539803665413
       loss: 9.51999326841611
       rating_group: 0
-      last_modified: 2008-03-24 02:45:16 +09:00
-    gps_effect5x3const16+1268f1e5638290288bce86eabe09826c: 
+      last_modified: 2008-03-24 02:45:16.000000000 +09:00
+    gps_effect5x3const16+1268f1e5638290288bce86eabe09826c:
       name: gps_effect5x3const16
       rate: 2904.0
       win: 14.0017416718463
       loss: 12.4685158739091
       rating_group: 0
-      last_modified: 2008-04-10 18:44:22 +09:00
-    garyu+2e31d52fa05194cf8f2ad023ac572f09: 
+      last_modified: 2008-04-10 18:44:22.000000000 +09:00
+    garyu+2e31d52fa05194cf8f2ad023ac572f09:
       name: garyu
       rate: -2592.0
       win: 97.261418788048
       loss: 706.624377702383
       rating_group: 0
-      last_modified: 2008-05-03 01:49:54 +09:00
-    YSS+707d4f98d9d2620cdaab58f19d02a2e4: 
+      last_modified: 2008-05-03 01:49:54.000000000 +09:00
+    YSS+707d4f98d9d2620cdaab58f19d02a2e4:
       name: YSS
       rate: -1529.0
       win: 1012.14413170938
       loss: 121.533527986877
       rating_group: 0
-      last_modified: 2008-04-07 08:51:42 +09:00
-    KShogi900+d0426ce2e69157611ba5e225f4a92d11: 
+      last_modified: 2008-04-07 08:51:42.000000000 +09:00
+    KShogi900+d0426ce2e69157611ba5e225f4a92d11:
       name: KShogi900
       rate: -1768.0
       win: 387.398787408915
       loss: 145.420571829785
       rating_group: 0
-      last_modified: 2008-04-27 09:49:56 +09:00
-    gps_small_step_1+3eacd3587c056e61f7a34ac81b25f3a1: 
+      last_modified: 2008-04-27 09:49:56.000000000 +09:00
+    gps_small_step_1+3eacd3587c056e61f7a34ac81b25f3a1:
       name: gps_small_step_1
       rate: 2873.0
       win: 15.352514288629
       loss: 16.3427595653383
       rating_group: 0
-      last_modified: 2008-04-28 23:22:30 +09:00
-    gps_kh2+73cb40740074cde329b31fb6f7b0a2d1: 
+      last_modified: 2008-04-28 23:22:30.000000000 +09:00
+    gps_kh2+73cb40740074cde329b31fb6f7b0a2d1:
       name: gps_kh2
       rate: 2839.0
       win: 17.0
       loss: 22.0
       rating_group: 0
-      last_modified: 2008-05-04 00:33:13 +09:00
-    aleag1tst+3123059c1c816471780539f6b6b738dc: 
+      last_modified: 2008-05-04 00:33:13.000000000 +09:00
+    aleag1tst+3123059c1c816471780539f6b6b738dc:
       name: aleag1tst
       rate: -2463.0
       win: 9.48524456819644
       loss: 29.9907372901062
       rating_group: 0
-      last_modified: 2008-05-01 20:10:26 +09:00
-    gps_kh+f034f70ba869796cd6f953d84e85b9b8: 
+      last_modified: 2008-05-01 20:10:26.000000000 +09:00
+    gps_kh+f034f70ba869796cd6f953d84e85b9b8:
       name: gps_kh
       rate: 2872.0
       win: 13.9825518506586
       loss: 14.9874986816353
       rating_group: 0
-      last_modified: 2008-05-02 10:22:31 +09:00
-    gps_newopening4+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-05-02 10:22:31.000000000 +09:00
+    gps_newopening4+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_newopening4
       rate: 2810.0
       win: 57.3861518936011
       loss: 87.4893233925526
       rating_group: 0
-      last_modified: 2008-04-30 12:38:10 +09:00
-    gps_qtsee2+076ea545a9d74230e053400d043993d9: 
+      last_modified: 2008-04-30 12:38:10.000000000 +09:00
+    gps_qtsee2+076ea545a9d74230e053400d043993d9:
       name: gps_qtsee2
       rate: 2973.0
       win: 18.4240146179166
       loss: 11.0372650659614
       rating_group: 0
-      last_modified: 2008-04-06 01:02:34 +09:00
-    gps_lt3+a62314b60359500f4974c756b04d98e8: 
+      last_modified: 2008-04-06 01:02:34.000000000 +09:00
+    gps_lt3+a62314b60359500f4974c756b04d98e8:
       name: gps_lt3
       rate: 2876.0
       win: 10.9114049440672
       loss: 11.4125817038391
       rating_group: 0
-      last_modified: 2008-03-06 20:40:07 +09:00
-    gps_ce2l+970196b4e4c872321da146e7afe8f298: 
+      last_modified: 2008-03-06 20:40:07.000000000 +09:00
+    gps_ce2l+970196b4e4c872321da146e7afe8f298:
       name: gps_ce2l
       rate: 2833.0
       win: 8.12683984375216
       loss: 10.8520014353578
       rating_group: 0
-      last_modified: 2008-03-29 16:53:13 +09:00
-    gps_exp3o4+3066c53d1daa02af64e5590a2b0fc0d2: 
+      last_modified: 2008-03-29 16:53:13.000000000 +09:00
+    gps_exp3o4+3066c53d1daa02af64e5590a2b0fc0d2:
       name: gps_exp3o4
       rate: 2873.0
       win: 14.8469848849175
       loss: 15.8286221375783
       rating_group: 0
-      last_modified: 2008-05-01 11:45:01 +09:00
-    misaki-on-note+d9ffaac630ab2ae0e93674c1b505f1aa: 
+      last_modified: 2008-05-01 11:45:01.000000000 +09:00
+    misaki-on-note+d9ffaac630ab2ae0e93674c1b505f1aa:
       name: misaki-on-note
       rate: -2409.0
       win: 7.6867985801868
       loss: 13.6426899212265
       rating_group: 0
-      last_modified: 2008-02-18 13:45:41 +09:00
-    gps_open25+4d56adee9881b46fb4afbbd012927f77: 
+      last_modified: 2008-02-18 13:45:41.000000000 +09:00
+    gps_open25+4d56adee9881b46fb4afbbd012927f77:
       name: gps_open25
       rate: 2919.0
       win: 14.200925757193
       loss: 11.615577284037
       rating_group: 0
-      last_modified: 2008-03-25 14:06:12 +09:00
-    Kakinoki-Test+89704a19dfaea78d699800e63bef0dea: 
+      last_modified: 2008-03-25 14:06:12.000000000 +09:00
+    Kakinoki-Test+89704a19dfaea78d699800e63bef0dea:
       name: Kakinoki-Test
       last_game_win: false
       rate: -1781.0
       win: 1502.51399278973
       loss: 570.847036100743
       rating_group: 0
-      last_modified: 2008-05-08 23:16:21 +09:00
-    gps1000+e293220e3f8a3e59f79f6b0efffaa931: 
+      last_modified: 2008-05-08 23:16:21.000000000 +09:00
+    gps1000+e293220e3f8a3e59f79f6b0efffaa931:
       name: gps1000
       rate: -1837.0
       win: 33.513467493493
       loss: 12.472413919018
       rating_group: 0
-      last_modified: 2008-02-11 02:11:19 +09:00
-    gps_exp5o8+ee125a193a2ba9c1bf4f662a87494c2e: 
+      last_modified: 2008-02-11 02:11:19.000000000 +09:00
+    gps_exp5o8+ee125a193a2ba9c1bf4f662a87494c2e:
       name: gps_exp5o8
       rate: 2873.0
       win: 15.8338481766278
       loss: 16.814632622013
       rating_group: 0
-      last_modified: 2008-05-01 11:54:17 +09:00
-    yowai_gps+95908f6c18338f5340371f71523fc5e3: 
+      last_modified: 2008-05-01 11:54:17.000000000 +09:00
+    yowai_gps+95908f6c18338f5340371f71523fc5e3:
       name: yowai_gps
       rate: -2507.0
       win: 225.669212529662
       loss: 290.616556759499
       rating_group: 0
-      last_modified: 2008-05-08 02:10:38 +09:00
-    gps_qtseeapp+ca8836c54b39c7fef557966e19a45c4b: 
+      last_modified: 2008-05-08 02:10:38.000000000 +09:00
+    gps_qtseeapp+ca8836c54b39c7fef557966e19a45c4b:
       name: gps_qtseeapp
       rate: 2901.0
       win: 16.1716844095597
       loss: 14.6247159019338
       rating_group: 0
-      last_modified: 2008-04-09 21:08:37 +09:00
-    gps_kh3+d2663672168f8bb0598d79995b007685: 
+      last_modified: 2008-04-09 21:08:37.000000000 +09:00
+    gps_kh3+d2663672168f8bb0598d79995b007685:
       name: gps_kh3
       rate: 2884.0
       win: 20.0
       loss: 20.0
       rating_group: 0
-      last_modified: 2008-05-04 05:08:19 +09:00
-    gps_newopening+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-05-04 05:08:19.000000000 +09:00
+    gps_newopening+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_newopening
       rate: 2885.0
       win: 286.317698576181
       loss: 283.546448297247
       rating_group: 0
-      last_modified: 2008-03-24 12:46:27 +09:00
-    YSS-1s+707d4f98d9d2620cdaab58f19d02a2e4: 
+      last_modified: 2008-03-24 12:46:27.000000000 +09:00
+    YSS-1s+707d4f98d9d2620cdaab58f19d02a2e4:
       name: YSS-1s
       rate: -1794.0
       win: 65.3391219828853
       loss: 10.0415273195652
       rating_group: 0
-      last_modified: 2008-02-25 12:10:26 +09:00
-    gps800+e293220e3f8a3e59f79f6b0efffaa931: 
+      last_modified: 2008-02-25 12:10:26.000000000 +09:00
+    gps800+e293220e3f8a3e59f79f6b0efffaa931:
       name: gps800
       rate: -2037.0
       win: 154.968017134351
       loss: 112.015983590553
       rating_group: 0
-      last_modified: 2008-02-20 11:45:21 +09:00
-    gps_pr8nrc+9c818a715439bb58038ea13860fa67a4: 
+      last_modified: 2008-02-20 11:45:21.000000000 +09:00
+    gps_pr8nrc+9c818a715439bb58038ea13860fa67a4:
       name: gps_pr8nrc
       rate: 2983.0
       win: 15.2870195536467
       loss: 8.6458627298524
       rating_group: 0
-      last_modified: 2008-03-28 03:28:28 +09:00
-    gps_s3+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-03-28 03:28:28.000000000 +09:00
+    gps_s3+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_s3
       rate: 2910.0
       win: 63.0
       loss: 54.0
       rating_group: 0
-      last_modified: 2008-05-06 21:30:22 +09:00
-    gps_q5p30_2+b46f4b3b73dd9fe02be65a13fea11267: 
+      last_modified: 2008-05-06 21:30:22.000000000 +09:00
+    gps_q5p30_2+b46f4b3b73dd9fe02be65a13fea11267:
       name: gps_q5p30_2
       rate: 2923.0
       win: 9.91954762752418
       loss: 7.93089563712773
       rating_group: 0
-      last_modified: 2008-05-01 13:31:31 +09:00
-    gps_kachi2+aab2d27a867ba2a63a1f92ce999845f3: 
+      last_modified: 2008-05-01 13:31:31.000000000 +09:00
+    gps_kachi2+aab2d27a867ba2a63a1f92ce999845f3:
       name: gps_kachi2
       rate: 2918.0
       win: 20.8983310934689
       loss: 17.1026689105532
       rating_group: 0
-      last_modified: 2008-04-28 02:24:26 +09:00
-    misaki900+d9ffaac630ab2ae0e93674c1b505f1aa: 
+      last_modified: 2008-04-28 02:24:26.000000000 +09:00
+    misaki900+d9ffaac630ab2ae0e93674c1b505f1aa:
       name: misaki900
       rate: -2293.0
       win: 915.676971193636
       loss: 1742.47270086152
       rating_group: 0
-      last_modified: 2008-05-08 20:20:50 +09:00
-    gps_newopening5_2dan+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-05-08 20:20:50.000000000 +09:00
+    gps_newopening5_2dan+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_newopening5_2dan
       rate: 2978.0
       win: 30.7005284346696
       loss: 17.8061733102248
       rating_group: 0
-      last_modified: 2008-05-01 15:33:32 +09:00
-    tomi900+fc9505d3dd1ebdd726ad7d2d1fc17c42: 
+      last_modified: 2008-05-01 15:33:32.000000000 +09:00
+    tomi900+fc9505d3dd1ebdd726ad7d2d1fc17c42:
       name: tomi900
       rate: -2394.0
       win: 16.6734844869228
       loss: 41.0136210133544
       rating_group: 0
-      last_modified: 2008-02-17 18:24:33 +09:00
-    gps_qtsee2mc3+d891620d5f4f4e770f726dbbe471d04c: 
+      last_modified: 2008-02-17 18:24:33.000000000 +09:00
+    gps_qtsee2mc3+d891620d5f4f4e770f726dbbe471d04c:
       name: gps_qtsee2mc3
       rate: 2919.0
       win: 16.4187162582884
       loss: 13.4225518156186
       rating_group: 0
-      last_modified: 2008-04-07 03:52:09 +09:00
-    gps_see+243d91f6c72383cf5892a6f8fbb434c1: 
+      last_modified: 2008-04-07 03:52:09.000000000 +09:00
+    gps_see+243d91f6c72383cf5892a6f8fbb434c1:
       name: gps_see
       rate: 2902.0
       win: 11.410682224614
       loss: 10.2861901919957
       rating_group: 0
-      last_modified: 2008-03-14 23:33:43 +09:00
-    gps_qtseeareaplus+5b9d8f9e83727e96205e14dadd591991: 
+      last_modified: 2008-03-14 23:33:43.000000000 +09:00
+    gps_qtseeareaplus+5b9d8f9e83727e96205e14dadd591991:
       name: gps_qtseeareaplus
       rate: 2954.0
       win: 18.1971584089735
       loss: 12.1262337391889
       rating_group: 0
-      last_modified: 2008-04-08 13:24:48 +09:00
-    kiri-test+f6e396dc8eb6a1123ed65d7ddcc78243: 
+      last_modified: 2008-04-08 13:24:48.000000000 +09:00
+    kiri-test+f6e396dc8eb6a1123ed65d7ddcc78243:
       name: kiri-test
       rate: -2092.0
       win: 40.5473992591258
       loss: 37.9301462747398
       rating_group: 0
-      last_modified: 2008-04-27 13:50:45 +09:00
-    yowa_usa+0c6049789d5fa11db9785155258b93b5: 
+      last_modified: 2008-04-27 13:50:45.000000000 +09:00
+    yowa_usa+0c6049789d5fa11db9785155258b93b5:
       name: yowa_usa
       last_game_win: true
       rate: -2724.0
       win: 10.8629800426498
       loss: 161.737929496205
       rating_group: 0
-      last_modified: 2008-05-08 23:36:36 +09:00
-    gps_mc3+5cef59cf3430503dacd5d71122802791: 
+      last_modified: 2008-05-08 23:36:36.000000000 +09:00
+    gps_mc3+5cef59cf3430503dacd5d71122802791:
       name: gps_mc3
       rate: 2907.0
       win: 29.0023324106828
       loss: 25.2929762134241
       rating_group: 0
-      last_modified: 2008-04-06 23:50:56 +09:00
-    gps_ka8+13f69316942a7bb10b33769f4f6513c9: 
+      last_modified: 2008-04-06 23:50:56.000000000 +09:00
+    gps_ka8+13f69316942a7bb10b33769f4f6513c9:
       name: gps_ka8
       rate: 2780.0
       win: 10.9888205042163
       loss: 19.9828527944161
       rating_group: 0
-      last_modified: 2008-05-02 10:16:23 +09:00
-    gps_so+a143c0e9135d136d05f8f6c63953a3a3: 
+      last_modified: 2008-05-02 10:16:23.000000000 +09:00
+    gps_so+a143c0e9135d136d05f8f6c63953a3a3:
       name: gps_so
       rate: 2784.0
       win: 7.09254352512512
       loss: 12.6087468546625
       rating_group: 0
-      last_modified: 2008-04-11 16:53:45 +09:00
-    gps_np+3c3ed5c337e39d047bc524e8d8eb0c6b: 
+      last_modified: 2008-04-11 16:53:45.000000000 +09:00
+    gps_np+3c3ed5c337e39d047bc524e8d8eb0c6b:
       name: gps_np
       rate: 2864.0
       win: 14.3060572181627
       loss: 15.9983548226445
       rating_group: 0
-      last_modified: 2008-04-17 13:34:11 +09:00
-    gps_pp2+1028f7b380e75bd54a5adb6de266e90d: 
+      last_modified: 2008-04-17 13:34:11.000000000 +09:00
+    gps_pp2+1028f7b380e75bd54a5adb6de266e90d:
       name: gps_pp2
       rate: 2825.0
       win: 10.0
       loss: 14.0
       rating_group: 0
-      last_modified: 2008-05-08 16:07:05 +09:00
-    cat18_on_note+1a3871214cdb95f2f7f9e2910c4cf3bb: 
+      last_modified: 2008-05-08 16:07:05.000000000 +09:00
+    cat18_on_note+1a3871214cdb95f2f7f9e2910c4cf3bb:
       name: cat18_on_note
       rate: -2385.0
       win: 158.469804422715
       loss: 474.828163150174
       rating_group: 0
-      last_modified: 2008-04-20 14:23:15 +09:00
-    MyMove900+94a2fb7f864ae656bdf9ed1d1dae3a3c: 
+      last_modified: 2008-04-20 14:23:15.000000000 +09:00
+    MyMove900+94a2fb7f864ae656bdf9ed1d1dae3a3c:
       name: MyMove900
       last_game_win: true
       rate: -2253.0
       win: 1360.66968921526
       loss: 2363.83249839534
       rating_group: 0
-      last_modified: 2008-05-08 23:53:26 +09:00
-    gps_mc00+67fe440a10c121de46c4276fc6332b7a: 
+      last_modified: 2008-05-08 23:53:26.000000000 +09:00
+    gps_mc00+67fe440a10c121de46c4276fc6332b7a:
       name: gps_mc00
       rate: 2884.0
       win: 11.7897169909261
       loss: 11.7839083830482
       rating_group: 0
-      last_modified: 2008-04-11 12:15:31 +09:00
-    gps_pfo+eafbd3c8c3c02fbc307b9ee9be81dd3d: 
+      last_modified: 2008-04-11 12:15:31.000000000 +09:00
+    gps_pfo+eafbd3c8c3c02fbc307b9ee9be81dd3d:
       name: gps_pfo
       rate: -2473.0
       win: 269.0
       loss: 221.0
       rating_group: 0
-      last_modified: 2008-05-05 19:14:12 +09:00
-    cat10+4bf1d145889d0e2410b76cefb149a404: 
+      last_modified: 2008-05-05 19:14:12.000000000 +09:00
+    cat10+4bf1d145889d0e2410b76cefb149a404:
       name: cat10
       rate: -2387.0
       win: 149.082727062101
       loss: 315.274052558195
       rating_group: 0
-      last_modified: 2008-04-05 18:46:36 +09:00
-    spear900_note+0de01547572775761f6eb2b9ec59dbae: 
+      last_modified: 2008-04-05 18:46:36.000000000 +09:00
+    spear900_note+0de01547572775761f6eb2b9ec59dbae:
       name: spear900_note
       rate: -2103.0
       win: 247.103632012203
       loss: 251.852475537186
       rating_group: 0
-      last_modified: 2008-05-02 07:07:38 +09:00
-    bingo+7859e4cc481f9487f5d45e6ade7a2518: 
+      last_modified: 2008-05-02 07:07:38.000000000 +09:00
+    bingo+7859e4cc481f9487f5d45e6ade7a2518:
       name: bingo
       last_game_win: false
       rate: -1623.0
       win: 1208.89734617365
       loss: 237.437390949787
       rating_group: 0
-      last_modified: 2008-05-01 03:38:47 +09:00
-    gps_mc2+ef32e1eeadb591be032ffd87fa8f3aab: 
+      last_modified: 2008-05-01 03:38:47.000000000 +09:00
+    gps_mc2+ef32e1eeadb591be032ffd87fa8f3aab:
       name: gps_mc2
       rate: 2804.0
       win: 8.7152292056957
       loss: 13.7960054306812
       rating_group: 0
-      last_modified: 2008-04-04 17:11:44 +09:00
-    gps_open25_20+d70e3f7b088ccfd310962bb37fc975ac: 
+      last_modified: 2008-04-04 17:11:44.000000000 +09:00
+    gps_open25_20+d70e3f7b088ccfd310962bb37fc975ac:
       name: gps_open25_20
       rate: 2931.0
       win: 13.7364342241624
       loss: 10.4680907249845
       rating_group: 0
-      last_modified: 2008-03-26 16:27:46 +09:00
-    gps_cpu4+1990ca8a73acba0401f325228d8c4f96: 
+      last_modified: 2008-03-26 16:27:46.000000000 +09:00
+    gps_cpu4+1990ca8a73acba0401f325228d8c4f96:
       name: gps_cpu4
       rate: 3227.0
       win: 47.9581993943147
       loss: 33.4593638353841
       rating_group: 0
-      last_modified: 2008-04-29 06:53:19 +09:00
-    gps_cpu4tbb+d631d551c7b87d36905f46167caa41c5: 
+      last_modified: 2008-04-29 06:53:19.000000000 +09:00
+    gps_cpu4tbb+d631d551c7b87d36905f46167caa41c5:
       name: gps_cpu4tbb
       rate: 3127.0
       win: 8.68479132982944
       loss: 15.4436996507596
       rating_group: 0
-      last_modified: 2008-04-29 06:53:19 +09:00
-    gps_cc2+e178cc4ceb7f69ca039aa46c746f18bf: 
+      last_modified: 2008-04-29 06:53:19.000000000 +09:00
+    gps_cc2+e178cc4ceb7f69ca039aa46c746f18bf:
       name: gps_cc2
       rate: 2866.0
       win: 17.7971465882009
       loss: 19.6880419042549
       rating_group: 0
-      last_modified: 2008-04-26 21:59:53 +09:00
-    gps_effect5x3func7+57ddcc5f075d66a422fc7037f92e91a1: 
+      last_modified: 2008-04-26 21:59:53.000000000 +09:00
+    gps_effect5x3func7+57ddcc5f075d66a422fc7037f92e91a1:
       name: gps_effect5x3func7
       rate: 2894.0
       win: 14.1843881597541
       loss: 13.386632664677
       rating_group: 0
-      last_modified: 2008-04-11 23:58:09 +09:00
-    gps_seenr+734797905c1a9e6d1ad64f19c31a1e1d: 
+      last_modified: 2008-04-11 23:58:09.000000000 +09:00
+    gps_seenr+734797905c1a9e6d1ad64f19c31a1e1d:
       name: gps_seenr
       rate: 2921.0
       win: 11.7279128495228
       loss: 9.48396449634873
       rating_group: 0
-      last_modified: 2008-03-13 01:51:12 +09:00
-    gps_step_100+69a935e4287879be46f83b2817b46f85: 
+      last_modified: 2008-03-13 01:51:12.000000000 +09:00
+    gps_step_100+69a935e4287879be46f83b2817b46f85:
       name: gps_step_100
       rate: 2884.0
       win: 16.9991860852941
       loss: 16.9976980786016
       rating_group: 0
-      last_modified: 2008-05-02 22:06:19 +09:00
-    spearCSA2008+417e7849a8ac94c94202e7d821db9b7e: 
+      last_modified: 2008-05-02 22:06:19.000000000 +09:00
+    spearCSA2008+417e7849a8ac94c94202e7d821db9b7e:
       name: spearCSA2008
       last_game_win: true
       rate: -2019.0
       win: 27.0
       loss: 12.0
       rating_group: 0
-      last_modified: 2008-05-08 23:50:54 +09:00
-    gps_qtseeplus+223748d30f3f8b7efa3423de12a6bd96: 
+      last_modified: 2008-05-08 23:50:54.000000000 +09:00
+    gps_qtseeplus+223748d30f3f8b7efa3423de12a6bd96:
       name: gps_qtseeplus
       rate: 2918.0
       win: 16.7028105818679
       loss: 13.6749889028838
       rating_group: 0
-      last_modified: 2008-04-08 16:51:59 +09:00
-  11: 
-    gps3_p+dea40e920b32ad920881f840ca1fecf0: 
+      last_modified: 2008-04-08 16:51:59.000000000 +09:00
+  11:
+    gps3_p+dea40e920b32ad920881f840ca1fecf0:
       name: gps3_p
       rate: 926.0
       win: 6.0
       loss: 14.0
       rating_group: 11
-      last_modified: 2008-05-04 23:45:59 +09:00
-    gps3_pke7+a8472716b65c248d7283308f8b085acc: 
+      last_modified: 2008-05-04 23:45:59.000000000 +09:00
+    gps3_pke7+a8472716b65c248d7283308f8b085acc:
       name: gps3_pke7
       rate: 1073.0
       win: 14.0
       loss: 6.0
       rating_group: 11
-      last_modified: 2008-05-04 23:45:59 +09:00
-  6: 
-    gps0_mpke+bb9f7923189236268b0bfee73e995729: 
+      last_modified: 2008-05-04 23:45:59.000000000 +09:00
+  6:
+    gps0_mpke+bb9f7923189236268b0bfee73e995729:
       name: gps0_mpke
       rate: 971.0
       win: 8.77311662103004
       loss: 10.726403086889
       rating_group: 6
-      last_modified: 2008-04-30 01:57:00 +09:00
-    gps0+3db9f442857731ed6f858ac991bc90d5: 
+      last_modified: 2008-04-30 01:57:00.000000000 +09:00
+    gps0+3db9f442857731ed6f858ac991bc90d5:
       name: gps0
       last_game_win: true
       rate: 1006.0
       win: 40.6362611991685
       loss: 38.7001461662861
       rating_group: 6
-      last_modified: 2008-05-04 16:34:03 +09:00
-    gps0_epi+3d727b4e40d6345563da37a3f33c0c83: 
+      last_modified: 2008-05-04 16:34:03.000000000 +09:00
+    gps0_epi+3d727b4e40d6345563da37a3f33c0c83:
       name: gps0_epi
       rate: 936.0
       win: 8.0
       loss: 12.0
       rating_group: 6
-      last_modified: 2008-05-04 00:26:05 +09:00
-    gps0_kab6+67a1c27d42175909f3dfb4be9b34468d: 
+      last_modified: 2008-05-04 00:26:05.000000000 +09:00
+    gps0_kab6+67a1c27d42175909f3dfb4be9b34468d:
       name: gps0_kab6
       rate: 1114.0
       win: 13.0
       loss: 7.0
       rating_group: 6
-      last_modified: 2008-05-04 16:34:03 +09:00
-    gps0_epkm+5f692dd43863431e607e059122178b21: 
+      last_modified: 2008-05-04 16:34:03.000000000 +09:00
+    gps0_epkm+5f692dd43863431e607e059122178b21:
       name: gps0_epkm
       rate: 971.0
       win: 8.92702954525609
       loss: 10.9098581122795
       rating_group: 6
-      last_modified: 2008-05-01 13:46:06 +09:00
-  1: 
-    gps1_pmp6+7e4a98f5d21d0bfbdbf06c905a5ec76f: 
+      last_modified: 2008-05-01 13:46:06.000000000 +09:00
+  1:
+    gps1_pmp6+7e4a98f5d21d0bfbdbf06c905a5ec76f:
       name: gps1_pmp6
       rate: 980.0
       win: 8.73319292008062
       loss: 10.6748914106424
       rating_group: 1
-      last_modified: 2008-04-29 17:18:37 +09:00
-    gps0_epi2+585ee99a46f1453587ed4dbce7bf1712: 
+      last_modified: 2008-04-29 17:18:37.000000000 +09:00
+    gps0_epi2+585ee99a46f1453587ed4dbce7bf1712:
       name: gps0_epi2
       rate: 1015.0
       win: 11.0
       loss: 9.0
       rating_group: 1
-      last_modified: 2008-05-04 13:24:15 +09:00
-    gps1_pmpc10+886242d533721d4f6deb70ab99c65b8a: 
+      last_modified: 2008-05-04 13:24:15.000000000 +09:00
+    gps1_pmpc10+886242d533721d4f6deb70ab99c65b8a:
       name: gps1_pmpc10
       rate: 1027.0
       win: 11.2028891182806
       loss: 8.53709973211393
       rating_group: 1
-      last_modified: 2008-03-09 03:47:04 +09:00
-    gps0_ppbw+20c38aac12d0a0cdcd1a0a5a8aa4d6fa: 
+      last_modified: 2008-03-09 03:47:04.000000000 +09:00
+    gps0_ppbw+20c38aac12d0a0cdcd1a0a5a8aa4d6fa:
       name: gps0_ppbw
       rate: 980.0
       win: 9.80169607999749
       loss: 9.80612633695485
       rating_group: 1
-      last_modified: 2008-04-30 14:46:16 +09:00
-    gps0_pkte+da595ccd83a463811f6b606c066810d0: 
+      last_modified: 2008-04-30 14:46:16.000000000 +09:00
+    gps0_pkte+da595ccd83a463811f6b606c066810d0:
       name: gps0_pkte
       rate: 1087.0
       win: 11.4662095419876
       loss: 6.17743471733985
       rating_group: 1
-      last_modified: 2008-04-21 11:52:25 +09:00
-    gps1_pmp+16b30034aa230cb0390fbb4b9afb29d1: 
+      last_modified: 2008-04-21 11:52:25.000000000 +09:00
+    gps1_pmp+16b30034aa230cb0390fbb4b9afb29d1:
       name: gps1_pmp
       rate: 1108.0
       win: 11.0418289499423
       loss: 6.44561033853136
       rating_group: 1
-      last_modified: 2008-04-25 03:13:30 +09:00
-    gps1_pmp5+2dc0d15860881dad0c2048ba6046b3b3: 
+      last_modified: 2008-04-25 03:13:30.000000000 +09:00
+    gps1_pmp5+2dc0d15860881dad0c2048ba6046b3b3:
       name: gps1_pmp5
       rate: 1015.0
       win: 9.57992527409892
       loss: 9.57928748387886
       rating_group: 1
-      last_modified: 2008-04-28 14:55:23 +09:00
-    gps1_p+e2a4088894d38f53c579be64644aa0ce: 
+      last_modified: 2008-04-28 14:55:23.000000000 +09:00
+    gps1_p+e2a4088894d38f53c579be64644aa0ce:
       name: gps1_p
       rate: 1015.0
       win: 122.337709090737
       loss: 122.158686634462
       rating_group: 1
-      last_modified: 2008-05-04 09:18:24 +09:00
-    gps1_ppb+0ac9978c2bd7b19ab10a7aa1e2284cd5: 
+      last_modified: 2008-05-04 09:18:24.000000000 +09:00
+    gps1_ppb+0ac9978c2bd7b19ab10a7aa1e2284cd5:
       name: gps1_ppb
       rate: 1122.0
       win: 13.0
       loss: 7.0
       rating_group: 1
-      last_modified: 2008-05-02 19:40:39 +09:00
-    gps0_pmke+4e3c1830c160c63cd4450b84eb0b2f54: 
+      last_modified: 2008-05-02 19:40:39.000000000 +09:00
+    gps0_pmke+4e3c1830c160c63cd4450b84eb0b2f54:
       name: gps0_pmke
       rate: 1088.0
       win: 12.323826352781
       loss: 6.62244088559627
       rating_group: 1
-      last_modified: 2008-04-27 15:41:40 +09:00
-    gps1_pmp4+c08b10fe0f713d9dd64c7b46abe8ec37: 
+      last_modified: 2008-04-27 15:41:40.000000000 +09:00
+    gps1_pmp4+c08b10fe0f713d9dd64c7b46abe8ec37:
       name: gps1_pmp4
       rate: 774.0
       win: 3.77791937551651
       loss: 15.1395135795855
       rating_group: 1
-      last_modified: 2008-04-27 12:10:25 +09:00
-    gps0_pnpee2+93f19f509fe12c6f49d3a1e6a0b2e725: 
+      last_modified: 2008-04-27 12:10:25.000000000 +09:00
+    gps0_pnpee2+93f19f509fe12c6f49d3a1e6a0b2e725:
       name: gps0_pnpee2
       rate: 909.0
       win: 7.4117785398901
       loss: 11.1196619009622
       rating_group: 1
-      last_modified: 2008-04-25 17:35:14 +09:00
-    gps1_ppabb3+e6df1c5175209f2ddbc537401eae0052: 
+      last_modified: 2008-04-25 17:35:14.000000000 +09:00
+    gps1_ppabb3+e6df1c5175209f2ddbc537401eae0052:
       name: gps1_ppabb3
       rate: 909.0
       win: 12.0874241992837
       loss: 18.14354756741
       rating_group: 1
-      last_modified: 2008-04-08 10:50:53 +09:00
-    gps1_pmp3+9b3a277d62350375b0d1b5a3e8b501e0: 
+      last_modified: 2008-04-08 10:50:53.000000000 +09:00
+    gps1_pmp3+9b3a277d62350375b0d1b5a3e8b501e0:
       name: gps1_pmp3
       rate: 1050.0
       win: 10.281108847505
       loss: 8.42133796130253
       rating_group: 1
-      last_modified: 2008-04-26 11:45:15 +09:00
-    gps1_pkj+bf60767768e6a99e06734e7365c2f1ee: 
+      last_modified: 2008-04-26 11:45:15.000000000 +09:00
+    gps1_pkj+bf60767768e6a99e06734e7365c2f1ee:
       name: gps1_pkj
       rate: 980.0
       win: 9.0
       loss: 11.0
       rating_group: 1
-      last_modified: 2008-05-03 12:18:29 +09:00
-    gps1_pe2+2f8973d8d3e301ca5819a8c6cf650e1a: 
+      last_modified: 2008-05-03 12:18:29.000000000 +09:00
+    gps1_pe2+2f8973d8d3e301ca5819a8c6cf650e1a:
       name: gps1_pe2
       rate: 1015.0
       win: 15.2959586162338
       loss: 14.2828692000647
       rating_group: 1
-      last_modified: 2008-04-30 14:12:40 +09:00
-    gps0_pbsm+7fd35123ccaa14f67462976d22fb2810: 
+      last_modified: 2008-04-30 14:12:40.000000000 +09:00
+    gps0_pbsm+7fd35123ccaa14f67462976d22fb2810:
       name: gps0_pbsm
       rate: 909.0
       win: 7.7450965938711
       loss: 11.6441019024452
       rating_group: 1
-      last_modified: 2008-04-29 15:33:50 +09:00
-    gps0_pkte2+996384f8b2baf98042196c0990aff956: 
+      last_modified: 2008-04-29 15:33:50.000000000 +09:00
+    gps0_pkte2+996384f8b2baf98042196c0990aff956:
       name: gps0_pkte2
       rate: 1015.0
       win: 9.84562219563632
       loss: 8.06071389199098
       rating_group: 1
-      last_modified: 2008-04-22 18:45:12 +09:00
-    gps0_pnpee+9d1358e53dcab6368c74a6c556e2ae09: 
+      last_modified: 2008-04-22 18:45:12.000000000 +09:00
+    gps0_pnpee+9d1358e53dcab6368c74a6c556e2ae09:
       name: gps0_pnpee
       rate: 945.0
       win: 8.25074808692898
       loss: 10.0901391336692
       rating_group: 1
-      last_modified: 2008-04-24 22:42:36 +09:00
-    gps0_pnpef+6a7f1956f921cc8ab4b2d123f14f6ac4: 
+      last_modified: 2008-04-24 22:42:36.000000000 +09:00
+    gps0_pnpef+6a7f1956f921cc8ab4b2d123f14f6ac4:
       name: gps0_pnpef
       rate: 980.0
       win: 9.06187135480589
       loss: 9.06017127503476
       rating_group: 1
-      last_modified: 2008-04-23 19:43:55 +09:00
-    gps1_pcx+5b2e1a61c9dc9a869ab14d5a8d98e74d: 
+      last_modified: 2008-04-23 19:43:55.000000000 +09:00
+    gps1_pcx+5b2e1a61c9dc9a869ab14d5a8d98e74d:
       name: gps1_pcx
       rate: 980.0
       win: 7.95923156541008
       loss: 9.72718755194501
       rating_group: 1
-      last_modified: 2008-04-21 16:46:36 +09:00
-    gps1_ppabb2+d07da6400758989888fff3fcbb4a938c: 
+      last_modified: 2008-04-21 16:46:36.000000000 +09:00
+    gps1_ppabb2+d07da6400758989888fff3fcbb4a938c:
       name: gps1_ppabb2
       rate: 1030.0
       win: 14.8422787892135
       loss: 11.1303228560631
       rating_group: 1
-      last_modified: 2008-04-06 18:52:41 +09:00
-    gps0_pmkb+815a8899b63276bec38b8c54886fe355: 
+      last_modified: 2008-04-06 18:52:41.000000000 +09:00
+    gps0_pmkb+815a8899b63276bec38b8c54886fe355:
       name: gps0_pmkb
       rate: 1127.0
       win: 13.1421706174191
       loss: 5.63133448814683
       rating_group: 1
-      last_modified: 2008-04-26 20:02:50 +09:00
-    gps0_pke5+facace91f58b19e1bd54f788d5601f47: 
+      last_modified: 2008-04-26 20:02:50.000000000 +09:00
+    gps0_pke5+facace91f58b19e1bd54f788d5601f47:
       name: gps0_pke5
       rate: 980.0
       win: 9.92368849637954
       loss: 9.91752462603345
       rating_group: 1
-      last_modified: 2008-05-01 15:52:53 +09:00
-    gps0_p15rp2+e64ad2ae7fd1217425c8489d1e190668: 
+      last_modified: 2008-05-01 15:52:53.000000000 +09:00
+    gps0_p15rp2+e64ad2ae7fd1217425c8489d1e190668:
       name: gps0_p15rp2
       rate: 872.0
       win: 5.4791200834662
       loss: 10.1748393347354
       rating_group: 1
-      last_modified: 2008-04-11 03:35:30 +09:00
-    gps1_pepf+4aad5d94ef116c66f9d85dea66a5d5c9: 
+      last_modified: 2008-04-11 03:35:30.000000000 +09:00
+    gps1_pepf+4aad5d94ef116c66f9d85dea66a5d5c9:
       name: gps1_pepf
       rate: 1050.0
       win: 10.9287270917035
       loss: 8.93239341491624
       rating_group: 1
-      last_modified: 2008-05-01 17:02:54 +09:00
-    gps1_pmp2+eaf775d96a8a33ca7d935c65e4bf6792: 
+      last_modified: 2008-05-01 17:02:54.000000000 +09:00
+    gps1_pmp2+eaf775d96a8a33ca7d935c65e4bf6792:
       name: gps1_pmp2
       rate: 994.0
       win: 7.41429387801882
       loss: 8.34541679222178
       rating_group: 1
-      last_modified: 2008-04-25 18:55:17 +09:00
-    gps1_pnpe+0ab166cc8ae68837ce39031ed949df91: 
+      last_modified: 2008-04-25 18:55:17.000000000 +09:00
+    gps1_pnpe+0ab166cc8ae68837ce39031ed949df91:
       name: gps1_pnpe
       rate: 1122.0
       win: 11.6353971180556
       loss: 6.27379905956942
       rating_group: 1
-      last_modified: 2008-04-22 19:04:02 +09:00
-    gps0_ppkd2+bf6912b6dbd47900a79d5c1fb792dd52: 
+      last_modified: 2008-04-22 19:04:02.000000000 +09:00
+    gps0_ppkd2+bf6912b6dbd47900a79d5c1fb792dd52:
       name: gps0_ppkd2
       rate: 945.0
       win: 9.0
       loss: 11.0
       rating_group: 1
-      last_modified: 2008-05-06 00:26:20 +09:00
-    gps1_pkd+92b2e371254e093ee41288d99d68ee29: 
+      last_modified: 2008-05-06 00:26:20.000000000 +09:00
+    gps1_pkd+92b2e371254e093ee41288d99d68ee29:
       name: gps1_pkd
       rate: 980.0
       win: 9.0
       loss: 11.0
       rating_group: 1
-      last_modified: 2008-05-04 09:18:24 +09:00
-    gps0_p+d5b7ec89ea83deaece5f6e0a5fcdfad7: 
+      last_modified: 2008-05-04 09:18:24.000000000 +09:00
+    gps0_p+d5b7ec89ea83deaece5f6e0a5fcdfad7:
       name: gps0_p
       rate: 980.0
       win: 160.600056350417
       loss: 168.073317052044
       rating_group: 1
-      last_modified: 2008-05-06 00:26:20 +09:00
-  7: 
-    gps1_epf2+3d5b65bb7f12ad93dacf6c6a590a4dfb: 
+      last_modified: 2008-05-06 00:26:20.000000000 +09:00
+  7:
+    gps1_epf2+3d5b65bb7f12ad93dacf6c6a590a4dfb:
       name: gps1_epf2
       rate: 1063.0
       win: 11.9546345439284
       loss: 7.96566841464449
       rating_group: 7
-      last_modified: 2008-05-01 23:18:14 +09:00
-    gps1_epf3+259d1309f956da0c489fa1e2b927cd9c: 
+      last_modified: 2008-05-01 23:18:14.000000000 +09:00
+    gps1_epf3+259d1309f956da0c489fa1e2b927cd9c:
       name: gps1_epf3
       rate: 1027.0
       win: 11.0
       loss: 9.0
       rating_group: 7
-      last_modified: 2008-05-03 09:16:56 +09:00
-    gps1_kd2+856d95db222350404da567880e3a3485: 
+      last_modified: 2008-05-03 09:16:56.000000000 +09:00
+    gps1_kd2+856d95db222350404da567880e3a3485:
       name: gps1_kd2
       rate: 958.0
       win: 9.0
       loss: 11.0
       rating_group: 7
-      last_modified: 2008-05-04 08:44:44 +09:00
-    gps1_e4+b2edfcc33e14f5a5041b9ba1bcc08c3c: 
+      last_modified: 2008-05-04 08:44:44.000000000 +09:00
+    gps1_e4+b2edfcc33e14f5a5041b9ba1bcc08c3c:
       name: gps1_e4
       rate: 957.0
       win: 8.82659124938429
       loss: 10.7904097029538
       rating_group: 7
-      last_modified: 2008-04-30 15:15:39 +09:00
-    gps1+5df059ccf2eda413600fc00081cc3d54: 
+      last_modified: 2008-04-30 15:15:39.000000000 +09:00
+    gps1+5df059ccf2eda413600fc00081cc3d54:
       name: gps1
       rate: 992.0
       win: 38.7560781175983
       loss: 40.7812257933127
       rating_group: 7
-      last_modified: 2008-05-04 08:44:44 +09:00
-  2: 
-    gps6_pebv+527147c9835290f6c5ddc5b9ddb35666: 
+      last_modified: 2008-05-04 08:44:44.000000000 +09:00
+  2:
+    gps6_pebv+527147c9835290f6c5ddc5b9ddb35666:
       name: gps6_pebv
       rate: 982.0
       win: 8.83377589213516
       loss: 10.800285846288
       rating_group: 2
-      last_modified: 2008-04-30 17:48:51 +09:00
-    gps6_pw4+02ee4810f85e8a88b088f4561be4cb83: 
+      last_modified: 2008-04-30 17:48:51.000000000 +09:00
+    gps6_pw4+02ee4810f85e8a88b088f4561be4cb83:
       name: gps6_pw4
       rate: 909.0
       win: 7.0
       loss: 13.0
       rating_group: 2
-      last_modified: 2008-05-08 03:54:12 +09:00
-    gps7_pkeu2+06cf8d45cd8db00554aa81d08bbbed21: 
+      last_modified: 2008-05-08 03:54:12.000000000 +09:00
+    gps7_pkeu2+06cf8d45cd8db00554aa81d08bbbed21:
       name: gps7_pkeu2
       rate: 979.0
       win: 9.95615463613726
       loss: 9.9613054078766
       rating_group: 2
-      last_modified: 2008-05-01 22:18:55 +09:00
-    gps7_p+edcd30db6362262ddb5c42327c96bcdc: 
+      last_modified: 2008-05-01 22:18:55.000000000 +09:00
+    gps7_p+edcd30db6362262ddb5c42327c96bcdc:
       name: gps7_p
       rate: 979.0
       win: 54.77840245852
       loss: 57.306261169016
       rating_group: 2
-      last_modified: 2008-05-04 09:45:39 +09:00
-    gps6_rp3+9ac0b1cb4eb5b51c1062bd97d0a47ef4: 
+      last_modified: 2008-05-04 09:45:39.000000000 +09:00
+    gps6_rp3+9ac0b1cb4eb5b51c1062bd97d0a47ef4:
       name: gps6_rp3
       rate: 1017.0
       win: 10.0
       loss: 10.0
       rating_group: 2
-      last_modified: 2008-05-04 16:51:42 +09:00
-    gps6_pw3+a53d6169ee0c70812da62c5251ddb25d: 
+      last_modified: 2008-05-04 16:51:42.000000000 +09:00
+    gps6_pw3+a53d6169ee0c70812da62c5251ddb25d:
       name: gps6_pw3
       rate: 1017.0
       win: 10.0
       loss: 10.0
       rating_group: 2
-      last_modified: 2008-05-07 10:26:36 +09:00
-    gps7_pz2+705c4dbca749eb9d17ca07a73e2e04cb: 
+      last_modified: 2008-05-07 10:26:36.000000000 +09:00
+    gps7_pz2+705c4dbca749eb9d17ca07a73e2e04cb:
       name: gps7_pz2
       rate: 982.0
       win: 6.78177767981663
       loss: 8.280716551552
       rating_group: 2
-      last_modified: 2008-04-07 17:28:42 +09:00
-    gps6_ppb2+fa14f013a1cb083ad0da5dd3ed61cab6: 
+      last_modified: 2008-04-07 17:28:42.000000000 +09:00
+    gps6_ppb2+fa14f013a1cb083ad0da5dd3ed61cab6:
       name: gps6_ppb2
       rate: 1017.0
       win: 10.0
       loss: 10.0
       rating_group: 2
-      last_modified: 2008-05-03 11:58:11 +09:00
-    gps6_peb+42afc7b6b767396b1e83b355c0deea22: 
+      last_modified: 2008-05-03 11:58:11.000000000 +09:00
+    gps6_peb+42afc7b6b767396b1e83b355c0deea22:
       name: gps6_peb
       rate: 1125.0
       win: 12.6676118707801
       loss: 6.82195084311398
       rating_group: 2
-      last_modified: 2008-04-30 00:47:07 +09:00
-    gps7_pkab4+99f0133905fb05d3b6de0a469f382dd0: 
+      last_modified: 2008-04-30 00:47:07.000000000 +09:00
+    gps7_pkab4+99f0133905fb05d3b6de0a469f382dd0:
       name: gps7_pkab4
       rate: 909.0
       win: 8.0
       loss: 12.0
       rating_group: 2
-      last_modified: 2008-05-04 09:45:39 +09:00
-    gps6_peb3+2a699ef355a01127ed97fa7efca111f4: 
+      last_modified: 2008-05-04 09:45:39.000000000 +09:00
+    gps6_peb3+2a699ef355a01127ed97fa7efca111f4:
       name: gps6_peb3
       rate: 1088.0
       win: 11.9100572426239
       loss: 7.93522543019853
       rating_group: 2
-      last_modified: 2008-05-01 15:56:46 +09:00
-    gps6_psmf2+0d49e10c9175e6600d84cf8511a9e8d0: 
+      last_modified: 2008-05-01 15:56:46.000000000 +09:00
+    gps6_psmf2+0d49e10c9175e6600d84cf8511a9e8d0:
       name: gps6_psmf2
       rate: 1017.0
       win: 7.87765342522577
       loss: 7.88207025636964
       rating_group: 2
-      last_modified: 2008-04-11 15:56:58 +09:00
-    gps7_pep+121fdf8ca75a59cc152c19c67e2daed4: 
+      last_modified: 2008-04-11 15:56:58.000000000 +09:00
+    gps7_pep+121fdf8ca75a59cc152c19c67e2daed4:
       name: gps7_pep
       rate: 1086.0
       win: 12.7525997544867
       loss: 6.87280643894678
       rating_group: 2
-      last_modified: 2008-04-30 17:29:38 +09:00
-    gps6_p+94b2b9d94ed461ab4b4053a2d4c4a114: 
+      last_modified: 2008-04-30 17:29:38.000000000 +09:00
+    gps6_p+94b2b9d94ed461ab4b4053a2d4c4a114:
       name: gps6_p
       last_game_win: true
       rate: 1017.0
       win: 131.734394623725
       loss: 122.431671775223
       rating_group: 2
-      last_modified: 2008-05-08 23:51:37 +09:00
-    gps7_pkab+fd61ed1b7ae0cc7c862c6386cb8a3644: 
+      last_modified: 2008-05-08 23:51:37.000000000 +09:00
+    gps7_pkab+fd61ed1b7ae0cc7c862c6386cb8a3644:
       name: gps7_pkab
       rate: 924.0
       win: 8.0
       loss: 11.0
       rating_group: 2
-      last_modified: 2008-05-02 19:13:06 +09:00
-    gps7_pz3+b69d94a2f5764780061eb9dd7d8a79a6: 
+      last_modified: 2008-05-02 19:13:06.000000000 +09:00
+    gps7_pz3+b69d94a2f5764780061eb9dd7d8a79a6:
       name: gps7_pz3
       rate: 1017.0
       win: 7.61059534994535
       loss: 7.62017859056819
       rating_group: 2
-      last_modified: 2008-04-08 17:13:41 +09:00
-    gps6_pw2+92b472c3f617095009fed8960f5670a4: 
+      last_modified: 2008-04-08 17:13:41.000000000 +09:00
+    gps6_pw2+92b472c3f617095009fed8960f5670a4:
       name: gps6_pw2
       rate: 909.0
       win: 7.0
       loss: 13.0
       rating_group: 2
-      last_modified: 2008-05-06 15:16:35 +09:00
-    gps6_psmf+01b42ab957311139e07ede84f547355b: 
+      last_modified: 2008-05-06 15:16:35.000000000 +09:00
+    gps6_psmf+01b42ab957311139e07ede84f547355b:
       name: gps6_psmf
       rate: 1017.0
       win: 7.80590970299945
       loss: 7.79646032724219
       rating_group: 2
-      last_modified: 2008-04-10 20:27:18 +09:00
-  8: 
-    gps6_akt+c3100b3aa28d7219a8cf5c11e977526e: 
+      last_modified: 2008-04-10 20:27:18.000000000 +09:00
+  8:
+    gps6_akt+c3100b3aa28d7219a8cf5c11e977526e:
       name: gps6_akt
       rate: 1081.0
       win: 13.0
       loss: 6.0
       rating_group: 8
-      last_modified: 2008-05-03 08:37:56 +09:00
-    gps6_rp2+fc6cfcea7623c03a83b53089ba8c5ae8: 
+      last_modified: 2008-05-03 08:37:56.000000000 +09:00
+    gps6_rp2+fc6cfcea7623c03a83b53089ba8c5ae8:
       name: gps6_rp2
       rate: 982.0
       win: 11.0
       loss: 9.0
       rating_group: 8
-      last_modified: 2008-05-04 13:29:22 +09:00
-    gps6_pw6+712bd16b4a856f9d6a193c868621347d: 
+      last_modified: 2008-05-04 13:29:22.000000000 +09:00
+    gps6_pw6+712bd16b4a856f9d6a193c868621347d:
       name: gps6_pw6
       last_game_win: true
       rate: 989.0
       win: 14.0
       loss: 11.0
       rating_group: 8
-      last_modified: 2008-05-08 23:14:25 +09:00
-    gps6+d915e85b03226884d42e5602373dfd02: 
+      last_modified: 2008-05-08 23:14:25.000000000 +09:00
+    gps6+d915e85b03226884d42e5602373dfd02:
       name: gps6
       last_game_win: false
       rate: 947.0
       win: 26.0
       loss: 38.0
       rating_group: 8
-      last_modified: 2008-05-08 23:14:25 +09:00
-  3: 
-    gps4_pmkke2+da66a3260b9799655b3a797320752305: 
+      last_modified: 2008-05-08 23:14:25.000000000 +09:00
+  3:
+    gps4_pmkke2+da66a3260b9799655b3a797320752305:
       name: gps4_pmkke2
       rate: 1022.0
       win: 9.56652811778896
       loss: 9.57133999095356
       rating_group: 3
-      last_modified: 2008-04-28 11:36:01 +09:00
-    gps4_pkep+3e887935d6b823165b5ef06ffc31e7ee: 
+      last_modified: 2008-04-28 11:36:01.000000000 +09:00
+    gps4_pkep+3e887935d6b823165b5ef06ffc31e7ee:
       name: gps4_pkep
       rate: 951.0
       win: 7.35253627034135
       loss: 11.0644423115383
       rating_group: 3
-      last_modified: 2008-04-25 06:48:44 +09:00
-    gps4_p+53ee4319f15f9cae0b108de6befac23b: 
+      last_modified: 2008-04-25 06:48:44.000000000 +09:00
+    gps4_p+53ee4319f15f9cae0b108de6befac23b:
       name: gps4_p
       rate: 1022.0
       win: 64.9417662122736
       loss: 55.9935568106017
       rating_group: 3
-      last_modified: 2008-04-28 11:36:01 +09:00
-    gps4_paebf5+0bef04a983e064f6f81b74582576ea2b: 
+      last_modified: 2008-04-28 11:36:01.000000000 +09:00
+    gps4_paebf5+0bef04a983e064f6f81b74582576ea2b:
       name: gps4_paebf5
       rate: 1022.0
       win: 7.73684061157097
       loss: 7.73566466353795
       rating_group: 3
-      last_modified: 2008-04-10 02:20:50 +09:00
-    gps4_paebf4+b01dbad724eb48420ccdb2a7e4cb22ad: 
+      last_modified: 2008-04-10 02:20:50.000000000 +09:00
+    gps4_paebf4+b01dbad724eb48420ccdb2a7e4cb22ad:
       name: gps4_paebf4
       rate: 987.0
       win: 6.88429453628398
       loss: 8.41980869197081
       rating_group: 3
-      last_modified: 2008-04-09 03:03:04 +09:00
-    gps4_paebf2+5e73acb18c0edf18355c1b8bc5c6e22c: 
+      last_modified: 2008-04-09 03:03:04.000000000 +09:00
+    gps4_paebf2+5e73acb18c0edf18355c1b8bc5c6e22c:
       name: gps4_paebf2
       rate: 1022.0
       win: 7.51827645124211
       loss: 7.51802897203015
       rating_group: 3
-      last_modified: 2008-04-07 14:04:23 +09:00
-    gps4_pmkke+a479c9c94175d5b52bb10612e9f922b9: 
+      last_modified: 2008-04-07 14:04:23.000000000 +09:00
+    gps4_pmkke+a479c9c94175d5b52bb10612e9f922b9:
       name: gps4_pmkke
       rate: 1057.0
       win: 10.4245996233114
       loss: 8.52445975437956
       rating_group: 3
-      last_modified: 2008-04-27 15:54:25 +09:00
-    gps4_pkep2+caa2af4cf9c0d28c06c3d70fd1bc473d: 
+      last_modified: 2008-04-27 15:54:25.000000000 +09:00
+    gps4_pkep2+caa2af4cf9c0d28c06c3d70fd1bc473d:
       name: gps4_pkep2
       rate: 914.0
       win: 6.51048120006291
       loss: 12.1080218278633
       rating_group: 3
-      last_modified: 2008-04-26 03:17:00 +09:00
-  9: 
-    gps_cpu2p30_2+15defe6c4af0b3e5e174a310dd06ebf4: 
+      last_modified: 2008-04-26 03:17:00.000000000 +09:00
+  9:
+    gps_cpu2p30_2+15defe6c4af0b3e5e174a310dd06ebf4:
       name: gps_cpu2p30_2
       rate: 1034.0
       win: 14.495785804564
       loss: 13.0494578486005
       rating_group: 9
-      last_modified: 2008-04-04 12:49:22 +09:00
-    gps_cpu2p30+06dacba1b8567acc21c488080ea413c3: 
+      last_modified: 2008-04-04 12:49:22.000000000 +09:00
+    gps_cpu2p30+06dacba1b8567acc21c488080ea413c3:
       name: gps_cpu2p30
       rate: 981.0
       win: 13.0308146635658
       loss: 15.9408731430726
       rating_group: 9
-      last_modified: 2008-04-04 10:59:08 +09:00
-    gps_cpu2p+574e90d7b2abe343a75b8c1cfeed5ff3: 
+      last_modified: 2008-04-04 10:59:08.000000000 +09:00
+    gps_cpu2p+574e90d7b2abe343a75b8c1cfeed5ff3:
       name: gps_cpu2p
       rate: 966.0
       win: 6.46147592240348
       loss: 8.61783504348173
       rating_group: 9
-      last_modified: 2008-04-03 14:02:43 +09:00
-    gpsp+20d6b4b22597e621dc2f1fb39197d948: 
+      last_modified: 2008-04-03 14:02:43.000000000 +09:00
+    gpsp+20d6b4b22597e621dc2f1fb39197d948:
       name: gpsp
       rate: 1016.0
       win: 37.6081660351548
       loss: 33.9880763905332
       rating_group: 9
-      last_modified: 2008-04-06 12:20:43 +09:00
-  999: 
-    gps7_ppabI3+0272537aeed684c58bc1104033e34aa0: 
+      last_modified: 2008-04-06 12:20:43.000000000 +09:00
+  999:
+    gps7_ppabI3+0272537aeed684c58bc1104033e34aa0:
       name: gps7_ppabI3
       rate: 0
       win: 2.37413854405468
       loss: 4.75192340608516
       rating_group: 999
-      last_modified: 2008-02-12 00:49:37 +09:00
-    gps7_pmk2+9c1c35a453346f0b5b664949689c98b8: 
+      last_modified: 2008-02-12 00:49:37.000000000 +09:00
+    gps7_pmk2+9c1c35a453346f0b5b664949689c98b8:
       name: gps7_pmk2
       rate: 0
       win: 7.19734717659165
       loss: 3.08348905396196
       rating_group: 999
-      last_modified: 2008-03-05 11:04:57 +09:00
-    gps_do+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-03-05 11:04:57.000000000 +09:00
+    gps_do+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_do
       rate: 0
       win: 5.97558324489925
       loss: 0.994988766801764
       rating_group: 999
-      last_modified: 2008-05-01 16:55:51 +09:00
-    gps7_pmk3+a3f122a05091ce9f0939de99d96b114d: 
+      last_modified: 2008-05-01 16:55:51.000000000 +09:00
+    gps7_pmk3+a3f122a05091ce9f0939de99d96b114d:
       name: gps7_pmk3
       rate: 0
       win: 4.16049011364312
       loss: 6.23719503773664
       rating_group: 999
-      last_modified: 2008-03-06 15:16:05 +09:00
-    gps7_kab2+ad71e0fa23c82c9f87e6e6884a07b129: 
+      last_modified: 2008-03-06 15:16:05.000000000 +09:00
+    gps7_kab2+ad71e0fa23c82c9f87e6e6884a07b129:
       name: gps7_kab2
       rate: 0
       win: 0.0
       loss: 1.0
       rating_group: 999
-      last_modified: 2008-05-02 15:09:19 +09:00
-    gps4_paebf3+0126f06215f43b87402ccadd720169e4: 
+      last_modified: 2008-05-02 15:09:19.000000000 +09:00
+    gps4_paebf3+0126f06215f43b87402ccadd720169e4:
       name: gps4_paebf3
       rate: 0
       win: 2.27910114803295
       loss: 6.8444977266173
       rating_group: 999
-      last_modified: 2008-04-08 10:46:12 +09:00
-    gps6_pw7+80058cfe0f6cd26a4118ed60b9b67154: 
+      last_modified: 2008-04-08 10:46:12.000000000 +09:00
+    gps6_pw7+80058cfe0f6cd26a4118ed60b9b67154:
       name: gps6_pw7
       last_game_win: false
       rate: 0
       win: 4.0
       loss: 3.0
       rating_group: 999
-      last_modified: 2008-05-08 23:51:37 +09:00
-    gps_pr8s3+2a1dd56e1d9ed3a626c737bcdee3ca49: 
+      last_modified: 2008-05-08 23:51:37.000000000 +09:00
+    gps_pr8s3+2a1dd56e1d9ed3a626c737bcdee3ca49:
       name: gps_pr8s3
       rate: 0
       win: 1.95129196539734
       loss: 4.55762133499333
       rating_group: 999
-      last_modified: 2008-03-25 22:39:21 +09:00
-    matomoni+50a6348c667759604bc4ff9247c11473: 
+      last_modified: 2008-03-25 22:39:21.000000000 +09:00
+    matomoni+50a6348c667759604bc4ff9247c11473:
       name: matomoni
       rate: 0
       win: 0.0
       loss: 13.007470167874
       rating_group: 999
-      last_modified: 2008-05-05 22:07:24 +09:00
-    gps1_pmpc2+e142c4bbdf75e8ae0331dad77d0f98eb: 
+      last_modified: 2008-05-05 22:07:24.000000000 +09:00
+    gps1_pmpc2+e142c4bbdf75e8ae0331dad77d0f98eb:
       name: gps1_pmpc2
       rate: 0
       win: 5.63947581946014
       loss: 3.07398447031382
       rating_group: 999
-      last_modified: 2008-03-05 09:31:45 +09:00
-    test1+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-03-05 09:31:45.000000000 +09:00
+    test1+098f6bcd4621d373cade4e832627b4f6:
       name: test1
       rate: 0
       win: 0.0
       loss: 1.31785860451171
       rating_group: 999
-      last_modified: 2008-03-26 21:15:42 +09:00
-    test1+47bce5c74f589f4867dbd57e9ca9f808: 
+      last_modified: 2008-03-26 21:15:42.000000000 +09:00
+    test1+47bce5c74f589f4867dbd57e9ca9f808:
       name: test1
       rate: 0
       win: 2.39816368022251
       loss: 1.19658441710944
       rating_group: 999
-      last_modified: 2008-02-12 18:59:40 +09:00
-    gps1_pnp+2a8efcf93fe5946869e4f31fa3c36a7a: 
+      last_modified: 2008-02-12 18:59:40.000000000 +09:00
+    gps1_pnp+2a8efcf93fe5946869e4f31fa3c36a7a:
       name: gps1_pnp
       rate: 0
       win: 4.92911996634997
       loss: 3.57902285620133
       rating_group: 999
-      last_modified: 2008-02-22 17:24:41 +09:00
-    pc2+c4ca4238a0b923820dcc509a6f75849b: 
+      last_modified: 2008-02-22 17:24:41.000000000 +09:00
+    pc2+c4ca4238a0b923820dcc509a6f75849b:
       name: pc2
       rate: 0
       win: 4.18171068842216
       loss: 2.74689869667087
       rating_group: 999
-      last_modified: 2008-03-11 22:28:00 +09:00
-    misaki900+8fb8876e8bb2125c004ded950d8bbb67: 
+      last_modified: 2008-03-11 22:28:00.000000000 +09:00
+    misaki900+8fb8876e8bb2125c004ded950d8bbb67:
       name: misaki900
       rate: 0
       win: 3.0
       loss: 5.99867526631817
       rating_group: 999
-      last_modified: 2008-05-02 02:39:23 +09:00
-    gps1_pka3+e996af61ebb5e773bb5f6eaeedb6f399: 
+      last_modified: 2008-05-02 02:39:23.000000000 +09:00
+    gps1_pka3+e996af61ebb5e773bb5f6eaeedb6f399:
       name: gps1_pka3
       rate: 0
       win: 3.21009672369634
       loss: 4.01530826585413
       rating_group: 999
-      last_modified: 2008-02-13 04:44:24 +09:00
-    gps6_pw+1d7aebda92dce3ad0ce3fd218e8bfcff: 
+      last_modified: 2008-02-13 04:44:24.000000000 +09:00
+    gps6_pw+1d7aebda92dce3ad0ce3fd218e8bfcff:
       name: gps6_pw
       rate: 0
       win: 1.0
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-05-05 21:49:00 +09:00
-    pc2+92eb5ffee6ae2fec3ad71c777531578f: 
+      last_modified: 2008-05-05 21:49:00.000000000 +09:00
+    pc2+92eb5ffee6ae2fec3ad71c777531578f:
       name: pc2
       rate: 0
       win: 1.36018889195079
       loss: 0.387278490318016
       rating_group: 999
-      last_modified: 2008-03-30 11:08:12 +09:00
-    gps7_psee2+82121163db0812c49f26279d42febd4e: 
+      last_modified: 2008-03-30 11:08:12.000000000 +09:00
+    gps7_psee2+82121163db0812c49f26279d42febd4e:
       name: gps7_psee2
       rate: 0
       win: 4.05059795826744
       loss: 5.57366777190387
       rating_group: 999
-      last_modified: 2008-03-04 09:08:38 +09:00
-    gps7_pmpc+a8189b0f3742350ee20e2caba0808441: 
+      last_modified: 2008-03-04 09:08:38.000000000 +09:00
+    gps7_pmpc+a8189b0f3742350ee20e2caba0808441:
       name: gps7_pmpc
       rate: 0
       win: 3.46975464137791
       loss: 7.63073259993943
       rating_group: 999
-      last_modified: 2008-03-31 14:33:38 +09:00
-    gps4_pmpc+37ee2322482bbb586663be8e8cf47e6d: 
+      last_modified: 2008-03-31 14:33:38.000000000 +09:00
+    gps4_pmpc+37ee2322482bbb586663be8e8cf47e6d:
       name: gps4_pmpc
       rate: 0
       win: 5.08024006179467
       loss: 3.55085944910098
       rating_group: 999
-      last_modified: 2008-03-04 12:42:10 +09:00
-    pc2+a87ff679a2f3e71d9181a67b7542122c: 
+      last_modified: 2008-03-04 12:42:10.000000000 +09:00
+    pc2+a87ff679a2f3e71d9181a67b7542122c:
       name: pc2
       rate: 0
       win: 0.54172245849132
       loss: 3.26461164467359
       rating_group: 999
-      last_modified: 2008-03-11 22:52:07 +09:00
-    gps2_p+d8a9eeb8a2501b81581be0d57677c145: 
+      last_modified: 2008-03-11 22:52:07.000000000 +09:00
+    gps2_p+d8a9eeb8a2501b81581be0d57677c145:
       name: gps2_p
       rate: 0
       win: 12.5717996135362
       loss: 12.4612707575602
       rating_group: 999
-      last_modified: 2008-03-04 12:42:10 +09:00
-    pc1+e4da3b7fbbce2345d7772b0674a318d5: 
+      last_modified: 2008-03-04 12:42:10.000000000 +09:00
+    pc1+e4da3b7fbbce2345d7772b0674a318d5:
       name: pc1
       rate: 0
       win: 4.43605643445131
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-03-11 22:52:23 +09:00
-    ymshogi_test+61b2c94ea07eda40cfc396e9ae7286cf: 
+      last_modified: 2008-03-11 22:52:23.000000000 +09:00
+    ymshogi_test+61b2c94ea07eda40cfc396e9ae7286cf:
       name: ymshogi_test
       rate: 0
       win: 0.966399854105744
       loss: 53.9649846244257
       rating_group: 999
-      last_modified: 2008-05-03 05:07:58 +09:00
-    gps1_pmpc3+e39b448ccdd53108ed5367db5ee2776a: 
+      last_modified: 2008-05-03 05:07:58.000000000 +09:00
+    gps1_pmpc3+e39b448ccdd53108ed5367db5ee2776a:
       name: gps1_pmpc3
       rate: 0
       win: 5.16523260869099
       loss: 3.60899376668153
       rating_group: 999
-      last_modified: 2008-03-06 00:28:24 +09:00
-    misaki+d9ffaac630ab2ae0e93674c1b505f1aa: 
+      last_modified: 2008-03-06 00:28:24.000000000 +09:00
+    misaki+d9ffaac630ab2ae0e93674c1b505f1aa:
       name: misaki
       last_game_win: false
       rate: 0
       win: 4.85072439857614
       loss: 3.85093185852652
       rating_group: 999
-      last_modified: 2008-05-08 23:40:19 +09:00
-    gps1_pe+57225819b01bcd9494ba5c69f15552c3: 
+      last_modified: 2008-05-08 23:40:19.000000000 +09:00
+    gps1_pe+57225819b01bcd9494ba5c69f15552c3:
       name: gps1_pe
       rate: 0
       win: 4.93804003702345
       loss: 4.94716343109585
       rating_group: 999
-      last_modified: 2008-03-02 05:49:24 +09:00
-    yoshiki+5058f1af8388633f609cadb75a75dc9d: 
+      last_modified: 2008-03-02 05:49:24.000000000 +09:00
+    yoshiki+5058f1af8388633f609cadb75a75dc9d:
       name: yoshiki
       rate: 0
       win: 0.0
       loss: 1.86668664677574
       rating_group: 999
-      last_modified: 2008-03-21 22:20:11 +09:00
-    ovo2+25bbdcd06c32d477f7fa1c3e4a91b032: 
+      last_modified: 2008-03-21 22:20:11.000000000 +09:00
+    ovo2+25bbdcd06c32d477f7fa1c3e4a91b032:
       name: ovo2
       rate: 0
       win: 0.0
       loss: 48.237522040793
       rating_group: 999
-      last_modified: 2008-05-02 13:12:12 +09:00
-    gps1_pnpg+ea2a4e4f1c8469f37299aa535f397adb: 
+      last_modified: 2008-05-02 13:12:12.000000000 +09:00
+    gps1_pnpg+ea2a4e4f1c8469f37299aa535f397adb:
       name: gps1_pnpg
       rate: 0
       win: 3.25890841273782
       loss: 5.58228591589497
       rating_group: 999
-      last_modified: 2008-02-26 00:01:03 +09:00
-    kaneko-test2+c1d518f5c51f59cfcdfa6fd0d74011d1: 
+      last_modified: 2008-02-26 00:01:03.000000000 +09:00
+    kaneko-test2+c1d518f5c51f59cfcdfa6fd0d74011d1:
       name: kaneko-test2
       rate: 0
       win: 3.24425845783411
       loss: 0.540731006296224
       rating_group: 999
-      last_modified: 2008-03-09 18:25:44 +09:00
-    gps1_pr88+736974779028c8a9ae369c40b99f4bab: 
+      last_modified: 2008-03-09 18:25:44.000000000 +09:00
+    gps1_pr88+736974779028c8a9ae369c40b99f4bab:
       name: gps1_pr88
       rate: 0
       win: 3.92435650239876
       loss: 2.74763123663178
       rating_group: 999
-      last_modified: 2008-02-11 06:50:53 +09:00
-    gps0_p15rp+21e0d6345a0afd3f8a9464337fc70f81: 
+      last_modified: 2008-02-11 06:50:53.000000000 +09:00
+    gps0_p15rp+21e0d6345a0afd3f8a9464337fc70f81:
       name: gps0_p15rp
       rate: 0
       win: 1.55571521000306
       loss: 3.89169575116332
       rating_group: 999
-      last_modified: 2008-04-10 09:34:05 +09:00
-    Ayaka2007+7052b1f054caaaf7769f15fccfdc4798: 
+      last_modified: 2008-04-10 09:34:05.000000000 +09:00
+    Ayaka2007+7052b1f054caaaf7769f15fccfdc4798:
       name: Ayaka2007
       rate: 0
       win: 0.919586531359499
       loss: 16.5457426948978
       rating_group: 999
-      last_modified: 2008-02-25 03:44:04 +09:00
-    gps1_pnp3+be109baa51edd8d89c0de206a3895ae0: 
+      last_modified: 2008-02-25 03:44:04.000000000 +09:00
+    gps1_pnp3+be109baa51edd8d89c0de206a3895ae0:
       name: gps1_pnp3
       rate: 0
       win: 4.11184105119365
       loss: 4.11287148225036
       rating_group: 999
-      last_modified: 2008-02-24 10:07:30 +09:00
-    gps1_pmpc4+dc07789d1cf8f1dca6ab9a893c59bbb2: 
+      last_modified: 2008-02-24 10:07:30.000000000 +09:00
+    gps1_pmpc4+dc07789d1cf8f1dca6ab9a893c59bbb2:
       name: gps1_pmpc4
       rate: 0
       win: 5.20057471794151
       loss: 4.15923237999246
       rating_group: 999
-      last_modified: 2008-03-06 15:19:38 +09:00
-    GOD+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-03-06 15:19:38.000000000 +09:00
+    GOD+098f6bcd4621d373cade4e832627b4f6:
       name: GOD
       rate: 0
       win: 0.0
       loss: 1.43410183880869
       rating_group: 999
-      last_modified: 2008-03-14 22:48:17 +09:00
-    gps7_psa2+4089f050b68443af2a6f4986afc759f6: 
+      last_modified: 2008-03-14 22:48:17.000000000 +09:00
+    gps7_psa2+4089f050b68443af2a6f4986afc759f6:
       name: gps7_psa2
       rate: 0
       win: 4.41815546839211
       loss: 3.61211579954968
       rating_group: 999
-      last_modified: 2008-02-13 05:53:50 +09:00
-    gps0_ppkd+6321826bbd94fb62c7e4c99dc494db42: 
+      last_modified: 2008-02-13 05:53:50.000000000 +09:00
+    gps0_ppkd+6321826bbd94fb62c7e4c99dc494db42:
       name: gps0_ppkd
       rate: 0
       win: 3.0
       loss: 2.0
       rating_group: 999
-      last_modified: 2008-05-05 06:52:19 +09:00
-    gps1_ppabb+3d1e87fe095b83f982bfbddc5cec13e1: 
+      last_modified: 2008-05-05 06:52:19.000000000 +09:00
+    gps1_ppabb+3d1e87fe095b83f982bfbddc5cec13e1:
       name: gps1_ppabb
       rate: 0
       win: 6.24789639065473
       loss: 4.15965642161918
       rating_group: 999
-      last_modified: 2008-03-31 14:36:41 +09:00
-    tomcat+48bae5e28e7585ccdfad978d2ce056b2: 
+      last_modified: 2008-03-31 14:36:41.000000000 +09:00
+    tomcat+48bae5e28e7585ccdfad978d2ce056b2:
       name: tomcat
       rate: 0
       win: 1.46199582559984
       loss: 0.969582861500572
       rating_group: 999
-      last_modified: 2008-03-01 17:47:43 +09:00
-    your_program_name+1060b7b46a3bd36b3a0d66e0127d0517: 
+      last_modified: 2008-03-01 17:47:43.000000000 +09:00
+    your_program_name+1060b7b46a3bd36b3a0d66e0127d0517:
       name: your_program_name
       rate: 0
       win: 0.0
       loss: 1.8231757836041
       rating_group: 999
-      last_modified: 2008-04-23 23:47:35 +09:00
-    gps1_pe13+6cc12bf8490991d034d004731855b27f: 
+      last_modified: 2008-04-23 23:47:35.000000000 +09:00
+    gps1_pe13+6cc12bf8490991d034d004731855b27f:
       name: gps1_pe13
       rate: 0
       win: 0.504442859236656
       loss: 2.52431759752155
       rating_group: 999
-      last_modified: 2008-03-03 20:52:38 +09:00
-    gps7_pska+ed528aeabb3dccbdf53a5243888aadae: 
+      last_modified: 2008-03-03 20:52:38.000000000 +09:00
+    gps7_pska+ed528aeabb3dccbdf53a5243888aadae:
       name: gps7_pska
       rate: 0
       win: 3.67338779718212
       loss: 3.67339093111968
       rating_group: 999
-      last_modified: 2008-02-14 16:25:32 +09:00
-    gps7_psee3+c6cf70391c5f7877e82068c76ebf5b64: 
+      last_modified: 2008-02-14 16:25:32.000000000 +09:00
+    gps7_psee3+c6cf70391c5f7877e82068c76ebf5b64:
       name: gps7_psee3
       rate: 0
       win: 5.10990415683874
       loss: 5.100732957657
       rating_group: 999
-      last_modified: 2008-03-05 02:06:03 +09:00
-    TeamGPS+91d5d6d0427f78f20dbdc8e76007356d: 
+      last_modified: 2008-03-05 02:06:03.000000000 +09:00
+    TeamGPS+91d5d6d0427f78f20dbdc8e76007356d:
       name: TeamGPS
       rate: 0
       win: 1.0
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-05-04 02:26:43 +09:00
-    gps_qtseearea+73c32ddbeef3515fce4d71786c38ef71: 
+      last_modified: 2008-05-04 02:26:43.000000000 +09:00
+    gps_qtseearea+73c32ddbeef3515fce4d71786c38ef71:
       name: gps_qtseearea
       rate: 0
       win: 7.51134737969909
       loss: 5.25426201436594
       rating_group: 999
-      last_modified: 2008-04-07 10:15:59 +09:00
-    gps7_pmk+c118a5489ce33b97f4aeb0783b90a3a5: 
+      last_modified: 2008-04-07 10:15:59.000000000 +09:00
+    gps7_pmk+c118a5489ce33b97f4aeb0783b90a3a5:
       name: gps7_pmk
       rate: 0
       win: 5.13125988290303
       loss: 5.13019364054553
       rating_group: 999
-      last_modified: 2008-03-05 07:12:35 +09:00
-    gps7_pmpc2+6185c9d6c43dff3a2bef269b63a53eb7: 
+      last_modified: 2008-03-05 07:12:35.000000000 +09:00
+    gps7_pmpc2+6185c9d6c43dff3a2bef269b63a53eb7:
       name: gps7_pmpc2
       rate: 0
       win: 7.43363614746777
       loss: 7.44099697225586
       rating_group: 999
-      last_modified: 2008-04-06 16:23:30 +09:00
-    pc1+c4ca4238a0b923820dcc509a6f75849b: 
+      last_modified: 2008-04-06 16:23:30.000000000 +09:00
+    pc1+c4ca4238a0b923820dcc509a6f75849b:
       name: pc1
       rate: 0
       win: 4.80701091245275
       loss: 6.06830448939908
       rating_group: 999
-      last_modified: 2008-04-25 19:33:00 +09:00
-    test2+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-04-25 19:33:00.000000000 +09:00
+    test2+098f6bcd4621d373cade4e832627b4f6:
       name: test2
       rate: 0
       win: 1.31785860451171
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-03-26 21:15:42 +09:00
-    pc1+0cc175b9c0f1b6a831c399e269772661: 
+      last_modified: 2008-03-26 21:15:42.000000000 +09:00
+    pc1+0cc175b9c0f1b6a831c399e269772661:
       name: pc1
       rate: 0
       win: 0.387278490318016
       loss: 3.96740892622904
       rating_group: 999
-      last_modified: 2008-03-30 11:08:12 +09:00
-    gps7_psa+ca86319a6b0d196e3f387bf8f6242d63: 
+      last_modified: 2008-03-30 11:08:12.000000000 +09:00
+    gps7_psa+ca86319a6b0d196e3f387bf8f6242d63:
       name: gps7_psa
       rate: 0
       win: 4.38515241355686
       loss: 3.58513866015491
       rating_group: 999
-      last_modified: 2008-02-12 14:18:55 +09:00
-    kaneko-test+5058f1af8388633f609cadb75a75dc9d: 
+      last_modified: 2008-02-12 14:18:55.000000000 +09:00
+    kaneko-test+5058f1af8388633f609cadb75a75dc9d:
       name: kaneko-test
       rate: 0
       win: 0.0
       loss: 1.0
       rating_group: 999
-      last_modified: 2008-05-04 02:26:43 +09:00
-    GEPPER+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-05-04 02:26:43.000000000 +09:00
+    GEPPER+098f6bcd4621d373cade4e832627b4f6:
       name: GEPPER
       rate: 0
       win: 0.0
       loss: 21.7051709294456
       rating_group: 999
-      last_modified: 2008-05-06 23:42:28 +09:00
-    username1+5f4dcc3b5aa765d61d8327deb882cf99: 
+      last_modified: 2008-05-06 23:42:28.000000000 +09:00
+    username1+5f4dcc3b5aa765d61d8327deb882cf99:
       name: username1
       rate: 0
       win: 0.0
       loss: 21.7871556340513
       rating_group: 999
-      last_modified: 2008-03-04 02:04:18 +09:00
-    gps1_pkte+c8beae8bd7158b319a91b379c057b05f: 
+      last_modified: 2008-03-04 02:04:18.000000000 +09:00
+    gps1_pkte+c8beae8bd7158b319a91b379c057b05f:
       name: gps1_pkte
       rate: 0
       win: 5.02005760026863
       loss: 6.13723134166796
       rating_group: 999
-      last_modified: 2008-03-12 19:45:55 +09:00
-    pc2+03c7c0ace395d80182db07ae2c30f034: 
+      last_modified: 2008-03-12 19:45:55.000000000 +09:00
+    pc2+03c7c0ace395d80182db07ae2c30f034:
       name: pc2
       rate: 0
       win: 1.09512293936863
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-03-10 20:31:36 +09:00
-    ipa+43945d0d3e53ac07d91b0e0f59fd1e21: 
+      last_modified: 2008-03-10 20:31:36.000000000 +09:00
+    ipa+43945d0d3e53ac07d91b0e0f59fd1e21:
       name: ipa
       rate: 0
       win: 0.0
       loss: 1.37599301613844
       rating_group: 999
-      last_modified: 2008-03-30 14:57:21 +09:00
-    gps4_paebf+1fdaa09e7f9c16ed1091ee09428fc0ac: 
+      last_modified: 2008-03-30 14:57:21.000000000 +09:00
+    gps4_paebf+1fdaa09e7f9c16ed1091ee09428fc0ac:
       name: gps4_paebf
       rate: 0
       win: 6.69990403704951
       loss: 8.18551413932288
       rating_group: 999
-      last_modified: 2008-04-06 17:47:00 +09:00
-    gps1_pka+add01fb87e5a1293d005247c9387391c: 
+      last_modified: 2008-04-06 17:47:00.000000000 +09:00
+    gps1_pka+add01fb87e5a1293d005247c9387391c:
       name: gps1_pka
       rate: 0
       win: 3.95938224668317
       loss: 3.9603124754782
       rating_group: 999
-      last_modified: 2008-02-12 01:34:32 +09:00
-    R+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-02-12 01:34:32.000000000 +09:00
+    R+098f6bcd4621d373cade4e832627b4f6:
       name: R
       rate: 0
       win: 0.448143453067201
       loss: 2.24050154600835
       rating_group: 999
-      last_modified: 2008-02-22 12:20:16 +09:00
-    Ayaka2007+7dcac6e40988bcfa8407fc0744f6b64e: 
+      last_modified: 2008-02-22 12:20:16.000000000 +09:00
+    Ayaka2007+7dcac6e40988bcfa8407fc0744f6b64e:
       name: Ayaka2007
       rate: 0
       win: 0.0
       loss: 30.5649072804631
       rating_group: 999
-      last_modified: 2008-02-24 02:39:43 +09:00
-    gps4_pky+8a88b1752937def23cda64522ff3c077: 
+      last_modified: 2008-02-24 02:39:43.000000000 +09:00
+    gps4_pky+8a88b1752937def23cda64522ff3c077:
       name: gps4_pky
       rate: 0
       win: 3.64780525160742
       loss: 4.45632381394203
       rating_group: 999
-      last_modified: 2008-02-14 01:47:54 +09:00
-    kaneko+5058f1af8388633f609cadb75a75dc9d: 
+      last_modified: 2008-02-14 01:47:54.000000000 +09:00
+    kaneko+5058f1af8388633f609cadb75a75dc9d:
       name: kaneko
       rate: 0
       win: 0.0
       loss: 1.77449942396776
       rating_group: 999
-      last_modified: 2008-03-05 10:41:37 +09:00
-    gps_s2+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-03-05 10:41:37.000000000 +09:00
+    gps_s2+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps_s2
       rate: 0
       win: 2.0
       loss: 9.0
       rating_group: 999
-      last_modified: 2008-05-04 02:17:33 +09:00
-    gps8cpu+51ba10507fee37a907cda72bd63d72f0: 
+      last_modified: 2008-05-04 02:17:33.000000000 +09:00
+    gps8cpu+51ba10507fee37a907cda72bd63d72f0:
       name: gps8cpu
       rate: 0
       win: 4.97969982709647
       loss: 0.391750615406864
       rating_group: 999
-      last_modified: 2008-02-20 13:43:30 +09:00
-    pc1+a87ff679a2f3e71d9181a67b7542122c: 
+      last_modified: 2008-02-20 13:43:30.000000000 +09:00
+    pc1+a87ff679a2f3e71d9181a67b7542122c:
       name: pc1
       rate: 0
       win: 3.85595408171491
       loss: 3.13266127153545
       rating_group: 999
-      last_modified: 2008-03-11 22:50:59 +09:00
-    test2+47bce5c74f589f4867dbd57e9ca9f808: 
+      last_modified: 2008-03-11 22:50:59.000000000 +09:00
+    test2+47bce5c74f589f4867dbd57e9ca9f808:
       name: test2
       rate: 0
       win: 1.19658441710944
       loss: 2.39816368022251
       rating_group: 999
-      last_modified: 2008-02-12 18:59:40 +09:00
-    gps4_pkep3+de14ab38aba203fba5770eb28de528ea: 
+      last_modified: 2008-02-12 18:59:40.000000000 +09:00
+    gps4_pkep3+de14ab38aba203fba5770eb28de528ea:
       name: gps4_pkep3
       rate: 0
       win: 4.70323518646419
       loss: 8.46352764886076
       rating_group: 999
-      last_modified: 2008-04-26 22:15:24 +09:00
-    gps_kachi+3b91020198c46a8070fcbbe55c1f984b: 
+      last_modified: 2008-04-26 22:15:24.000000000 +09:00
+    gps_kachi+3b91020198c46a8070fcbbe55c1f984b:
       name: gps_kachi
       rate: 0
       win: 3.76781181342986
       loss: 6.59706844766145
       rating_group: 999
-      last_modified: 2008-04-26 23:52:45 +09:00
-    gps1_pmpc8+9678ca96f57cc5a75782a1145fc9987b: 
+      last_modified: 2008-04-26 23:52:45.000000000 +09:00
+    gps1_pmpc8+9678ca96f57cc5a75782a1145fc9987b:
       name: gps1_pmpc8
       rate: 0
       win: 4.71466137351621
       loss: 4.18614807675241
       rating_group: 999
-      last_modified: 2008-03-07 05:34:47 +09:00
-    gps_cpu4p16+561d1247b6b08664758faa68347cadaf: 
+      last_modified: 2008-03-07 05:34:47.000000000 +09:00
+    gps_cpu4p16+561d1247b6b08664758faa68347cadaf:
       name: gps_cpu4p16
       rate: 0
       win: 7.42949610697478
       loss: 5.94750065979917
       rating_group: 999
-      last_modified: 2008-04-06 12:20:43 +09:00
-    gps_8cpu+813015cab4287a23392e0082220c5805: 
+      last_modified: 2008-04-06 12:20:43.000000000 +09:00
+    gps_8cpu+813015cab4287a23392e0082220c5805:
       name: gps_8cpu
       rate: 0
       win: 5.0
       loss: 4.0
       rating_group: 999
-      last_modified: 2008-05-04 08:00:38 +09:00
-    gps30+813015cab4287a23392e0082220c5805: 
+      last_modified: 2008-05-04 08:00:38.000000000 +09:00
+    gps30+813015cab4287a23392e0082220c5805:
       name: gps30
       rate: 0
       win: 12.027391442297
       loss: 4.0
       rating_group: 999
-      last_modified: 2008-05-06 23:42:28 +09:00
-    gps_scr+58b813a0dc157dfdbeabd3afe7643726: 
+      last_modified: 2008-05-06 23:42:28.000000000 +09:00
+    gps_scr+58b813a0dc157dfdbeabd3afe7643726:
       name: gps_scr
       rate: 0
       win: 3.0
       loss: 6.0
       rating_group: 999
-      last_modified: 2008-05-08 23:18:02 +09:00
-    gps4_pbp+d81ba2e3205d35d0dd2d12be19bf9d67: 
+      last_modified: 2008-05-08 23:18:02.000000000 +09:00
+    gps4_pbp+d81ba2e3205d35d0dd2d12be19bf9d67:
       name: gps4_pbp
       rate: 0
       win: 3.73322544415813
       loss: 4.56461635049319
       rating_group: 999
-      last_modified: 2008-02-16 03:17:29 +09:00
-    gps1_pnp4+1d2710ee2228968ecffb0d7e7021c144: 
+      last_modified: 2008-02-16 03:17:29.000000000 +09:00
+    gps1_pnp4+1d2710ee2228968ecffb0d7e7021c144:
       name: gps1_pnp4
       rate: 0
       win: 3.22085262459041
       loss: 5.52555734219273
       rating_group: 999
-      last_modified: 2008-02-25 02:43:23 +09:00
-    usaoya+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-02-25 02:43:23.000000000 +09:00
+    usaoya+098f6bcd4621d373cade4e832627b4f6:
       name: usaoya
       rate: 0
       win: 0.574085339470999
       loss: 1.70599269116463
       rating_group: 999
-      last_modified: 2008-03-29 23:04:17 +09:00
-    gps1_pka4+94a4ef82f4f0dae7d12fcd9e9fa68dc7: 
+      last_modified: 2008-03-29 23:04:17.000000000 +09:00
+    gps1_pka4+94a4ef82f4f0dae7d12fcd9e9fa68dc7:
       name: gps1_pka4
       rate: 0
       win: 4.45559409749626
       loss: 3.6480188462149
       rating_group: 999
-      last_modified: 2008-02-14 01:36:38 +09:00
-    spear900+05b08566ff2ec028287189062e521d1d: 
+      last_modified: 2008-02-14 01:36:38.000000000 +09:00
+    spear900+05b08566ff2ec028287189062e521d1d:
       name: spear900
       rate: 0
       win: 9.05771994907118
       loss: 2.01414206050652
       rating_group: 999
-      last_modified: 2008-03-03 15:52:55 +09:00
-    mattari_yuchan_test+aac81b5c0cf7bf4b5842e3908a709502: 
+      last_modified: 2008-03-03 15:52:55.000000000 +09:00
+    mattari_yuchan_test+aac81b5c0cf7bf4b5842e3908a709502:
       name: mattari_yuchan_test
       last_game_win: false
       rate: 0
       win: 3.0
       loss: 10.0
       rating_group: 999
-      last_modified: 2008-05-08 23:53:26 +09:00
-    pc2+c81e728d9d4c2f636f067f89cc14862c: 
+      last_modified: 2008-05-08 23:53:26.000000000 +09:00
+    pc2+c81e728d9d4c2f636f067f89cc14862c:
       name: pc2
       rate: 0
       win: 3.28656026387904
       loss: 2.51707390348184
       rating_group: 999
-      last_modified: 2008-04-19 13:31:23 +09:00
-    yowai_gps_test+dcbd015b6d6271acedcd30b84453c353: 
+      last_modified: 2008-04-19 13:31:23.000000000 +09:00
+    yowai_gps_test+dcbd015b6d6271acedcd30b84453c353:
       name: yowai_gps_test
       rate: 0
       win: 0.0
       loss: 1.16300981411347
       rating_group: 999
-      last_modified: 2008-02-09 23:10:01 +09:00
-    gps1_pt+dbe4ea3ae48cb785bf92d670723c925a: 
+      last_modified: 2008-02-09 23:10:01.000000000 +09:00
+    gps1_pt+dbe4ea3ae48cb785bf92d670723c925a:
       name: gps1_pt
       rate: 0
       win: 2.49153833722485
       loss: 4.56017852061372
       rating_group: 999
-      last_modified: 2008-02-16 02:16:17 +09:00
-    gps1_pe3+6df8e3e8851329a1ca3ec14c33ba804b: 
+      last_modified: 2008-02-16 02:16:17.000000000 +09:00
+    gps1_pe3+6df8e3e8851329a1ca3ec14c33ba804b:
       name: gps1_pe3
       rate: 0
       win: 3.04228163567075
       loss: 7.10358487942135
       rating_group: 999
-      last_modified: 2008-03-04 13:54:33 +09:00
-    gps1_pg+0283617fd60191c1e333831b9c10defa: 
+      last_modified: 2008-03-04 13:54:33.000000000 +09:00
+    gps1_pg+0283617fd60191c1e333831b9c10defa:
       name: gps1_pg
       rate: 0
       win: 4.43060682067607
       loss: 3.54004292474244
       rating_group: 999
-      last_modified: 2008-02-21 18:13:59 +09:00
-    gps_exp16b+9f74478657f8a65175fc0f42489acc05: 
+      last_modified: 2008-02-21 18:13:59.000000000 +09:00
+    gps_exp16b+9f74478657f8a65175fc0f42489acc05:
       name: gps_exp16b
       rate: 0
       win: 0.0
       loss: 5.71503485564411
       rating_group: 999
-      last_modified: 2008-04-27 20:36:25 +09:00
-    gps8cpu+11648e4e66e7ed6a86cb7f1d0cf604fe: 
+      last_modified: 2008-04-27 20:36:25.000000000 +09:00
+    gps8cpu+11648e4e66e7ed6a86cb7f1d0cf604fe:
       name: gps8cpu
       rate: 0
       win: 9.76910925599213
       loss: 0.714102787732918
       rating_group: 999
-      last_modified: 2008-05-03 05:57:55 +09:00
-    gps7_ppabI2+024cc4c494638819aef73d6a71925d9c: 
+      last_modified: 2008-05-03 05:57:55.000000000 +09:00
+    gps7_ppabI2+024cc4c494638819aef73d6a71925d9c:
       name: gps7_ppabI2
       rate: 0
       win: 3.5323942549571
       loss: 3.52839482243325
       rating_group: 999
-      last_modified: 2008-02-11 04:41:19 +09:00
-    pc2+e4da3b7fbbce2345d7772b0674a318d5: 
+      last_modified: 2008-02-11 04:41:19.000000000 +09:00
+    pc2+e4da3b7fbbce2345d7772b0674a318d5:
       name: pc2
       rate: 0
       win: 0.96451771211084
       loss: 3.86918367231102
       rating_group: 999
-      last_modified: 2008-03-11 22:52:23 +09:00
-    misaki+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-03-11 22:52:23.000000000 +09:00
+    misaki+098f6bcd4621d373cade4e832627b4f6:
       name: misaki
       rate: 0
       win: 1.17483538100067
       loss: 3.13216359232655
       rating_group: 999
-      last_modified: 2008-02-10 20:09:45 +09:00
-    gps7_pz4+2820db5da30c537181cfacd23a04bec5: 
+      last_modified: 2008-02-10 20:09:45.000000000 +09:00
+    gps7_pz4+2820db5da30c537181cfacd23a04bec5:
       name: gps7_pz4
       rate: 0
       win: 6.13575163921137
       loss: 8.45396550690933
       rating_group: 999
-      last_modified: 2008-04-09 11:14:59 +09:00
-    ellecia2+3123059c1c816471780539f6b6b738dc: 
+      last_modified: 2008-04-09 11:14:59.000000000 +09:00
+    ellecia2+3123059c1c816471780539f6b6b738dc:
       name: ellecia2
       rate: 0
       win: 0.650607307852355
       loss: 1.22554823127326
       rating_group: 999
-      last_modified: 2008-03-25 18:48:46 +09:00
-    gps_pp10+cfa3292063eb247e51fd103e53999c85: 
+      last_modified: 2008-03-25 18:48:46.000000000 +09:00
+    gps_pp10+cfa3292063eb247e51fd103e53999c85:
       name: gps_pp10
       rate: 0
       win: 2.0
       loss: 3.0
       rating_group: 999
-      last_modified: 2008-05-08 23:24:58 +09:00
-    gps7_pmk4+4bf23894d31c124f683995d341faeb5b: 
+      last_modified: 2008-05-08 23:24:58.000000000 +09:00
+    gps7_pmk4+4bf23894d31c124f683995d341faeb5b:
       name: gps7_pmk4
       rate: 0
       win: 4.71389101336148
       loss: 5.76081264301408
       rating_group: 999
-      last_modified: 2008-03-07 07:02:21 +09:00
-    gps1_old+cbd6837c2403128221c7f65315a76928: 
+      last_modified: 2008-03-07 07:02:21.000000000 +09:00
+    gps1_old+cbd6837c2403128221c7f65315a76928:
       name: gps1_old
       rate: 0
       win: 4.07954455349915
       loss: 6.12004175552569
       rating_group: 999
-      last_modified: 2008-03-04 18:20:09 +09:00
-    gps7_pkeu+946dd752934d80e81a6c0588bb35ac6f: 
+      last_modified: 2008-03-04 18:20:09.000000000 +09:00
+    gps7_pkeu+946dd752934d80e81a6c0588bb35ac6f:
       name: gps7_pkeu
       rate: 0
       win: 0.99037817695798
       loss: 5.94458057622329
       rating_group: 999
-      last_modified: 2008-05-01 07:17:08 +09:00
-    kaneko-test1+c1d518f5c51f59cfcdfa6fd0d74011d1: 
+      last_modified: 2008-05-01 07:17:08.000000000 +09:00
+    kaneko-test1+c1d518f5c51f59cfcdfa6fd0d74011d1:
       name: kaneko-test1
       rate: 0
       win: 0.540731006296224
       loss: 3.24425845783411
       rating_group: 999
-      last_modified: 2008-03-09 18:25:44 +09:00
-    gps7_ppabI+58008bcbd80ec35321353dceaacd77ce: 
+      last_modified: 2008-03-09 18:25:44.000000000 +09:00
+    gps7_ppabI+58008bcbd80ec35321353dceaacd77ce:
       name: gps7_ppabI
       rate: 0
       win: 3.5034694912018
       loss: 3.50885823530829
       rating_group: 999
-      last_modified: 2008-02-10 16:27:57 +09:00
-    gps30_8cpu+813015cab4287a23392e0082220c5805: 
+      last_modified: 2008-02-10 16:27:57.000000000 +09:00
+    gps30_8cpu+813015cab4287a23392e0082220c5805:
       name: gps30_8cpu
       rate: 0
       win: 4.0
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-05-04 02:33:05 +09:00
-    gps_wcsc17+a213f8b2b86d4f1595c8c0de34e7f2e2: 
+      last_modified: 2008-05-04 02:33:05.000000000 +09:00
+    gps_wcsc17+a213f8b2b86d4f1595c8c0de34e7f2e2:
       name: gps_wcsc17
       rate: 0
       win: 0.0
       loss: 1.0
       rating_group: 999
-      last_modified: 2008-05-02 19:49:30 +09:00
-    misakitest+098f6bcd4621d373cade4e832627b4f6: 
+      last_modified: 2008-05-02 19:49:30.000000000 +09:00
+    misakitest+098f6bcd4621d373cade4e832627b4f6:
       name: misakitest
       rate: 0
       win: 3.13216359232655
       loss: 1.17483538100067
       rating_group: 999
-      last_modified: 2008-02-10 20:09:45 +09:00
-    gps7_pmk2-30+faf5199cadb7774bad74b17a5c6cc0a1: 
+      last_modified: 2008-02-10 20:09:45.000000000 +09:00
+    gps7_pmk2-30+faf5199cadb7774bad74b17a5c6cc0a1:
       name: gps7_pmk2-30
       rate: 0
       win: 4.64919706385219
       loss: 5.1591179437548
       rating_group: 999
-      last_modified: 2008-03-06 00:29:06 +09:00
-    gps1_pnp2+33bb7c6e4d09574114756ab1fff59f37: 
+      last_modified: 2008-03-06 00:29:06.000000000 +09:00
+    gps1_pnp2+33bb7c6e4d09574114756ab1fff59f37:
       name: gps1_pnp2
       rate: 0
       win: 4.07503051644584
       loss: 4.53050101342215
       rating_group: 999
-      last_modified: 2008-02-23 17:29:25 +09:00
-    gps7_psa3+a252b8b8cf94d378376c30efaa7e3c12: 
+      last_modified: 2008-02-23 17:29:25.000000000 +09:00
+    gps7_psa3+a252b8b8cf94d378376c30efaa7e3c12:
       name: gps7_psa3
       rate: 0
       win: 3.64638172435888
       loss: 3.64110823557492
       rating_group: 999
-      last_modified: 2008-02-13 23:04:38 +09:00
-    ssp+fe33467fa97283fd0c6e39106f020753: 
+      last_modified: 2008-02-13 23:04:38.000000000 +09:00
+    ssp+fe33467fa97283fd0c6e39106f020753:
       name: ssp
       rate: 0
       win: 0.0
       loss: 1.18879968181155
       rating_group: 999
-      last_modified: 2008-03-17 23:03:43 +09:00
-    gps_lg2+3460302ed6cc24fb91dcadab211b18b1: 
+      last_modified: 2008-03-17 23:03:43.000000000 +09:00
+    gps_lg2+3460302ed6cc24fb91dcadab211b18b1:
       name: gps_lg2
       rate: 0
       win: 6.16876149215196
       loss: 8.22146578496015
       rating_group: 999
-      last_modified: 2008-03-30 13:16:17 +09:00
-    gps1_pr68+ab84ca8c4c34df394ef67ddb8a55c575: 
+      last_modified: 2008-03-30 13:16:17.000000000 +09:00
+    gps1_pr68+ab84ca8c4c34df394ef67ddb8a55c575:
       name: gps1_pr68
       rate: 0
       win: 1.94971780216178
       loss: 5.06277266660577
       rating_group: 999
-      last_modified: 2008-02-10 15:52:23 +09:00
-    gps1_pka2+7033c93adba70e063c3b744929e6f7c8: 
+      last_modified: 2008-02-10 15:52:23.000000000 +09:00
+    gps1_pka2+7033c93adba70e063c3b744929e6f7c8:
       name: gps1_pka2
       rate: 0
       win: 3.18814600262029
       loss: 4.78618461567772
       rating_group: 999
-      last_modified: 2008-02-12 15:54:28 +09:00
-    k+9fe9de3be8ad533149a36f366dff0bb3: 
+      last_modified: 2008-02-12 15:54:28.000000000 +09:00
+    k+9fe9de3be8ad533149a36f366dff0bb3:
       name: k
       rate: 0
       win: 1.34444228366597
       loss: 0.448143453067201
       rating_group: 999
-      last_modified: 2008-02-22 12:20:16 +09:00
-    pc2+0cc175b9c0f1b6a831c399e269772661: 
+      last_modified: 2008-02-22 12:20:16.000000000 +09:00
+    pc2+0cc175b9c0f1b6a831c399e269772661:
       name: pc2
       rate: 0
       win: 2.76296190816758
       loss: 1.79764425753254
       rating_group: 999
-      last_modified: 2008-04-25 19:33:00 +09:00
-    gps_pp6+be1cf926449472274af55a1b074e357e: 
+      last_modified: 2008-04-25 19:33:00.000000000 +09:00
+    gps_pp6+be1cf926449472274af55a1b074e357e:
       name: gps_pp6
       rate: 0
       win: 4.0
       loss: 6.0
       rating_group: 999
-      last_modified: 2008-05-08 23:31:31 +09:00
-    gps6_pw5+d22cb490b411ace707b146b090d1a2be: 
+      last_modified: 2008-05-08 23:31:31.000000000 +09:00
+    gps6_pw5+d22cb490b411ace707b146b090d1a2be:
       name: gps6_pw5
       rate: 0
       win: 1.0
       loss: 0.0
       rating_group: 999
-      last_modified: 2008-05-08 00:03:24 +09:00
-    gps_mc0+aa6598cc8577f5af6c122e18d13efb40: 
+      last_modified: 2008-05-08 00:03:24.000000000 +09:00
+    gps_mc0+aa6598cc8577f5af6c122e18d13efb40:
       name: gps_mc0
       rate: 0
       win: 4.65735073577001
       loss: 3.88433998290132
       rating_group: 999
-      last_modified: 2008-04-10 05:52:07 +09:00
-  4: 
-    gps6_orig+23daece4324fd5c2c7f2ef3f01e22cbd: 
+      last_modified: 2008-04-10 05:52:07.000000000 +09:00
+  4:
+    gps6_orig+23daece4324fd5c2c7f2ef3f01e22cbd:
       name: gps6_orig
       rate: 1005.0
       win: 56.4475550891671
       loss: 52.9404587900779
       rating_group: 4
-      last_modified: 2008-04-25 22:11:02 +09:00
-    gps8_orig+04b3be38b45d6c7341216df4494eba88: 
+      last_modified: 2008-04-25 22:11:02.000000000 +09:00
+    gps8_orig+04b3be38b45d6c7341216df4494eba88:
       name: gps8_orig
       rate: 988.0
       win: 34.8334553178621
       loss: 34.7756725880529
       rating_group: 4
-      last_modified: 2008-04-21 01:54:49 +09:00
-    gps7_nmb005+0603aa6be69954719efd16294d46e1fd: 
+      last_modified: 2008-04-21 01:54:49.000000000 +09:00
+    gps7_nmb005+0603aa6be69954719efd16294d46e1fd:
       name: gps7_nmb005
       rate: 1023.0
       win: 19.0187875399771
       loss: 15.5574290158712
       rating_group: 4
-      last_modified: 2008-04-19 22:30:16 +09:00
-    gps7_nmbf2048+7222b303fe6c918f085352fae3e948e0: 
+      last_modified: 2008-04-19 22:30:16.000000000 +09:00
+    gps7_nmbf2048+7222b303fe6c918f085352fae3e948e0:
       name: gps7_nmbf2048
       rate: 1023.0
       win: 19.1988151416004
       loss: 17.3554541281629
       rating_group: 4
-      last_modified: 2008-04-24 18:07:39 +09:00
-    gps7_nmb005_2+f9f5b4ad8876211ec87063448e3f309c: 
+      last_modified: 2008-04-24 18:07:39.000000000 +09:00
+    gps7_nmb005_2+f9f5b4ad8876211ec87063448e3f309c:
       name: gps7_nmb005_2
       rate: 953.0
       win: 30.9780397575928
       loss: 39.830690034666
       rating_group: 4
-      last_modified: 2008-04-22 21:18:36 +09:00
-    gps7_nmb005_3+833dbce4e46df7d07021364f70b004be: 
+      last_modified: 2008-04-22 21:18:36.000000000 +09:00
+    gps7_nmb005_3+833dbce4e46df7d07021364f70b004be:
       name: gps7_nmb005_3
       rate: 1005.0
       win: 18.5204889389606
       loss: 18.5374372283291
       rating_group: 4
-      last_modified: 2008-04-25 22:11:02 +09:00
-  10: 
-    gps7_kab3+b2920e23a50211cb5e3cd14f65efd909: 
+      last_modified: 2008-04-25 22:11:02.000000000 +09:00
+  10:
+    gps7_kab3+b2920e23a50211cb5e3cd14f65efd909:
       name: gps7_kab3
       rate: 1076.0
       win: 12.0
       loss: 7.0
       rating_group: 10
-      last_modified: 2008-05-03 06:30:07 +09:00
-    gps7_kab5+b58d115ca7a38174b8e094d80d1f754b: 
+      last_modified: 2008-05-03 06:30:07.000000000 +09:00
+    gps7_kab5+b58d115ca7a38174b8e094d80d1f754b:
       name: gps7_kab5
       rate: 1052.0
       win: 12.0
       loss: 8.0
       rating_group: 10
-      last_modified: 2008-05-04 17:13:22 +09:00
-    gps7_kab4+dadcdaa4377a9741d4476298f0dc3d28: 
+      last_modified: 2008-05-04 17:13:22.000000000 +09:00
+    gps7_kab4+dadcdaa4377a9741d4476298f0dc3d28:
       name: gps7_kab4
       rate: 888.0
       win: 7.0
       loss: 12.0
       rating_group: 10
-      last_modified: 2008-05-03 23:35:23 +09:00
-    gps7+3b3309e4846a69406950c38040488e08: 
+      last_modified: 2008-05-03 23:35:23.000000000 +09:00
+    gps7+3b3309e4846a69406950c38040488e08:
       name: gps7
       rate: 982.0
       win: 27.0
       loss: 31.0
       rating_group: 10
-      last_modified: 2008-05-04 17:13:22 +09:00
+      last_modified: 2008-05-04 17:13:22.000000000 +09:00

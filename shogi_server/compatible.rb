@@ -17,32 +17,10 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-module ShogiServer # for a namespace
-
-class Move
-  def initialize(x0, y0, x1, y1, name, sente)
-    @x0 = x0
-    @y0 = y0
-    @x1 = x1
-    @y1 = y1
-    @name = name
-    @sente = sente
-    @promotion = false
-    @captured_piece = nil
-    @captured_piece_promoted = false
-  end
-  attr_reader :x0, :y0, :x1, :y1, :name, :sente, 
-              :captured_piece, :captured_piece_promoted
-  attr_accessor :promotion
-
-  def set_captured_piece(piece)
-    @captured_piece = piece
-    @captured_piece_promoted = piece.promoted
-  end
-
-  def is_drop?
-    return (@x0 == 0 || @y0 == 0)
+# Allow Ruby 1.8.7 to use Array#sample 
+# 
+unless ::Array.method_defined?(:sample)
+  class Array
+    alias_method :sample, :choice
   end
 end
-
-end # namespace

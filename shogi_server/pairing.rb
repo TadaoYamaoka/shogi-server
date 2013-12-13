@@ -1,7 +1,7 @@
 ## $Id$
 
 ## Copyright (C) 2004 NABEYA Kenichi (aka nanami@2ch)
-## Copyright (C) 2007-2008 Daigo Moriwaki (daigo at debian dot org)
+## Copyright (C) 2007-2012 Daigo Moriwaki (daigo at debian dot org)
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -24,44 +24,52 @@ module ShogiServer
   class Pairing
 
     class << self
-      def default_factory
-        return least_diff_pairing
+      def default_factory(options)
+        return least_diff_pairing(options)
       end
 
-      def sort_by_rate_with_randomness
+      def sort_by_rate_with_randomness(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 SortByRateWithRandomness.new(1200, 2400),
                 StartGameWithoutHumans.new]
       end
 
-      def random_pairing
+      def random_pairing(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 Randomize.new,
                 StartGameWithoutHumans.new]
       end
 
-      def swiss_pairing
+      def swiss_pairing(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 Swiss.new,
                 StartGameWithoutHumans.new]
       end
 
-      def least_diff_pairing
+      def least_diff_pairing(options)
         return [LogPlayers.new,
-                ExcludeSacrificeGps500.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
                 MakeEven.new,
                 LeastDiff.new,
                 StartGameWithoutHumans.new]
       end
 
-      def match(players)
-        logics = default_factory
+      def floodgate_zyunisen(options)
+        return [LogPlayers.new,
+                ExcludeUnratedPlayers.new,
+                ExcludeSacrifice.new(options[:sacrifice]),
+                MakeEven.new,
+                LeastDiff.new,
+                StartGameWithoutHumans.new]
+      end
+
+      def match(players, logics)
         logics.inject(players) do |result, item|
           item.match(result)
           result
@@ -136,7 +144,7 @@ module ShogiServer
     def match(players)
       super
       if players.size < 2
-        log_warning("Floodgate: There should be more than one player (%d)." % [players.size])
+        log_message("Floodgate: There are less than two players: %d" % [players.size])
         return
       end
       if players.size.odd?
@@ -159,7 +167,7 @@ module ShogiServer
       super
       log_players(players)
       if players.size < 2
-        log_warning("Floodgate: There should be more than one player (%d)." % [players.size])
+        log_message("Floodgate: There are less than two players: %d" % [players.size])
         return
       elsif players.size == 2
         start_game_shuffle(players)
@@ -298,7 +306,7 @@ module ShogiServer
     def match(players)
       super
       return if less_than_one?(players)
-      one = players.choice
+      one = players.sample
       log_message("Floodgate: Deleted %s at random" % [one.name])
       players.delete(one)
       log_players(players)
@@ -346,7 +354,7 @@ module ShogiServer
     # @sacrifice a player id to be eliminated
     def initialize(sacrifice)
       super()
-      @sacrifice = sacrifice
+      @sacrifice = sacrifice || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
     end
 
     def match(players)
@@ -388,43 +396,74 @@ module ShogiServer
       players.shuffle
     end
 
-    # Returns a player's rate value.
+    # Update estimated rate of a player.
     # 1. If it has a valid rate, return the rate.
-    # 2. If it has no valid rate, return average of the following values:
-    #   a. For games it won, the opponent's rate + 100
-    #   b. For games it lost, the opponent's rate - 100
-    #   (if the opponent has no valid rate, count out the game)
-    #   (if there are not such games, return 2150 (default value)
+    # 2. If it has no valid rate, return:
+    #   a. If it won the last game, the opponent's rate + 200
+    #   b. If it lost the last game, the opponent's rate - 200
+    #   c. otherwise, return 2150 (default value)
+    #
+    def estimate_rate(player, history)
+      player.estimated_rate = 2150 # default value
+
+      unless history
+        log_message("Floodgate: Without game history, estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      g = history.last_valid_game(player.player_id)
+      unless g
+        log_message("Floodgate: Without any valid games in history, estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      opponent_id = nil
+      win         = true
+      case player.player_id
+      when g[:winner]
+        opponent_id = g[:loser]
+        win = true
+      when g[:loser]
+        opponent_id = g[:winner]
+        win = false
+      else
+        log_warning("Floodgate: The last valid game is invalid for %s!" % [player.name])
+        log_message("Floodgate: Estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      opponent_name = opponent_id.split("+")[0]
+      p = $league.find(opponent_name)
+      unless p
+        log_message("Floodgate: No active opponent found. Estimated %s's rate: %d" % [player.name, player.estimated_rate])
+        return
+      end
+
+      opponent_rate = 0
+      if p.rate != 0
+        opponent_rate = p.rate
+      elsif p.estimated_rate != 0
+        opponent_rate = p.estimated_rate
+      end
+
+      if opponent_rate != 0
+        player.estimated_rate = opponent_rate + (win ? 200 : -200)
+      end
+
+      log_message("Floodgate: Estimated %s's rate: %d" % [player.name, player.estimated_rate])
+    end
+
+    # Return a player's rate based on its actual rate or estimated rate.
     #
     def get_player_rate(player, history)
-      return player.rate if player.rate != 0
-      return 2150 unless history
-
-      count = 0
-      sum = 0
-
-      history.win_games(player.player_id).each do |g|
-        next unless g[:loser]
-        name = g[:loser].split("+")[0]
-        p = $league.find(name)
-        if p && p.rate != 0
-          count += 1
-          sum += p.rate + 100
-        end
+      if player.rate != 0
+        return player.rate
+      elsif player.estimated_rate != 0
+        return player.estimated_rate 
+      else
+        estimate_rate(player, history)
+        return player.estimated_rate
       end
-      history.loss_games(player.player_id).each do |g|
-        next unless g[:winner]
-        name = g[:winner].split("+")[0]
-        p = $league.find(name)
-        if p && p.rate != 0
-          count += 1
-          sum += p.rate - 100
-        end
-      end
-
-      estimate = (count == 0 ? 2150 : sum/count)
-      log_message("Floodgate: Estimated rate of %s is %d" % [player.name, estimate])
-      return estimate
     end
 
     def calculate_diff_with_penalty(players, history)
@@ -467,6 +506,9 @@ module ShogiServer
         return players
       end
 
+      # Reset estimated rate
+      players.each {|p| p.estimated_rate = 0}
+
       # 10 trials
       matches = []
       scores  = []
@@ -493,10 +535,23 @@ module ShogiServer
           min_score = s
         end
       end
-      log_message("Floodgate: the least score %d (%d per player) [%s]" % [min_score, min_score/players.size, scores.join(" ")])
+      log_message("Floodgate: the least score %d (%d per game) [%s]" % [min_score, min_score/players.size*2, scores.join(" ")])
 
       players.replace(matches[min_index])
     end
   end
+
+  # This pairing method excludes unrated players
+  #
+  class ExcludeUnratedPlayers < Pairing
+
+    def match(players)
+      super
+
+      log_message("Floodgate: Deleting unrated players...")
+      players.delete_if{|a| a.rate == 0}
+      log_players(players)
+    end
+  end # class ExcludeUnratedPlayers
 
 end # ShogiServer

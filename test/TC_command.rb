@@ -2,8 +2,8 @@ $:.unshift File.join(File.dirname(__FILE__), "..")
 $topdir = File.expand_path File.dirname(__FILE__)
 require 'test/unit'
 require 'tempfile'
-require 'mock_game'
-require 'mock_log_message'
+require 'test/mock_game'
+require 'test/mock_log_message'
 require 'test/mock_player'
 require 'shogi_server/login'
 require 'shogi_server/player'
@@ -842,7 +842,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 2
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert !@buoy.is_new_game?("buoy_hoge-1500-0")
     assert !$p1.out.empty?
     assert !$p2.out.empty?
@@ -854,7 +854,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_hoge-1500-0", "+7776FU", 1
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
     assert !$p1.out.empty?
     assert !$p2.out.empty?
@@ -864,7 +864,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoyhoge-1500-0", "+7776FU", 1
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert $p1.out.empty?
     assert $p2.out.empty?
     assert @buoy.is_new_game?("buoy_hoge-1500-0")
@@ -878,7 +878,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_duplicated-1500-0", "+7776FU", 1
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert $p1.out.empty?
     assert $p2.out.empty?
     assert !@buoy.is_new_game?("buoy_duplicated-1500-0")
@@ -888,7 +888,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?("buoy_badmoves-1500-0")
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_badmoves-1500-0", "+7776FU+8786FU", 1
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert $p1.out.empty?
     assert $p2.out.empty?
     assert @buoy.is_new_game?("buoy_badmoves-1500-0")
@@ -898,7 +898,7 @@ class TestSetBuoyCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?("buoy_badcounter-1500-0")
     cmd = ShogiServer::SetBuoyCommand.new "%%SETBUOY", @p, "buoy_badcounter-1500-0", "+7776FU", 0
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert $p1.out.empty?
     assert $p2.out.empty?
     assert @buoy.is_new_game?("buoy_badcounter-1500-0")
@@ -916,7 +916,7 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
     assert !@buoy.is_new_game?(buoy_game.game_name)
     cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert $p1.out.empty?
     assert $p2.out.empty?
     assert @buoy.is_new_game?(buoy_game.game_name)
@@ -927,7 +927,7 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?(buoy_game.game_name)
     cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert $p1.out.empty?
     assert $p2.out.empty?
     assert @buoy.is_new_game?(buoy_game.game_name)
@@ -941,7 +941,7 @@ class TestDeleteBuoyCommand < BaseTestBuoyCommand
 
     cmd = ShogiServer::DeleteBuoyCommand.new "%%DELETEBUOY", @p, buoy_game.game_name
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert_equal "##[ERROR] you are not allowed to delete a buoy game that you did not set: buoy_anotherplayer-1500-0\n", @p.out.first
     assert !@buoy.is_new_game?(buoy_game.game_name)
   end
@@ -979,7 +979,7 @@ class TestGetBuoyCountCommand < BaseTestBuoyCommand
     assert !@buoy.is_new_game?(buoy_game.game_name)
     cmd = ShogiServer::GetBuoyCountCommand.new "%%GETBUOYCOUNT", @p, buoy_game.game_name
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert_equal ["##[GETBUOYCOUNT] 1\n", "##[GETBUOYCOUNT] +OK\n"], @p.out
   end
 
@@ -988,7 +988,7 @@ class TestGetBuoyCountCommand < BaseTestBuoyCommand
     assert @buoy.is_new_game?(buoy_game.game_name)
     cmd = ShogiServer::GetBuoyCountCommand.new "%%GETBUOYCOUNT", @p, buoy_game.game_name
     rt = cmd.call
-    assert :continue, rt
+    assert_equal :continue, rt
     assert_equal ["##[GETBUOYCOUNT] -1\n", "##[GETBUOYCOUNT] +OK\n"], @p.out
   end
 end

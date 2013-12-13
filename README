@@ -1,8 +1,4 @@
-$Id$
-
 = Shogi-server project
-
-2008-11-30 Daigo Moriwaki <daigo at debian dot org>
 
 The Shogi-server project develops Shogi-server, a rating tool and so on.
 
@@ -14,15 +10,22 @@ in order for computer shogi players to play games.
 
 === Pre-requires
 
-Ruby 1.8.7:: Ruby 1.8.6 or earlier are not supported.
+Ruby 1.9.3 or 1.8.7
+
+As of January 2012, Shogi-server supports both Ruby 1.9.3 and 1.8.7. In
+future, however, it will only work with Ruby 1.9.x.  The Ruby community
+claimed that Ruby 1.8 had no future.  It is recommended that you soon
+upgrade to Ruby 1.9.3. 
 
 For Debian,
- $ sudo aptitude install ruby1.8
+ $ sudo aptitude install ruby1.9.1
+
+Note that the latest ruby1.9.1 package in Debian originates from Ruby 1.9.3.
+"1.9.1" in the package name is Ruby internal API version, not release version.
 
 === Install
 
- $ svn checkout \ 
-     http://svn.sourceforge.jp/svnroot/shogi-server/shogi-server/trunk shogi-server
+ $ git clone git://git.sourceforge.jp/gitroot/shogi-server/shogi-server.git
 
 The following files are required to run Shogi-server:
 
@@ -32,11 +35,17 @@ The following files are required to run Shogi-server:
 
 === Run
 
- $ ruby ./shogi-server --pid-file shogi-server.pid \
-                       --daemon . \
-                       --player-log-dir player-log-dir \
-                       --floodgate-history floodgate_history.yaml \
-                       floodgatetest 4000
+Examples:
+
+ $ ./shogi-server hoge 4000
+
+ $ ruby1.8 ./shogi-server hoge 4000
+
+ $ ruby1.9.1 ./shogi-server --pid-file shogi-server.pid \
+                            --daemon . \
+                            --player-log-dir player-log-dir \
+                            --floodgate-history floodgate_history.yaml \
+                            floodgatetest 4000
 
 == Other tools
 
@@ -45,3 +54,29 @@ See documents at the head of each source file.
 * mk_rate
 * mk_html
 * showgame
+
+
+== Tests
+
+Run the server
+
+  $ ./shogi-server hoge 4000
+
+Run test cases
+
+  $ cd test
+  $ ruby TC_ALL.rb
+
+Tested:
+
+- ruby 1.9.3p0 (2011-10-30 revision 33570) [x86_64-linux]
+  Finished tests in 83.667928s, 4.2669 tests/s, 11.7249 assertions/s.
+  357 tests, 981 assertions, 0 failures, 0 errors, 0 skips
+
+- ruby 1.8.7 (2011-06-30 patchlevel 352) [x86_64-linux]
+  Finished in 69.885457 seconds.
+  357 tests, 977 assertions, 0 failures, 0 errors
+
+  
+---
+2012-01-07 Daigo Moriwaki <daigo at debian dot org>

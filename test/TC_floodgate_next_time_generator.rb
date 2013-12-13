@@ -2,7 +2,8 @@ $:.unshift File.join(File.dirname(__FILE__), "..")
 require 'test/unit'
 require 'shogi_server'
 require 'shogi_server/league/floodgate'
-require 'ftools'
+require 'fileutils'
+require 'test/mock_log_message'
 
 $topdir = File.expand_path File.dirname(__FILE__)
 
@@ -142,24 +143,38 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
   def setup
   end
 
+  def test_comment
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(#\ comment1 Thu\ 22:00 #\ comment2)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+  end
+
+  def test_empty_line
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(\  Thu\ 22:00 \  hoge)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+  end
+
   def test_read
     now = DateTime.new(2010, 6, 10, 21, 20, 15) # Thu
     assert_equal DateTime.parse("10-06-2010 21:20:15"), now
 
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_instance_of Time, ntc.call(now)
     assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:15"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:15"]
     assert_equal Time.parse("10-06-2010 22:15"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Fri 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Fri 22:00"]
     assert_equal Time.parse("11-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Sat 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sat 22:00"]
     assert_equal Time.parse("12-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Sun 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Sun 22:00"]
     assert_equal Time.parse("13-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Mon 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Mon 22:00"]
     assert_equal Time.parse("14-06-2010 22:00"), ntc.call(now)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 20:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 20:00"]
     assert_equal Time.parse("17-06-2010 20:00"), ntc.call(now)
   end
 
@@ -189,17 +204,49 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
 
   def test_read_time
     now = Time.mktime(2010, 6, 10, 21, 20, 15)
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_instance_of Time, ntc.call(now)
   end
 
   def test_read_change
     now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
 
     now = DateTime.new(2010, 6, 10, 22, 0, 0) # Thu
-    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new "Thu 22:00"
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new ["Thu 22:00"]
     assert_equal Time.parse("17-06-2010 22:00"), ntc.call(now)
+  end
+
+  def test_default_pairing_factory
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal("default_factory", ntc.pairing_factory)
+  end
+
+  def test_read_pairing_factory
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(set\ pairing_factory\ least_diff_pairing Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal("least_diff_pairing", ntc.pairing_factory)
+  end
+
+  def test_default_sacrifice
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal("gps500+e293220e3f8a3e59f79f6b0efffaa931", ntc.sacrifice)
+  end
+
+  def test_read_sacrifice
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(set\ sacrifice\ yowai_gps+95908f6c18338f5340371f71523fc5e3 Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal("yowai_gps+95908f6c18338f5340371f71523fc5e3", ntc.sacrifice)
   end
 end

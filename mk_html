@@ -1,11 +1,11 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 # $Id$
 #
 # Author:: Daigo Moriwaki
 # Homepage:: http://sourceforge.jp/projects/shogi-server/
 #
 #--
-# Copyright (C) 2006-2008 Daigo Moriwaki <daigo at debian dot org>
+# Copyright (C) 2006-2012 Daigo Moriwaki <daigo at debian dot org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,9 +41,9 @@
 #
 # == Prerequire
 #
-# * Ruby 1.8.7
+# * Ruby 1.9.3 or 1.8.7
 #
-#   $ sudo aptitude install ruby ruby1.8
+#   $ sudo aptitude install ruby ruby1.9.1
 #
 # == Example
 #
