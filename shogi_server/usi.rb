@@ -140,7 +140,7 @@ module ShogiServer # for a namespace
     # Convert USI moves to CSA one by one from the initial position
     #
     class UsiToCsa
-      attr_reader :board, :csa_moves
+      attr_reader :board, :csa_moves, :usi_moves
 
       # Constructor
       #
@@ -149,24 +149,31 @@ module ShogiServer # for a namespace
         @board.initial
         @sente = true
         @csa_moves = []
+        @usi_moves = []
+      end
+
+      def deep_copy
+        return Marshal.load(Marshal.dump(self))
       end
 
       # Parses a usi move string and returns an array of [move_result_state,
       # csa_move_string]
       #
       def next(usi)
+        usi_moves << usi
         csa = Usi.usiToCsa(usi, @board, @sente)
         state = @board.handle_one_move(csa, @sente)
         @sente = !@sente
         @csa_moves << csa
         return [state, csa]
       end
+
     end # class UsiToCsa
 
     # Convert CSA moves to USI one by one from the initial position
     #
     class CsaToUsi
-      attr_reader :board, :usi_moves
+      attr_reader :board, :csa_moves, :usi_moves
 
       # Constructor
       #
@@ -174,13 +181,19 @@ module ShogiServer # for a namespace
         @board = ShogiServer::Board.new
         @board.initial
         @sente = true
+        @csa_moves = []
         @usi_moves = []
       end
 
+      def deep_copy
+        return Marshal.load(Marshal.dump(self))
+      end
+      
       # Parses a csa move string and returns an array of [move_result_state,
       # usi_move_string]
       #
       def next(csa)
+        csa_moves << csa
         state = @board.handle_one_move(csa, @sente)
         @sente = !@sente
         usi = Usi.moveToUsi(@board.move)

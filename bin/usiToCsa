@@ -1,0 +1,34 @@
+#!/bin/sh
+
+engine=${1:?Specify engine binary path}
+if [ ! -x "$engine" ] ; then
+  echo "Engine not found: $engine"
+  exit 1
+fi
+
+curdir=$(cd `dirname $0`; pwd)
+
+if [ -z "$ID" ] ; then
+  echo "Specify ID"
+  exit 1
+fi
+
+if [ -z "$PASSWORD" ] ; then
+  password_file="$HOME/.$ID.password"
+  if [ ! -f "$password_file" ] ; then
+    echo "Prepare a passowrd file at $password_file"
+  fi
+  export PASSWORD=`cat "$password_file"`
+fi
+
+while true
+do
+  logger -s "$ID: Restarting..."
+
+  $curdir/usiToCsa.rb "$engine"
+
+  if [ $? -ne 0 ] ; then
+    logger -s "$ID: Sleeping..."
+    sleep 900
+  fi
+done

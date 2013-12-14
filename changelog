@@ -1,3 +1,10 @@
+2013-12-14  Daigo Moriwaki <daigo at debian dot org>
+
+	* [usiToCsa]
+	  - Added a new program, bin/usiToCsa.rb, which is a bridge for a
+	    USI engine to connect to the Shogi-server.
+	  - bin/usiToCsa is a sample wrapper script.
+
 2013-12-13  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
