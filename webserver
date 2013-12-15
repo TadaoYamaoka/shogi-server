@@ -151,6 +151,7 @@ def main
   http_log_file            = File.join($options["dir"], "shogi-server-httpd.log")
   http_access_log_file     = File.join($options["dir"], "shogi-server-access.log")
   http_config = {}
+  http_config[:BindAddress] = "0.0.0.0"
   http_config[:Port]       = $options["port"]
   http_config[:ServerType] = WEBrick::Daemon if $options["daemon"]
   http_config[:Logger]     = WEBrick::Log.new(http_log_file)
