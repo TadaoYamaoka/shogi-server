@@ -6,6 +6,8 @@
 	    and "::". Specifying "::" on Linux leads to listen on both IPv4
 	    and IPv6, which results in a warning message saying "Address
 	    already in use - bind(2)".
+	* [shogi-server]
+	  - Released: Revision "20131215"
 
 2013-12-13  Daigo Moriwaki <daigo at debian dot org>
 
