@@ -372,7 +372,7 @@ class BridgeState
 
     case str.strip
     when /^bestmove\s+resign/
-      server_puts "%TYORO"
+      server_puts "%TORYO"
     when /^bestmove\swin/
       server_puts "%KACHI"
     when /^bestmove\s+(.*)/
@@ -522,6 +522,7 @@ end
 def server_puts(str)
   log_server_send str
   $server.puts str
+  $bridge_state.update_last_server_send_time
 end
 
 # Start an engine process
@@ -613,9 +614,9 @@ def main_loop
     ret, = select([$server, $engine], nil, nil, 60)
     unless ret
       # Send keep-alive
-      if @bridge_state.too_quiet?
+      if $bridge_state.too_quiet?
         $server.puts ""
-        @bridge_state.update_last_server_send_time
+        $bridge_state.update_last_server_send_time
       end
       next
     end
