@@ -411,6 +411,19 @@ class TestLeastDiff < Test::Unit::TestCase
     @x.player_id = "x"
     @x.name = "x"
 
+    @abcdefg1 = ShogiServer::BasicPlayer.new
+    @abcdefg1.player_id = "abcdefg1"
+    @abcdefg1.name = "abcdefg1"
+    @abcdefg1.rate = 2100
+    @abcdefg2 = ShogiServer::BasicPlayer.new
+    @abcdefg2.player_id = "abcdefg2"
+    @abcdefg2.name = "abcdefg2"
+    @abcdefg2.rate = 2200
+    @abcdxyz = ShogiServer::BasicPlayer.new
+    @abcdxyz.player_id = "abcdxyz"
+    @abcdxyz.name = "abcdxyz"
+    @abcdxyz.rate = 2300
+
     $league.add(@a)
     $league.add(@b)
     $league.add(@c)
@@ -420,6 +433,9 @@ class TestLeastDiff < Test::Unit::TestCase
     $league.add(@g)
     $league.add(@h)
     $league.add(@x)
+    $league.add(@abcdefg1)
+    $league.add(@abcdefg2)
+    $league.add(@abcdxyz)
   end
 
   def teardown
@@ -546,6 +562,16 @@ class TestLeastDiff < Test::Unit::TestCase
     end
     @history.update(dummy)
     assert_equal(@b.rate-@a.rate+400+@h.rate-@g.rate+400, @pairing.calculate_diff_with_penalty(players, @history))
+  end
+
+  def test_calculate_diff_with_kin_4_players
+    players = [@abcdefg1, @abcdxyz]
+    assert_equal(@abcdxyz.rate - @abcdefg1.rate + 400, @pairing.calculate_diff_with_penalty(players,nil))
+  end
+
+  def test_calculate_diff_with_kin_7_players
+    players = [@abcdefg1, @abcdefg2]
+    assert_equal(@abcdefg2.rate - @abcdefg1.rate + 800, @pairing.calculate_diff_with_penalty(players,nil))
   end
 
   def test_get_player_rate_0
