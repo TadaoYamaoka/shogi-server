@@ -1,3 +1,9 @@
+2013-12-21  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/pairing.rb: Impose penalty on matches between
+	    likely kin players.
+
 2013-12-15  Daigo Moriwaki <daigo at debian dot org>
 
 	* [webserver]
