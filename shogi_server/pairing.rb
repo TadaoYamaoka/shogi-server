@@ -494,6 +494,13 @@ module ShogiServer
         if p1.is_human? && p2.is_human?
           ret += 800
         end
+
+        # 2.3 a match with likely kin players
+        if (p1.player_id[0..6] == p2.player_id[0..6])
+          ret += 800
+        elsif (p1.player_id[0..3] == p2.player_id[0..3])
+          ret += 400
+        end
       end
 
       ret
