@@ -27,16 +27,17 @@ class League
     #
     attr_reader :next_time
     attr_reader :league, :game_name
-    attr_reader :pairing_factory
+    attr_reader :pairing_factory, :sacrifice
     attr_reader :options
 
     def initialize(league, hash={})
       @league = league
-      @next_time = hash[:next_time] || nil
-      @game_name = hash[:game_name] || "floodgate-900-0"
-      @pairing_factory = "default_factory" # will be updated by NextTimeGenerator
-      # Options will be updated by NextTimeGenerator
-      @options = {:sacrifice => "gps500+e293220e3f8a3e59f79f6b0efffaa931"}
+      @next_time       = hash[:next_time] || nil
+      @game_name       = hash[:game_name] || "floodgate-900-0"
+      @pairing_factory = hash[:pairing_factory] || "default_factory" # will be updated by NextTimeGenerator
+      @sacrifice       = hash[:sacrifice] || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
+      # @options is passed to a pairing factory
+      @options = {:sacrifice => @sacrifice}
       charge if @next_time.nil?
     end
 

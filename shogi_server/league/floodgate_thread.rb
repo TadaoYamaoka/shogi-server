@@ -68,15 +68,16 @@ module ShogiServer
       floodgate.match_game
     end
 
-    # Regenerate floodgate instances from next_array for the next matches.
-    # @param next_array array of [game_name, next_time]
+    # Regenerate floodgate instances from next_instances for the next matches.
+    # @param next_instances array of [game_name, next_time]
     #
-    def regenerate_leagues(next_array)
-      leagues = next_array.collect do |game_name, next_time|
-        log_message("Regenerating a floodgate league...: %s %s" % [game_name, next_time])
+    def regenerate_leagues(next_instances)
+      leagues = next_instances.collect do |prev|
+        log_message("Regenerating a floodgate league...: %s %s %s" %
+                    [prev.game_name, prev.next_time, prev.sacrifice])
         floodgate = ShogiServer::League::Floodgate.new($league, 
-                                                       {:game_name => game_name,
-                                                        :next_time => next_time})
+                      {:game_name       => prev.game_name,       :next_time => prev.next_time,
+                       :pairing_factory => prev.pairing_factory, :sacrifice => prev.sacrifice})
       end
       floodgate_reload_log(leagues)
       return leagues
@@ -98,20 +99,18 @@ module ShogiServer
             floodgate = next_league(leagues)
             next if wait_next_floodgate(floodgate)
 
-            next_array = leagues.collect do |floodgate|
-              if (floodgate.next_time - Time.now) > 0
-                [floodgate.game_name, floodgate.next_time]
-              else
+            next_instances = leagues.collect do |floodgate|
+              unless (floodgate.next_time - Time.now) > 0
                 start_games(floodgate)
                 floodgate.charge # updates next_time
-                [floodgate.game_name, floodgate.next_time] 
               end
+              floodgate
             end
 
             reload_shogi_server
 
             # Regenerate floodgate instances after ShogiServer.realod
-            leagues = regenerate_leagues(next_array)
+            leagues = regenerate_leagues(next_instances)
           rescue Exception => ex 
             # ignore errors
             log_error("[in Floodgate's thread] #{ex} #{ex.backtrace}")
