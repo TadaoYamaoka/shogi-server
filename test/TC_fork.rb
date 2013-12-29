@@ -1,3 +1,4 @@
+$:.unshift File.dirname(__FILE__)
 $:.unshift File.join(File.dirname(__FILE__), "..")
 $topdir = File.expand_path File.dirname(__FILE__)
 require "baseclient"
