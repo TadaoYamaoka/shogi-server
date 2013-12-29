@@ -27,17 +27,17 @@ class League
     #
     attr_reader :next_time
     attr_reader :league, :game_name
-    attr_reader :pairing_factory, :sacrifice
     attr_reader :options
 
     def initialize(league, hash={})
       @league = league
       @next_time       = hash[:next_time] || nil
       @game_name       = hash[:game_name] || "floodgate-900-0"
-      @pairing_factory = hash[:pairing_factory] || "default_factory" # will be updated by NextTimeGenerator
-      @sacrifice       = hash[:sacrifice] || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
-      # @options is passed to a pairing factory
-      @options = {:sacrifice => @sacrifice}
+      # Options will be updated by NextTimeGenerator and then passed to a
+      # pairing factory.
+      @options = {}
+      @options[:pairing_factory] = hash[:pairing_factory] || "default_factory"
+      @options[:sacrifice]       = hash[:sacrifice] || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
       charge if @next_time.nil?
     end
 
@@ -45,25 +45,33 @@ class League
       return Regexp.new(@game_name).match(str) ? true : false
     end
 
+    def pairing_factory
+      return @options[:pairing_factory]
+    end
+
+    def sacrifice
+      return @options[:sacrifice]
+    end
+
     def charge
       ntg = NextTimeGenerator.factory(@game_name)
-      @pairing_factory = ntg.pairing_factory
-      @options[:sacrifice] = ntg.sacrifice
       if ntg
         @next_time = ntg.call(Time.now)
+        @options[:pairing_factory] = ntg.pairing_factory
+        @options[:sacrifice]       = ntg.sacrifice
       else
         @next_time = nil
       end
     end
 
     def match_game
-      log_message("Starting Floodgate games...: %s, %s" % [@game_name, @pairing_factory])
+      log_message("Starting Floodgate games...: %s, %s" % [@game_name, @options])
       players = @league.find_all_players do |pl|
         pl.status == "game_waiting" &&
         game_name?(pl.game_name) &&
         pl.sente == nil
       end
-      logics = Pairing.send(@pairing_factory, @options)
+      logics = Pairing.send(@options[:pairing_factory], @options)
       Pairing.match(players, logics)
     end
     
@@ -151,9 +159,9 @@ class League
         @lines.each do |line|
           case line
           when %r!^\s*set\s+pairing_factory\s+(\w+)!
-            @pairing_factory = $1
+            @pairing_factory = $1.chomp
           when %r!^\s*set\s+sacrifice\s+(.*)!
-            @sacrifice = $1
+            @sacrifice = $1.chomp
           when %r!^\s*(\w+)\s+(\d{1,2}):(\d{1,2})!
             dow, hour, minute = $1, $2.to_i, $3.to_i
             dow_index = ::ShogiServer::parse_dow(dow)

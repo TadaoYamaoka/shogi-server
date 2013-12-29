@@ -73,8 +73,8 @@ module ShogiServer
     #
     def regenerate_leagues(next_instances)
       leagues = next_instances.collect do |prev|
-        log_message("Regenerating a floodgate league...: %s %s %s" %
-                    [prev.game_name, prev.next_time, prev.sacrifice])
+        log_message("Regenerating a floodgate league...: %s %s %s %s" %
+                    [prev.game_name, prev.next_time, prev.pairing_factory, prev.sacrifice])
         floodgate = ShogiServer::League::Floodgate.new($league, 
                       {:game_name       => prev.game_name,       :next_time => prev.next_time,
                        :pairing_factory => prev.pairing_factory, :sacrifice => prev.sacrifice})

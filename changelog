@@ -1,4 +1,4 @@
-2013-12-26  Daigo Moriwaki <daigo at debian dot org>
+2013-12-29  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
 	  - Previously, parameters in Floodgate time configuration file were
