@@ -65,7 +65,13 @@ class TestSetupFloodgate < Test::Unit::TestCase
   def test_regenerate_leagues
     game_names = %w(floodgate-900-0 floodgate-3600-0)
     now = Time.now
-    next_array = [["floodgate-900-0", now+100], ["floodgate-3600-0", now+200]]
+    next_array = []
+    next_array << ShogiServer::League::Floodgate.new($league, 
+                    {:game_name => "floodgate-900-0",
+                     :next_time => (now+100)})
+    next_array << ShogiServer::League::Floodgate.new($league, 
+                    {:game_name => "floodgate-3600-0",
+                     :next_time => (now+200)})
     objs = @sf.regenerate_leagues(next_array)
     assert_equal 2, objs.size
     assert_instance_of ShogiServer::League::Floodgate, objs[0]
