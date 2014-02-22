@@ -13,7 +13,194 @@ module ShogiServer # for a namespace
             gsub("@", "+").
             gsub(".", " ")
       end
-    end
+
+      # 1 -> a
+      # 2 -> b
+      # ...
+      # 9 -> i
+      def danToAlphabet(int)
+        return (int+96).chr
+      end
+
+      # a -> 1
+      # b -> 2
+      # ...
+      # i -> 9
+      def alphabetToDan(s)
+        if RUBY_VERSION >= "1.9.1"
+          return s.bytes[0]-96
+        else
+          return s[0]-96
+        end
+      end
+
+      def csaPieceToUsi(csa, sente)
+        str = ""
+        case csa
+        when "FU"
+          str = "p"
+        when "KY"
+          str = "l"
+        when "KE"
+          str = "n"
+        when "GI"
+          str = "s"
+        when "KI"
+          str = "g"
+        when "KA"
+          str = "b"
+        when "HI"
+          str = "r"
+        when "OU"
+          str = "k"
+        when "TO"
+          str = "+p"
+        when "NY"
+          str = "+l"
+        when "NK"
+          str = "+n"
+        when "NG"
+          str = "+s"
+        when "UM"
+          str = "+b"
+        when "RY"
+          str = "+r"
+        end
+        return sente ? str.upcase : str
+      end
+
+      def usiPieceToCsa(str)
+        ret = ""
+        case str.downcase
+        when "p"
+          ret = "FU"
+        when "l"
+          ret = "KY"
+        when "n"
+          ret = "KE"
+        when "s"
+          ret = "GI"
+        when "g"
+          ret = "KI"
+        when "b"
+          ret = "KA"
+        when "r"
+          ret = "HI"
+        when "+p"
+          ret = "TO"
+        when "+l"
+          ret = "NY"
+        when "+n"
+          ret = "NK"
+        when "+s"
+          ret = "NG"
+        when "+b"
+          ret = "UM"
+        when "+r"
+          ret = "RY"
+        when "k"
+          ret = "OU"
+        end
+        return ret
+      end
+
+      def moveToUsi(move)
+        str = ""
+        if move.is_drop?
+          str += "%s*%s%s" % [csaPieceToUsi(move.name, move.sente).upcase, move.x1, danToAlphabet(move.y1)]
+        else
+          str += "%s%s%s%s" % [move.x0, danToAlphabet(move.y0), move.x1, danToAlphabet(move.y1)]
+          str += "+" if move.promotion
+        end
+
+        return str
+      end
+
+      def usiToCsa(str, board, sente)
+        ret = ""
+        if str[1..1] == "*" 
+          # drop
+          ret += "00%s%s%s" % [str[2..2], alphabetToDan(str[3..3]), usiPieceToCsa(str[0..0])]
+        else
+          from_x = str[0..0]
+          from_y = alphabetToDan(str[1..1])
+          ret += "%s%s%s%s" % [from_x, from_y, str[2..2], alphabetToDan(str[3..3])]
+          csa_piece = board.array[from_x.to_i][from_y.to_i]
+          if str.size == 5 && str[4..4] == "+"
+            # Promoting move
+            ret += csa_piece.promoted_name
+          else
+            ret += csa_piece.current_name
+          end
+        end
+        return (sente ? "+" : "-") + ret
+      end
+    end # class methods
+
+    # Convert USI moves to CSA one by one from the initial position
+    #
+    class UsiToCsa
+      attr_reader :board, :csa_moves, :usi_moves
+
+      # Constructor
+      #
+      def initialize
+        @board = ShogiServer::Board.new
+        @board.initial
+        @sente = true
+        @csa_moves = []
+        @usi_moves = []
+      end
+
+      def deep_copy
+        return Marshal.load(Marshal.dump(self))
+      end
+
+      # Parses a usi move string and returns an array of [move_result_state,
+      # csa_move_string]
+      #
+      def next(usi)
+        usi_moves << usi
+        csa = Usi.usiToCsa(usi, @board, @sente)
+        state = @board.handle_one_move(csa, @sente)
+        @sente = !@sente
+        @csa_moves << csa
+        return [state, csa]
+      end
+
+    end # class UsiToCsa
+
+    # Convert CSA moves to USI one by one from the initial position
+    #
+    class CsaToUsi
+      attr_reader :board, :csa_moves, :usi_moves
+
+      # Constructor
+      #
+      def initialize
+        @board = ShogiServer::Board.new
+        @board.initial
+        @sente = true
+        @csa_moves = []
+        @usi_moves = []
+      end
+
+      def deep_copy
+        return Marshal.load(Marshal.dump(self))
+      end
+      
+      # Parses a csa move string and returns an array of [move_result_state,
+      # usi_move_string]
+      #
+      def next(csa)
+        csa_moves << csa
+        state = @board.handle_one_move(csa, @sente)
+        @sente = !@sente
+        usi = Usi.moveToUsi(@board.move)
+        @usi_moves << usi
+        return [state, usi]
+      end
+    end # class CsaToUsi
 
     def charToPiece(c)
       player = nil
@@ -164,6 +351,7 @@ module ShogiServer # for a namespace
       s += hands2usi(board.gote_hands).downcase
       return s
     end
+
   end # class
 
 end # module

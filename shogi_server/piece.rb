@@ -154,18 +154,17 @@ class Piece
     @promoted_name
   end
 
+  def current_name
+    return @promoted ? @promoted_name : @name
+  end
+
   def to_s
     if (@sente)
       sg = "+"
     else
       sg = "-"
     end
-    if (@promoted)
-      n = @promoted_name
-    else
-      n = @name
-    end
-    return sg + n
+    return sg + current_name
   end
 end
 

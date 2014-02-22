@@ -21,6 +21,13 @@
 	* [shogi-server]
 	  - Released: Revision "20131215"
 
+2013-12-14  Daigo Moriwaki <daigo at debian dot org>
+
+	* [usiToCsa]
+	  - Added a new program, bin/usiToCsa.rb, which is a bridge for a
+	    USI engine to connect to the Shogi-server.
+	  - bin/usiToCsa is a sample wrapper script.
+
 2013-12-13  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
@@ -54,6 +61,10 @@
 	    factory function name generating a pairing method which will be
 	    used in a specific Floodgate game.
 	    ex. set pairing_factory floodgate_zyunisen 
+=======
+	  - Implemented conversion of move representation between CSA format
+	    and USI one.
+>>>>>>> 201312-usiToCsa
 
 2013-11-24  Daigo Moriwaki <daigo at debian dot org>
 
