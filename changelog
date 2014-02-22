@@ -61,10 +61,8 @@
 	    factory function name generating a pairing method which will be
 	    used in a specific Floodgate game.
 	    ex. set pairing_factory floodgate_zyunisen 
-=======
 	  - Implemented conversion of move representation between CSA format
 	    and USI one.
->>>>>>> 201312-usiToCsa
 
 2013-11-24  Daigo Moriwaki <daigo at debian dot org>
 
