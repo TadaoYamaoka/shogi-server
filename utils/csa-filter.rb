@@ -42,9 +42,11 @@ class CsaFileReader
   attr_reader :winner, :loser
   attr_reader :state
   attr_reader :start_time, :end_time
+  attr_reader :ply
 
   def initialize(file_name)
     @file_name = file_name
+    @ply = 0
     grep
   end
 
@@ -92,6 +94,12 @@ class CsaFileReader
         end
       end
     end
+
+    @str.each_line do |line|
+      if /^[\+\-]\d{4}[A-Z]{2}/ =~ line
+        @ply += 1
+      end
+    end
   end
 
   def movetimes
@@ -107,7 +115,8 @@ class CsaFileReader
            "BlackName #{@black_name}, WhiteName #{@white_name}\n" +
            "BlackId #{@black_id}, WhiteId #{@white_id}\n" +
            "Winner #{@winner}, Loser #{@loser}\n"    +
-           "Start #{@start_time}, End #{@end_time}\n"
+           "Start #{@start_time}, End #{@end_time}\n" +
+           "Ply #{@ply}"
   end
 
   def identify_id(id)
