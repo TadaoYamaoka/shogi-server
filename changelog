@@ -1,3 +1,12 @@
+2014-07-19  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Added a new option, --abnormal-threshold n:
+	    Games that end with the 'abnormal' status are counted in
+	    win/lost games for the rating calculation if a game plays more
+	    than n plies. Otherwise (or if n is zero), abnormal games are
+	    counted out of rating games.
+
 2013-12-29  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]

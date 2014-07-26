@@ -42,21 +42,23 @@ class CsaFileReader
   attr_reader :winner, :loser
   attr_reader :state
   attr_reader :start_time, :end_time
+  attr_reader :ply
 
-  def initialize(file_name)
+  def initialize(file_name, encoding="Shift_JIS:EUC-JP")
     @file_name = file_name
+    @encoding = encoding
+    @ply = 0
     grep
   end
 
   def grep
-    @str = File.open(@file_name, "r:Shift_JIS:EUC-JP").read
+    @str = File.open(@file_name, "r:#{@encoding}").read
 
 
     if /^N\+(.*)$/ =~ @str then @black_name = $1.strip end
     if /^N\-(.*)$/ =~ @str then @white_name = $1.strip end
     if /^'summary:(.*)$/ =~ @str
       @state, p1, p2 = $1.split(":").map {|a| a.strip}    
-      return if @state == "abnormal"
       p1_name, p1_mark = p1.split(" ")
       p2_name, p2_mark = p2.split(" ")
       if p1_name == @black_name
@@ -92,6 +94,12 @@ class CsaFileReader
         end
       end
     end
+
+    @str.each_line do |line|
+      if /^[\+\-]\d{4}[A-Z]{2}/ =~ line
+        @ply += 1
+      end
+    end
   end
 
   def movetimes
@@ -107,7 +115,8 @@ class CsaFileReader
            "BlackName #{@black_name}, WhiteName #{@white_name}\n" +
            "BlackId #{@black_id}, WhiteId #{@white_id}\n" +
            "Winner #{@winner}, Loser #{@loser}\n"    +
-           "Start #{@start_time}, End #{@end_time}\n"
+           "Start #{@start_time}, End #{@end_time}\n" +
+           "Ply #{@ply}"
   end
 
   def identify_id(id)
