@@ -679,7 +679,7 @@ def parse(line)
   end
 
   if state == "abnormal"
-    csa = CsaFileReader.new file
+    csa = CsaFileReader.new(file, "EUC-JP")
     if $options["abnormal-threshold"] == 0 || csa.ply <= $options["abnormal-threshold"]
       return
     end
