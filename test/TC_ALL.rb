@@ -15,7 +15,9 @@ require 'TC_functional'
 require 'TC_game'
 require 'TC_game_result'
 require 'TC_handicapped_boards'
-require 'TC_jishogi_kachi'
+# This game has more thatn 256 moves.
+# Disableing max-moves, "./shogi-server --max moves 0", is required.
+#require 'TC_jishogi_kachi'
 require 'TC_league'
 require 'TC_logger'
 require 'TC_login'

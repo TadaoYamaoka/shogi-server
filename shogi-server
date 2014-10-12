@@ -1,4 +1,4 @@
-#! /usr/bin/ruby1.9.1
+#! /usr/bin/ruby
 # $Id$
 #
 # Author:: NABEYA Kenichi, Daigo Moriwaki
@@ -76,6 +76,9 @@ OPTIONS
         port_number
                 a port number for the server to listen. 
                 4081 is often used.
+        --max-moves n
+                when a game with the n-th move played does not end, make the game a draw.
+                Default 256. 0 disables this feature.
         --pid-file file
                 a file path in which a process ID will be written.
                 Use with --daemon option.
@@ -193,6 +196,7 @@ def parse_command_line
   parser = GetoptLong.new(
     ["--daemon",            GetoptLong::REQUIRED_ARGUMENT],
     ["--floodgate-games",   GetoptLong::REQUIRED_ARGUMENT],
+    ["--max-moves",         GetoptLong::REQUIRED_ARGUMENT],
     ["--pid-file",          GetoptLong::REQUIRED_ARGUMENT],
     ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
@@ -263,6 +267,9 @@ def check_command_line
     $stderr.puts "WARNING: --floodgate-history has been deprecated."
     $options["floodgate-history"] = nil
   end
+
+  $options["max-moves"] ||= 256
+  $options["max-moves"] = $options["max-moves"].to_i
 end
 
 # See if a file can be created in the directory.

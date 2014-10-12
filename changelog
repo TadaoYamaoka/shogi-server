@@ -1,3 +1,18 @@
+2014-10-12  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi_server]
+	  - New feature: max moves
+	    - New command line option: --max-moves n
+	      When a game with the n-th move played does not end, make the
+	      game a draw (default 256). 0 disables this feature.
+	    - Players will receive a new message, "#MAX_MOVES_DRAW",  upon
+	      an end of such a game:
+	        #MAX_MOVES_DRAW
+	        #DRAW
+	    - A new log summary type, "max_moves_draw", has been assigned for games
+	      drawing with max moves.
+	      'summary:max_moves_draw:name_sente draw:name_gote draw
+
 2014-07-19  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]

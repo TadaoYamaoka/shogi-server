@@ -343,4 +343,21 @@ class GameResultSennichiteDraw < GameResultDraw
   end
 end
 
+class GameResultMaxMovesDraw < GameResultDraw
+  def initialize(game, winner, loser)
+    super
+    @log_summary_type = "max_moves_draw"
+    @result_type      = "#MAX_MOVES_DRAW"
+  end
+
+  def process
+    @players.each do |player|
+      player.write_safe("#MAX_MOVES_DRAW\n#DRAW\n")
+    end
+    # no log
+    log_summary
+    notify
+  end
+end
+
 end # ShogiServer
