@@ -14,6 +14,11 @@
 	    than n plies. Otherwise (or if n is zero), abnormal games are
 	    counted out of rating games.
 
+2014-01-07  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Released: Revision "20140107"
+
 2013-12-29  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
