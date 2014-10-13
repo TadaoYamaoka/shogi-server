@@ -1,3 +1,10 @@
+2014-10-13  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - A player, attempting to login with the current live player
+	    stalling for more than a day, can forcibly override the current
+	    player.
+
 2014-07-19  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]

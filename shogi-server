@@ -40,6 +40,8 @@ require 'tempfile'
 # MAIN
 #
 
+ONE_DAY = 3600 * 24   # in seconds
+
 ShogiServer.reload
 
 # Return
@@ -330,9 +332,14 @@ def login_loop(client)
         player = ShogiServer::Player::new(str, client, eol)
         login  = ShogiServer::Login::factory(str, player)
         if (current_player = $league.find(player.name))
+          # Even if a player is in the 'game' state, when the status of the
+          # player has not been updated for more than a day, it is very
+          # likely that the player is stalling. In such a case, a new player
+          # can override the current player.
           if (current_player.password == player.password &&
-              current_player.status != "game")
-            log_message(sprintf("user %s login forcely", player.name))
+              (current_player.status != "game" ||
+               Time.now - current_player.modifiled_at > ONE_DAY))
+            log_message("user %s login forcely (previously modified at %s)" % [player.name, player.modified_at])
             current_player.kill
           else
             login.incorrect_duplicated_player(str)
