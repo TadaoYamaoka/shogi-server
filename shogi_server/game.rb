@@ -335,6 +335,12 @@ class Game
       black_name = @sente.rated? ? @sente.player_id : @sente.name
       white_name = @gote.rated?  ? @gote.player_id  : @gote.name
       @fh.puts("'rating:%s:%s" % [black_name, white_name])
+      if @sente.rated? && @sente.rate != 0
+        @fh.puts("'black_rate:%s:%s" % [@sente.player_id, @sente.rate])
+      end
+      if @gote.rated? && @gote.rate != 0
+        @fh.puts("'white_rate:%s:%s" % [@gote.player_id, @gote.rate])
+      end
     end
     unless @board.initial_moves.empty?
       @fh.puts "'buoy game starting with %d moves" % [@board.initial_moves.size]

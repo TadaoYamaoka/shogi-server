@@ -4,6 +4,18 @@
 	  - A player, attempting to login with the current live player
 	    stalling for more than a day, can forcibly override the current
 	    player.
+	  - Kifu record files now includes rating scores of players at the
+	    time when games start.  Previously, for rating games, a record
+	    file includes player IDs of both players with a line starting with
+	    "'rating".  Now it also shows rating scores for players who have
+	    valid scores.  The formats for black and white players are as
+	    follows:
+	      'black_rate:<player_id>:<score>
+	      'white_rate:<player_id>:<score>
+	    A sample output:
+	      'rating:Test_sente+275876e34cf609db118f3d84b799a790:Test_gote+275876e34cf609db118f3d84b799a790
+	      'black_rate:Test_sente+275876e34cf609db118f3d84b799a790:2763.0
+	      'white_rate:Test_gote+275876e34cf609db118f3d84b799a790:2345.0
 
 2014-07-19  Daigo Moriwaki <daigo at debian dot org>
 
