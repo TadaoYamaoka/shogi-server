@@ -49,7 +49,6 @@ Max_Identifier_Length = 32
 Default_Timeout = 60            # for single socket operation
 Default_Game_Name = "default-1500-0"
 One_Time = 10
-Least_Time_Per_Move = 1
 Login_Time = 300                # time for LOGIN
 Revision = "20131215"
 

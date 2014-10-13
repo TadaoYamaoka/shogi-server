@@ -13,6 +13,7 @@ require 'TC_floodgate_thread.rb'
 require 'TC_fork'
 require 'TC_functional'
 require 'TC_game'
+require 'TC_game_least_0'
 require 'TC_game_result'
 require 'TC_handicapped_boards'
 # This game has more thatn 256 moves.

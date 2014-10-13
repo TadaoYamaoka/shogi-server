@@ -76,6 +76,10 @@ OPTIONS
         port_number
                 a port number for the server to listen. 
                 4081 is often used.
+        --least-time-per-move n
+                Least time in second per move: 0, 1 (default 1).
+                  - 0: The new rule that CSA introduced in November 2014.
+                  - 1: The old rule before it.
         --max-moves n
                 when a game with the n-th move played does not end, make the game a draw.
                 Default 256. 0 disables this feature.
@@ -194,11 +198,12 @@ end
 def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
-    ["--daemon",            GetoptLong::REQUIRED_ARGUMENT],
-    ["--floodgate-games",   GetoptLong::REQUIRED_ARGUMENT],
-    ["--max-moves",         GetoptLong::REQUIRED_ARGUMENT],
-    ["--pid-file",          GetoptLong::REQUIRED_ARGUMENT],
-    ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT])
+    ["--daemon",              GetoptLong::REQUIRED_ARGUMENT],
+    ["--floodgate-games",     GetoptLong::REQUIRED_ARGUMENT],
+    ["--least-time-per-move", GetoptLong::REQUIRED_ARGUMENT],
+    ["--max-moves",           GetoptLong::REQUIRED_ARGUMENT],
+    ["--pid-file",            GetoptLong::REQUIRED_ARGUMENT],
+    ["--player-log-dir",      GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -270,6 +275,9 @@ def check_command_line
 
   $options["max-moves"] ||= 256
   $options["max-moves"] = $options["max-moves"].to_i
+
+  $options["least-time-per-move"] ||= 1
+  $options["least-time-per-move"] = $options["least-time-per-move"].to_i
 end
 
 # See if a file can be created in the directory.

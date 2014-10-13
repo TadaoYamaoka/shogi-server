@@ -36,7 +36,11 @@ class TimeClock
     if (byoyomi_str == "060")
       @time_clock = StopWatchClock.new(least_time_per_move, total_time, byoyomi)
     else
-      @time_clock = ChessClock.new(least_time_per_move, total_time, byoyomi)
+      if least_time_per_move == 0
+        @time_clock = ChessClockWithLeastZero.new(least_time_per_move, total_time, byoyomi)
+      else
+        @time_clock = ChessClock.new(least_time_per_move, total_time, byoyomi)
+      end
     end
   end
 
@@ -48,7 +52,7 @@ class TimeClock
 
   # Returns thinking time duration
   #
-  def time_duration(start_time, end_time)
+  def time_duration(mytime, start_time, end_time)
     # implement this
     return 9999999
   end
@@ -69,7 +73,7 @@ class TimeClock
   # Updates a player's remaining time and returns thinking time.
   #
   def process_time(player, start_time, end_time)
-    t = time_duration(start_time, end_time)
+    t = time_duration(player.mytime, start_time, end_time)
     
     player.mytime -= t
     if (player.mytime < 0)
@@ -87,12 +91,12 @@ class ChessClock < TimeClock
     super
   end
 
-  def time_duration(start_time, end_time)
+  def time_duration(mytime, start_time, end_time)
     return [(end_time - start_time).floor, @least_time_per_move].max
   end
 
   def timeout?(player, start_time, end_time)
-    t = time_duration(start_time, end_time)
+    t = time_duration(player.mytime, start_time, end_time)
 
     if ((player.mytime - t <= -@byoyomi) && 
         ((@total_time > 0) || (@byoyomi > 0)))
@@ -107,6 +111,42 @@ class ChessClock < TimeClock
   end
 end
 
+# Calculates thinking time with chess clock, truncating decimal seconds for
+# thinking time. This is a new rule that CSA introduced in November 2014.
+#
+# least_time_per_move should be 0.
+# byoyomi should be more than 0.
+#
+class ChessClockWithLeastZero < ChessClock
+  def initialize(least_time_per_move, total_time, byoyomi)
+    if least_time_per_move != 0
+      raise ArgumentError, "least_time_per_move #{least_time_per_move} should be 0."
+    end
+    super
+  end
+
+  def time_duration(mytime, start_time, end_time)
+    t = end_time - start_time
+    if @byoyomi > 0
+      # If the remaining thinking time covers the duration t, floor it.
+      if mytime + @byoyomi - t > 0
+        t = t.floor
+      else
+        t = t.ceil
+      end
+    else
+      # Thinking time only
+      t = t.floor
+    end
+
+    return t
+  end
+
+  def to_s
+    return "ChessClockWithLeastZero: LeastTimePerMove %d; TotalTime %d; Byoyomi %d" % [@least_time_per_move, @total_time, @byoyomi]
+  end
+end
+
 class StopWatchClock < TimeClock
   def initialize(least_time_per_move, total_time, byoyomi)
     super
@@ -116,13 +156,13 @@ class StopWatchClock < TimeClock
     return "1min"
   end
 
-  def time_duration(start_time, end_time)
+  def time_duration(mytime, start_time, end_time)
     t = [(end_time - start_time).floor, @least_time_per_move].max
     return (t / @byoyomi) * @byoyomi
   end
 
   def timeout?(player, start_time, end_time)
-    t = time_duration(start_time, end_time)
+    t = time_duration(player.mytime, start_time, end_time)
 
     if (player.mytime <= t)
       return true

@@ -71,7 +71,7 @@ class Game
       @total_time = $1.to_i
       @byoyomi = $2.to_i
 
-      @time_clock = TimeClock::factory(Least_Time_Per_Move, @game_name)
+      @time_clock = TimeClock::factory($options["least-time-per-move"], @game_name)
     end
 
     if (player0.sente)
@@ -369,7 +369,7 @@ BEGIN Time
 Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
-Least_Time_Per_Move:#{Least_Time_Per_Move}
+Least_Time_Per_Move:#{$options["least-time-per-move"]}
 Remaining_Time+:#{@sente.mytime}
 Remaining_Time-:#{@gote.mytime}
 Last_Move:#{@last_move}
@@ -403,7 +403,7 @@ BEGIN Time
 Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
-Least_Time_Per_Move:#{Least_Time_Per_Move}
+Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
 #{@board.initial_string.chomp}

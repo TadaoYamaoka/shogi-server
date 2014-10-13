@@ -178,20 +178,32 @@ class BaseClient < Test::Unit::TestCase
   end
 
   def login
+    sleep 0.1
     @p1.connect
+    sleep 0.1
     @p2.connect
+    sleep 0.1
     @p1.login
+    sleep 0.1
     @p2.login
+    sleep 0.1
     @p1.game
+    sleep 0.1
     @p2.game
+    sleep 0.1
     @p1.wait_game
+    sleep 0.1
     @p2.wait_game
   end
 
   def agree
+    sleep 0.1
     @p1.agree
+    sleep 0.1
     @p2.agree
+    sleep 0.1
     @p1.wait_agree
+    sleep 0.1
     @p2.wait_agree
   end
 
