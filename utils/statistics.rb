@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.9.1
+#!/usr/bin/ruby
 # This program shows statistics of CSA kifu files like following: 
 #   - Monthly #games and #players
 #   - Game results

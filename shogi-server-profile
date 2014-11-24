@@ -1,4 +1,4 @@
-#! /usr/bin/ruby1.9.1
+#! /usr/bin/ruby
 # $Id$
 #
 # Author:: Daigo Moriwaki
@@ -38,7 +38,7 @@
 #
 # * {ruby-prof}[http://rubyforge.org/projects/ruby-prof/]
 #
-#   $ sudo gem1.9.1 install ruby-prof
+#   $ sudo gem install ruby-prof
 #
 # == Run
 #
