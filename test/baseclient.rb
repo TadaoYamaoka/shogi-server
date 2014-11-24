@@ -35,21 +35,25 @@ class SocketPlayer
 
   def reader
     @thread = Thread.new do
-      Thread.pass
-      loop do 
-#        break if @socket.closed?
-        if r = select([@socket], nil, nil, 10)
-          str = r[0].first.gets
-          break if str.nil?
-          @mutex.synchronize do
-            if %r!^[\+\-]\d{4}\w{2},T\d+$! =~ str
-                @received_moves += 1
+      begin
+        Thread.pass
+        loop do 
+          break if @socket.closed?
+          if r = select([@socket], nil, nil, 10)
+            str = r[0].first.gets
+            break if str.nil?
+            @mutex.synchronize do
+              if %r!^[\+\-]\d{4}\w{2},T\d+$! =~ str
+                  @received_moves += 1
+              end
+              @message << str
             end
-            @message << str
+          else
+            raise "timed out"
           end
-        else
-          raise "timed out"
         end
+      rescue IOError
+        $stderr.puts "\nReader thread interrupted"
       end
     end
   end
@@ -123,8 +127,8 @@ class SocketPlayer
   end
 
   def logout
-    stop_reader
     @socket.puts "LOGOUT"
+    @socket.close
   end
 
 end
