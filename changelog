@@ -3,6 +3,8 @@
 	* Ruby 2.0:
 	  - Ruby 2.0.0 or later is recommended to use with shogi-server
 	    since Ruby 1.8 reached its End-of-Life on the end of July, 2014.
+	* [shogi-server]
+	  - Addressed a warning of duplicated range in a regular expression.
 
 2014-07-19  Daigo Moriwaki <daigo at debian dot org>
 

@@ -79,7 +79,7 @@ class Login
   end
 
   def Login.good_identifier?(str)
-    if str =~ /\A[\w\d_@\-\.]{1,#{Max_Identifier_Length}}\z/
+    if str =~ /\A[\w@\-\.]{1,#{Max_Identifier_Length}}\z/
       return true
     else
       return false
