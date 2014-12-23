@@ -28,7 +28,10 @@ module ShogiServer # for a namespace
       # i -> 9
       def alphabetToDan(s)
         if RUBY_VERSION >= "1.9.1"
-          return s.bytes[0]-96
+          # String.bytes is incompatible:
+          #  - Ruby 1.9.3 String.bytes returns Enumerator
+          #  - Ruby 2.1.0 String.bytes returns [Integer]
+          return s.each_byte.next-96
         else
           return s[0]-96
         end

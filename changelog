@@ -1,3 +1,11 @@
+2014-12-23  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - Addressed Ruby incompatibility on ShogiServer::Usi::alphabetToDan.
+	    It (and usiToCsa.rb) did not work with Ruby 1.9.3. This issue
+	    has now been fixed.
+	    Thanks to Hiraoka-san for debugging.
+
 2014-11-24  Daigo Moriwaki <daigo at debian dot org>
 
 	* Ruby 2.0:

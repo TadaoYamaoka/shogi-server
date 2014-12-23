@@ -102,4 +102,10 @@ EOB
 
     assert_equal(usi_moves, cu.usi_moves)
   end
+
+  def test_alphabetToDan
+    assert_equal(1, ShogiServer::Usi::alphabetToDan("axxx"))
+    assert_equal(2, ShogiServer::Usi::alphabetToDan("bxxx"))
+    assert_equal(9, ShogiServer::Usi::alphabetToDan("ixxx"))
+  end
 end
