@@ -1,3 +1,8 @@
+2014-11-30  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	  - Corrected a url.
+
 2014-11-24  Daigo Moriwaki <daigo at debian dot org>
 
 	* Ruby 2.0:
