@@ -84,7 +84,11 @@ class Logger < ::Logger
       end
 
       def age_file_name(time)
-        postfix = previous_period_end(time).strftime("%Y%m%d")	# YYYYMMDD
+        if RUBY_VERSION >= "2.2.0"
+          postfix = previous_period_end(time, @shift_age).strftime("%Y%m%d")	# YYYYMMDD
+        else
+          postfix = previous_period_end(time).strftime("%Y%m%d")	# YYYYMMDD
+        end
         age_file = File.join(
                      File.dirname(@filename),
                      postfix[0..3], # YYYY

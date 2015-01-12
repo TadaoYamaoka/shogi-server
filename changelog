@@ -1,3 +1,9 @@
+2015-01-12  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server.rb: Follow an API change in a upstream class:
+	    LogDevice.previous_period_end
+
 2014-10-12  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi_server]
