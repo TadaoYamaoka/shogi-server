@@ -64,15 +64,23 @@ class League
       end
     end
 
-    def match_game
-      log_message("Starting Floodgate games...: %s, %s" % [@game_name, @options])
+    # Returns an array of players who are allowed to participate in this
+    # Floodgate match
+    #
+    def select_players
       players = @league.find_all_players do |pl|
         pl.status == "game_waiting" &&
         game_name?(pl.game_name) &&
-        pl.sente == nil
+        pl.sente == nil &&
+        pl.rated? # Only players who have player ID can participate in Floodgate (rating match)
       end
+      return players
+    end
+
+    def match_game
+      log_message("Starting Floodgate games...: %s, %s" % [@game_name, @options])
       logics = Pairing.send(@options[:pairing_factory], @options)
-      Pairing.match(players, logics)
+      Pairing.match(select_players(), logics)
     end
     
     #

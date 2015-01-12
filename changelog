@@ -1,3 +1,16 @@
+2014-12-27  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - When a non-rated player participates in Floodgate, the following exception
+	    was thrown and a Floodgate game would not start:
+	      undefined method `[]' for nil:NilClass
+	      ["/home/shogi-server/www/x/shogi_server/pairing.rb:499:in `block
+	      in calculate_diff_with_penalty'"
+	    This issue has been resolved. Only players who have player ID
+	    (i.e. those who log in with valid password) are now allowed to
+	    participate in Floodgate as the spec web page
+	    [http://shogi-server.sourceforge.jp/rating.html] describes.
+
 2014-12-23  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
@@ -5,6 +18,11 @@
 	    It (and usiToCsa.rb) did not work with Ruby 1.9.3. This issue
 	    has now been fixed.
 	    Thanks to Hiraoka-san for debugging.
+
+2014-11-30  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_html]
+	  - Corrected a url.
 
 2014-11-24  Daigo Moriwaki <daigo at debian dot org>
 
