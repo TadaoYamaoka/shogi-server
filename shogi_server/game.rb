@@ -292,7 +292,7 @@ class Game
     elsif (move_status == :oute_kaihimore)
       # the current player losed
       @result = GameResultOuteKaihiMoreWin.new(self, @next_player, @current_player)
-    elsif (move_status == :max_moves_draw)
+    elsif (move_status == :max_moves)
       @result = GameResultMaxMovesDraw.new(self, @current_player, @next_player)
     else
       finish_flag = false

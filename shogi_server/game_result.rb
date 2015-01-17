@@ -346,13 +346,13 @@ end
 class GameResultMaxMovesDraw < GameResultDraw
   def initialize(game, winner, loser)
     super
-    @log_summary_type = "max_moves_draw"
-    @result_type      = "#MAX_MOVES_DRAW"
+    @log_summary_type = "max_moves"
+    @result_type      = "#MAX_MOVES"
   end
 
   def process
     @players.each do |player|
-      player.write_safe("#MAX_MOVES_DRAW\n#DRAW\n")
+      player.write_safe("#MAX_MOVES\n#CENSORED\n")
     end
     # no log
     log_summary
