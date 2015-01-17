@@ -100,14 +100,17 @@ EXAMPLES
            Run the shogi-server. Then clients can connect to port#4081.
            The server output logs to the stdout.
 
-        2. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
+        2. % ./shogi-server --max-moves 0 --least-time-per-move 1 test 4081
+           Run the shogi-server in compliance with CSA Protocol V1.1.2 or before.
+
+        3. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
                             --player-log-dir ./player-logs \
                             test 4081
            Run the shogi-server as a daemon. The server outputs regular logs
            to shogi-server.log located in the current directory and network 
            messages in ./player-logs directory.
 
-        3. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
+        4. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
                             --player-log-dir ./player-logs \
                             --floodgate-games floodgate-900-0,floodgate-3600-0 \
                             test 4081
