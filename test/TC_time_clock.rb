@@ -76,7 +76,7 @@ class TestChessClockWithLeastZero < Test::Unit::TestCase
     assert_equal(0, tc.time_duration(100, 100.1, 100.9))  # 0.8
     assert_equal(1, tc.time_duration(100, 100, 101))      # 1
     assert_equal(1, tc.time_duration(100, 100.1, 101.9))  # 1.8
-    assert_equal(1, tc.time_duration(1,    100,   101))    # 1
+    assert_equal(1, tc.time_duration(1,    100,   101))   # 1
     assert_equal(2, tc.time_duration(100, 100.1, 102.9))  # 2.8
     assert_equal(2, tc.time_duration(100, 100, 102))      # 2
   end

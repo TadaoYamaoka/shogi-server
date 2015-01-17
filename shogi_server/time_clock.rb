@@ -127,19 +127,7 @@ class ChessClockWithLeastZero < ChessClock
 
   def time_duration(mytime, start_time, end_time)
     t = end_time - start_time
-    if @byoyomi > 0
-      # If the remaining thinking time covers the duration t, floor it.
-      if mytime + @byoyomi - t > 0
-        t = t.floor
-      else
-        t = t.ceil
-      end
-    else
-      # Thinking time only
-      t = t.floor
-    end
-
-    return t
+    return t.floor
   end
 
   def to_s
