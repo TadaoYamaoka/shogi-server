@@ -78,6 +78,13 @@ OPTIONS
         port_number
                 a port number for the server to listen. 
                 4081 is often used.
+        --least-time-per-move n
+                Least time in second per move: 0, 1 (default 1).
+                  - 0: The new rule that CSA introduced in November 2014.
+                  - 1: The old rule before it.
+        --max-moves n
+                when a game with the n-th move played does not end, make the game a draw.
+                Default 256. 0 disables this feature.
         --pid-file file
                 a file path in which a process ID will be written.
                 Use with --daemon option.
@@ -95,14 +102,17 @@ EXAMPLES
            Run the shogi-server. Then clients can connect to port#4081.
            The server output logs to the stdout.
 
-        2. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
+        2. % ./shogi-server --max-moves 0 --least-time-per-move 1 test 4081
+           Run the shogi-server in compliance with CSA Protocol V1.1.2 or before.
+
+        3. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
                             --player-log-dir ./player-logs \
                             test 4081
            Run the shogi-server as a daemon. The server outputs regular logs
            to shogi-server.log located in the current directory and network 
            messages in ./player-logs directory.
 
-        3. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
+        4. % ./shogi-server --daemon . --pid-file ./shogi-server.pid \
                             --player-log-dir ./player-logs \
                             --floodgate-games floodgate-900-0,floodgate-3600-0 \
                             test 4081
@@ -193,10 +203,12 @@ end
 def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
-    ["--daemon",            GetoptLong::REQUIRED_ARGUMENT],
-    ["--floodgate-games",   GetoptLong::REQUIRED_ARGUMENT],
-    ["--pid-file",          GetoptLong::REQUIRED_ARGUMENT],
-    ["--player-log-dir",    GetoptLong::REQUIRED_ARGUMENT])
+    ["--daemon",              GetoptLong::REQUIRED_ARGUMENT],
+    ["--floodgate-games",     GetoptLong::REQUIRED_ARGUMENT],
+    ["--least-time-per-move", GetoptLong::REQUIRED_ARGUMENT],
+    ["--max-moves",           GetoptLong::REQUIRED_ARGUMENT],
+    ["--pid-file",            GetoptLong::REQUIRED_ARGUMENT],
+    ["--player-log-dir",      GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -265,6 +277,12 @@ def check_command_line
     $stderr.puts "WARNING: --floodgate-history has been deprecated."
     $options["floodgate-history"] = nil
   end
+
+  $options["max-moves"] ||= 256
+  $options["max-moves"] = $options["max-moves"].to_i
+
+  $options["least-time-per-move"] ||= 0
+  $options["least-time-per-move"] = $options["least-time-per-move"].to_i
 end
 
 # See if a file can be created in the directory.

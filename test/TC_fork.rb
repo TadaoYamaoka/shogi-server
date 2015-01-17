@@ -16,8 +16,11 @@ class TestFork < BaseClient
   def test_wrong_game
     @admin = SocketPlayer.new "dummy", "admin", false
     @admin.connect
+    sleep 0.1
     @admin.reader
+    sleep 0.1
     @admin.login
+    sleep 0.1
 
     result, result2 = handshake do
       @admin.puts "%%FORK wronggame-900-0 buoy_WrongGame-900-0"
@@ -31,8 +34,11 @@ class TestFork < BaseClient
   def test_too_short_fork
     @admin = SocketPlayer.new "dummy", "admin", false
     @admin.connect
+    sleep 0.1
     @admin.reader
+    sleep 0.1
     @admin.login
+    sleep 0.1
 
     result, result2 = handshake do
       source_game = parse_game_name(@admin)
@@ -49,8 +55,12 @@ class TestFork < BaseClient
     
     @admin = SocketPlayer.new "dummy", "admin", "*"
     @admin.connect
+    sleep 0.1
     @admin.reader
+    sleep 0.1
     @admin.login
+    sleep 0.1
+
     assert buoy.is_new_game?("buoy_Fork-1500-0")
 
     result, result2 = handshake do
@@ -63,26 +73,34 @@ class TestFork < BaseClient
     @p1 = SocketPlayer.new "buoy_Fork", "p1", true
     @p2 = SocketPlayer.new "buoy_Fork", "p2", false
     @p1.connect
+    sleep 0.1
     @p2.connect
+    sleep 0.1
     @p1.reader
+    sleep 0.1
     @p2.reader
+    sleep 0.1
     @p1.login
+    sleep 0.1
     @p2.login
-    sleep 1
+    sleep 0.1
     @p1.game
+    sleep 0.1
     @p2.game
-    sleep 1
     @p1.agree
+    sleep 0.1
     @p2.agree
-    sleep 1
+    sleep 0.1
     assert /^Total_Time:1500/ =~ @p1.message
     assert /^Total_Time:1500/ =~ @p2.message
     @p2.move("-3334FU")
-    sleep 1
+    sleep 0.1
     @p1.toryo
-    sleep 1
+    sleep 0.1
     @p2.logout
+    sleep 0.1
     @p1.logout
+    sleep 0.1
 
     @admin.logout
   end
@@ -92,8 +110,11 @@ class TestFork < BaseClient
     
     @admin = SocketPlayer.new "dummy", "admin", "*"
     @admin.connect
+    sleep 0.1
     @admin.reader
+    sleep 0.1
     @admin.login
+    sleep 0.1
 
     result, result2 = handshake do
       source_game = parse_game_name(@admin)
@@ -106,26 +127,35 @@ class TestFork < BaseClient
     @p1 = SocketPlayer.new "buoy_TestFork_1", "p1", true
     @p2 = SocketPlayer.new "buoy_TestFork_1", "p2", false
     @p1.connect
+    sleep 0.1
     @p2.connect
+    sleep 0.1
     @p1.reader
+    sleep 0.1
     @p2.reader
+    sleep 0.1
     @p1.login
+    sleep 0.1
     @p2.login
-    sleep 1
+    sleep 0.1
     @p1.game
+    sleep 0.1
     @p2.game
-    sleep 1
+    sleep 0.1
     @p1.agree
+    sleep 0.1
     @p2.agree
-    sleep 1
+    sleep 0.1
     assert /^Total_Time:1500/ =~ @p1.message
     assert /^Total_Time:1500/ =~ @p2.message
     @p2.move("-3334FU")
-    sleep 1
+    sleep 0.1
     @p1.toryo
-    sleep 1
+    sleep 0.1
     @p2.logout
+    sleep 0.1
     @p1.logout
+    sleep 0.1
 
     @admin.logout
   end

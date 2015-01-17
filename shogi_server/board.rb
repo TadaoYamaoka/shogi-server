@@ -626,6 +626,7 @@ EOF
   #   - :uchifuzume 
   #   - :oute_kaihimore 
   #   - (:outori will not be returned)
+  #   - :max_moves
   #
   def handle_one_move(str, sente=nil)
     if (str =~ /^([\+\-])(\d)(\d)(\d)(\d)([A-Z]{2})/)
@@ -711,6 +712,14 @@ EOF
       move_back(@move)
       restore_sennichite_stuff(*sennichite_stuff)
       return :sennichite 
+    end
+
+    # New rule that CSA introduced in November 2014.
+    # If a game with 256 plies does not end, make the game a draw.
+    # When running test cases $options might be nil.
+    if $options && $options["max-moves"] &&
+       $options["max-moves"] > 0 && @move_count >= $options["max-moves"]
+      return :max_moves
     end
 
     return :normal

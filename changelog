@@ -1,3 +1,9 @@
+2015-01-12  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server.rb: Follow an API change in a upstream class:
+	    LogDevice.previous_period_end
+
 2014-12-27  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
@@ -50,6 +56,30 @@
 	      'rating:Test_sente+275876e34cf609db118f3d84b799a790:Test_gote+275876e34cf609db118f3d84b799a790
 	      'black_rate:Test_sente+275876e34cf609db118f3d84b799a790:2763.0
 	      'white_rate:Test_gote+275876e34cf609db118f3d84b799a790:2345.0
+
+2014-10-12  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi_server]
+	  - New feature: max moves
+	    - New command line option: --max-moves n
+	      When a game with the n-th move played does not end, make the
+	      game a draw (default 256 in compliance with CSA Protocol V1.2
+	      or later).  Setting 0 disables this feature for
+	      CSA Protocol V1.1.2 or before.
+	    - Players will receive a new message, "#MAX_MOVES", upon an end
+	      of such a game:
+	        #MAX_MOVES
+	        #CENSORED
+	    - A new log summary type, "max_moves", has been assigned for games
+	      drawing with max moves.
+	      'summary:max_moves:name_sente draw:name_gote draw
+	  - Least time per move:
+	    - New command line option: --least-time-per-move n
+	      This option specifies a least time in second per move, which
+	      is 0 second by default, meaning that a decimal
+	      fraction of time for a move will be truncated in compliance
+	      with CSA Protocol V1.2 or later.
+	      Set 1 for CSA Protocol V1.1.2 or before.
 
 2014-07-19  Daigo Moriwaki <daigo at debian dot org>
 

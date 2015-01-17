@@ -49,9 +49,8 @@ Max_Identifier_Length = 32
 Default_Timeout = 60            # for single socket operation
 Default_Game_Name = "default-1500-0"
 One_Time = 10
-Least_Time_Per_Move = 1
 Login_Time = 300                # time for LOGIN
-Revision = "20140107"
+Revision = "20150117"
 
 RELOAD_FILES = ["shogi_server/league/floodgate.rb",
                 "shogi_server/league/persistent.rb",
@@ -85,7 +84,11 @@ class Logger < ::Logger
       end
 
       def age_file_name(time)
-        postfix = previous_period_end(time).strftime("%Y%m%d")	# YYYYMMDD
+        if RUBY_VERSION >= "2.2.0"
+          postfix = previous_period_end(time, @shift_age).strftime("%Y%m%d")	# YYYYMMDD
+        else
+          postfix = previous_period_end(time).strftime("%Y%m%d")	# YYYYMMDD
+        end
         age_file = File.join(
                      File.dirname(@filename),
                      postfix[0..3], # YYYY

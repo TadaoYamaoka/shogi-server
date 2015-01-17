@@ -48,9 +48,9 @@ P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 'rating:atmark_B@p1+275876e34cf609db118f3d84b799a790:atmark_W@p2+275876e34cf609db118f3d84b799a790
 +2726FU
-T1
+T0
 -3334FU
-T1
+T0
 %TORYO
 'P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 'P2 * -HI *  *  *  *  * -KA * 
@@ -115,9 +115,9 @@ P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 +
 'rating:hc2p_hoge_B+275876e34cf609db118f3d84b799a790:hc2p_hoge_W+275876e34cf609db118f3d84b799a790
 +2726FU
-T1
+T0
 -3334FU
-T1
+T0
 %TORYO
 'P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 'P2 * -HI *  *  *  *  * -KA * 

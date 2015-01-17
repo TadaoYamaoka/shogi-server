@@ -24,24 +24,6 @@ EOM
     assert_equal(true, b.good_kachi?(false))
   end
 
-  def test_kachi_good
-    b = ShogiServer::Board.new
-    b.set_from_str(<<EOM)
-P1+HI+HI+KA+KA+OU *  *  *  * 
-P2+FU+FU+FU+FU+FU+FU *  *  * 
-P+00FU00FU
-EOM
-    assert_equal(true, b.good_kachi?(true))
-
-    b = ShogiServer::Board.new
-    b.set_from_str(<<EOM)
-P8-HI-HI-KA-KA-OU *  *  *  * 
-P9-FU-FU-FU-FU-FU-FU *  *  * 
-P-00FU
-EOM
-    assert_equal(true, b.good_kachi?(false))
-  end
-
   def test_kachi_bad
     b = ShogiServer::Board.new
     b.set_from_str(<<EOM)

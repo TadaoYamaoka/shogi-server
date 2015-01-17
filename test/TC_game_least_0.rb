@@ -6,7 +6,7 @@ require 'shogi_server/game'
 require 'shogi_server/player'
 
 $options = {}
-$options["least-time-per-move"] = 1
+$options["least-time-per-move"] = 0
 
 def log_message(str)
   $stderr.puts str
@@ -23,10 +23,10 @@ end
 $league = ShogiServer::League.new(File.dirname(__FILE__))
 $league.event = "test"
 
-class TestGame < Test::Unit::TestCase
+class TestGameWithLeastZero < Test::Unit::TestCase
 
   def test_new
-    game_name = "hoge-1500-0"
+    game_name = "hoge-1500-10"
     board = ShogiServer::Board.new
     board.initial
     p1 = MockPlayer.new
@@ -54,7 +54,7 @@ To_Move:+
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
-Byoyomi:0
+Byoyomi:10
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -88,7 +88,7 @@ To_Move:+
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
-Byoyomi:0
+Byoyomi:10
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -128,7 +128,7 @@ EOF
   end
 
   def test_new_buoy_1_move
-    game_name = "buoyhoge-1500-0"
+    game_name = "buoyhoge-1500-10"
     board = ShogiServer::Board.new
     board.set_from_moves ["+7776FU"]
     p1 = MockPlayer.new
@@ -156,7 +156,7 @@ To_Move:-
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
-Byoyomi:0
+Byoyomi:10
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -191,7 +191,7 @@ To_Move:-
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
-Byoyomi:0
+Byoyomi:10
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -235,7 +235,7 @@ EOF
   end
 
   def test_new_buoy_2_moves
-    game_name = "buoyhoge-1500-0"
+    game_name = "buoyhoge-1500-10"
     board = ShogiServer::Board.new
     board.set_from_moves ["+7776FU", "-3334FU"]
     p1 = MockPlayer.new
@@ -263,7 +263,7 @@ To_Move:+
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
-Byoyomi:0
+Byoyomi:10
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -299,7 +299,7 @@ To_Move:+
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
-Byoyomi:0
+Byoyomi:10
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -346,7 +346,7 @@ EOF
   end
   
   def test_monitor_add
-    game_name = "hoge-1500-0"
+    game_name = "hoge-1500-10"
     board = ShogiServer::Board.new
     board.initial
     p1 = MockPlayer.new
