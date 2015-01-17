@@ -34,6 +34,12 @@
 	    has now been fixed.
 	    Thanks to Hiraoka-san for debugging.
 
+2014-12-18  Daigo Moriwaki <daigo at debian dot org>
+
+	* utils/eval_graph.rb:
+	  - Gnuplot 4.6.6 drew evaluation-value lines with a dashed style.
+	    This issue has now been addressed so that solid lines are used.
+
 2014-11-30  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_html]

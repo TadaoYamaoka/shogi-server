@@ -224,8 +224,8 @@ def plot(csa_file, title, black, white, a_play_time)
       plot.size   "0.9,0.9"
       plot.key "left"
      
-      plot.style "line 1 linewidth 5 linetype 0 linecolor rgbcolor \"red\"" 
-      plot.style "line 2 linewidth 4 linetype 0 linecolor rgbcolor \"dark-green\"" 
+      plot.style "line 1 linewidth 5 linetype -1 linecolor rgbcolor \"red\""
+      plot.style "line 2 linewidth 4 linetype -1 linecolor rgbcolor \"dark-green\""
 
       plot.data << Gnuplot::DataSet.new( black.eval_values ) do |ds|
         ds.with  = "lines ls 1"
@@ -238,8 +238,8 @@ def plot(csa_file, title, black, white, a_play_time)
       end
 
       if a_play_time > 0
-        plot.style "line 5 linewidth 1 linetype 0 linecolor rgbcolor \"red\"" 
-        plot.style "line 6 linewidth 1 linetype 0 linecolor rgbcolor \"green\"" 
+        plot.style "line 5 linewidth 1 linetype -1 linecolor rgbcolor \"red\""
+        plot.style "line 6 linewidth 1 linetype -1 linecolor rgbcolor \"green\""
         plot.style "fill solid 0.25 noborder"
 
         plot.data << Gnuplot::DataSet.new( black.time_values(3000, a_play_time) ) do |ds|
