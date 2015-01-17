@@ -8,6 +8,15 @@ require 'test/mock_log_message'
 
 $topdir = File.expand_path File.dirname(__FILE__)
 
+class SimplePlayer < ShogiServer::BasicPlayer
+  attr_accessor :status
+  def initialize
+    super
+    @status = "game_waiting"
+    @game_name = "floodgate-900-0"
+  end
+end
+
 class TestFloodgate < Test::Unit::TestCase
   def setup
     @fg = ShogiServer::League::Floodgate.new(nil)
@@ -32,6 +41,37 @@ class TestFloodgate < Test::Unit::TestCase
     assert(fg.game_name?("floodgate-3600-0"))
   end
 
+  def test_select_players
+    league = ShogiServer::League.new(File.dirname(__FILE__))
+    league.event = "test"
+    league.setup_players_database
+
+    a = SimplePlayer.new
+    a.win  = 1
+    a.loss = 2
+    a.rate = 0
+    a.name = "a"
+    a.player_id = "a+123"
+    b = SimplePlayer.new
+    b.win  = 10
+    b.loss = 20
+    b.rate = 1500
+    b.name = "b"
+    b.player_id = "b+456"
+    c = SimplePlayer.new
+    c.win  = 100
+    c.loss = 200
+    c.rate = 1000
+    c.name = "c"
+
+    league.add a
+    league.add b
+    league.add c
+
+    fg = ShogiServer::League::Floodgate.new(league, {:game_name => "floodgate-900-0"})
+
+    assert_equal([a,b], fg.select_players)
+  end
 end
 
 class TestDeleteMostPlayingPlayer < Test::Unit::TestCase
