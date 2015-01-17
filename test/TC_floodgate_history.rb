@@ -18,6 +18,7 @@ end
 
 class MockPlayer < ShogiServer::BasicPlayer
   attr_accessor :status
+  attr_accessor :last_command_at
 end
 
 class TestHistory < Test::Unit::TestCase

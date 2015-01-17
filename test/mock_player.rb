@@ -7,6 +7,7 @@ class MockPlayer < ShogiServer::BasicPlayer
   attr_accessor :game_name
   attr_reader :socket_buffer
   attr_reader :rate
+  attr_accessor :last_command_at
 
   def initialize
     @name     = "mock_player"

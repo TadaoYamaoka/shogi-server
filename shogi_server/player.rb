@@ -148,6 +148,7 @@ class Player < BasicPlayer
     @main_thread = Thread::current
     @write_queue = ShogiServer::TimeoutQueue.new(WRITE_THREAD_WATCH_INTERVAL)
     @player_logger = nil
+    @last_command_at = Time.now
     start_write_thread
   end
 
@@ -155,6 +156,8 @@ class Player < BasicPlayer
   attr_accessor :protocol, :eol, :game, :mytime
   attr_accessor :main_thread
   attr_reader :socket_buffer
+  # It is updated whenever a player sends a new command
+  attr_accessor :last_command_at
   
   def setup_logger(dir)
     log_file = File.join(dir, "%s.log" % [simple_player_id])

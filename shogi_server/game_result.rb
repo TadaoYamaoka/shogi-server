@@ -94,7 +94,7 @@ class GameResult
     elsif !p1.sente && p2.sente
       @black, @white = p2, p1
     else
-      raise "Never reached!"
+      raise "Never reached!: %s p1: %s p2: %s" % [game.game_id, p1.sente, p2.sente]
     end
     @players.each do |player|
       player.status = "connected"

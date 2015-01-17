@@ -356,8 +356,9 @@ def login_loop(client)
           # can override the current player.
           if (current_player.password == player.password &&
               (current_player.status != "game" ||
-               Time.now - current_player.modifiled_at > ONE_DAY))
-            log_message("user %s login forcely (previously modified at %s)" % [player.name, player.modified_at])
+               Time.now - current_player.last_command_at > ONE_DAY))
+            log_message("player %s login forcibly, nudging the former player" % [player.name])
+            log_message("  the former player was in %s and received the last command at %s" % [current_player.status, current_player.last_command_at])
             current_player.kill
           else
             login.incorrect_duplicated_player(str)

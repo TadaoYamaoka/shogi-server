@@ -121,6 +121,7 @@ module ShogiServer
       end
 
       cmd.time = time
+      player.last_command_at = time
       return cmd
     end
 
