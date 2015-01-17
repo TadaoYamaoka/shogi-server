@@ -10,8 +10,8 @@ class MaxMovesTest < ReadFileClient
   def test_max_moves_draw
     csa = File.open(filepath("max_moves_draw.csa")) {|f| f.read}
     handshake(csa)
-    @p1.wait(/#MAX_MOVES_DRAW\n#DRAW/)
-    @p2.wait(/#MAX_MOVES_DRAW\n#DRAW/)
+    @p1.wait(/#MAX_MOVES\n#CENSORED/)
+    @p2.wait(/#MAX_MOVES\n#CENSORED/)
     assert true
     logout12
   end
