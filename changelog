@@ -1,3 +1,12 @@
+2015-01-20  Daigo Moriwaki <daigo at debian dot org>
+
+	* [mk_rate]
+	  - Getting an absolute path of this file was wrong if it was a
+	    symbolic link. This issue has been addressed.
+	* [mk_html]
+	  - Links to details pages for players now use a relative path so
+	    that it works on a testing site.
+
 2015-01-17  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
