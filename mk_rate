@@ -107,7 +107,8 @@
 # * (Rated) players, who played more than $GAMES_LIMIT [15] (rated) games. 
 #
 
-$:.unshift(File.dirname(File.expand_path(__FILE__)))
+require 'pathname'
+$:.unshift(File.dirname(Pathname.new(__FILE__).realpath))
 require 'utils/csa-filter'
 require 'yaml'
 require 'time'
