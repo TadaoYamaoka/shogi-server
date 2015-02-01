@@ -190,7 +190,7 @@ class BaseClient < Test::Unit::TestCase
     @p1.login
     sleep 0.1
     @p2.login
-    sleep 0.1
+    sleep 0.5
     @p1.game
     sleep 0.1
     @p2.game

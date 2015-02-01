@@ -118,8 +118,9 @@ class TestFork < BaseClient
 
     result, result2 = handshake do
       source_game = parse_game_name(@admin)
+      sleep 0.2
       @admin.puts "%%FORK #{source_game}" # nil for new_buoy_game name
-      sleep 1
+      sleep 1.2
       assert /##\[FORK\]: new buoy game name: buoy_TestFork_1-1500-0/ =~ @admin.message
     end
 
