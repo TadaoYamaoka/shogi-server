@@ -109,7 +109,8 @@ class Login
 
   def process
     @player.write_safe(sprintf("LOGIN:%s OK\n", @player.name))
-    log_message(sprintf("user %s run in %s mode", @player.name, @player.protocol))
+    log_message("user %s run in %s mode" % [(@player.rated? ? @player.player_id : @player.name),
+                                            @player.protocol])
   end
 
   def incorrect_duplicated_player(str)
