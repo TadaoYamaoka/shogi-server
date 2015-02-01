@@ -50,7 +50,7 @@ Default_Timeout = 60            # for single socket operation
 Default_Game_Name = "default-1500-0"
 One_Time = 10
 Login_Time = 300                # time for LOGIN
-Revision = "20150117"
+Revision = "20150201"
 
 RELOAD_FILES = ["shogi_server/league/floodgate.rb",
                 "shogi_server/league/persistent.rb",
