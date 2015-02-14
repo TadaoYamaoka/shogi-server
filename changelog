@@ -1,3 +1,11 @@
+2015-02-14  Daigo Moriwaki <daigo at debian dot org>
+
+	* util/statistics.rb:
+	  - Updated to investigate floodgate-600-10 games.
+	    Consult the result at
+	    http://www.sgtpepper.net/hyspro/diary/20150214.html.
+	  - Added a companion R script: histogram.R 
+
 2015-01-20  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
