@@ -125,11 +125,6 @@ class ChessClockWithLeastZero < ChessClock
     super
   end
 
-  def time_duration(mytime, start_time, end_time)
-    t = end_time - start_time
-    return t.floor
-  end
-
   def to_s
     return "ChessClockWithLeastZero: LeastTimePerMove %d; TotalTime %d; Byoyomi %d" % [@least_time_per_move, @total_time, @byoyomi]
   end
