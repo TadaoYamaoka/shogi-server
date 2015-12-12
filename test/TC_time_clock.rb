@@ -79,6 +79,8 @@ class TestChessClockWithLeastZero < Test::Unit::TestCase
     assert_equal(1, tc.time_duration(1,    100,   101))   # 1
     assert_equal(2, tc.time_duration(100, 100.1, 102.9))  # 2.8
     assert_equal(2, tc.time_duration(100, 100, 102))      # 2
+
+    assert_equal(0, tc.time_duration(100, 100, 99.9))     # -0.1
   end
 
   def test_time_duration_over_thinking_time
