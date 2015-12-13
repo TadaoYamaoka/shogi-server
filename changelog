@@ -43,6 +43,12 @@
 	    http://www.sgtpepper.net/hyspro/diary/20150214.html.
 	  - Added a companion R script: histogram.R 
 
+2015-02-01  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server]
+	  - shogi_server/login.rb: When players are logged in, log their
+	    player_id if they have it.
+
 2015-01-20  Daigo Moriwaki <daigo at debian dot org>
 
 	* [mk_rate]
