@@ -36,8 +36,10 @@ class League
       # Options will be updated by NextTimeGenerator and then passed to a
       # pairing factory.
       @options = {}
-      @options[:pairing_factory] = hash[:pairing_factory] || "default_factory"
-      @options[:sacrifice]       = hash[:sacrifice] || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
+      @options[:pairing_factory]     = hash[:pairing_factory] || "default_factory"
+      @options[:sacrifice]           = hash[:sacrifice] || "gps500+e293220e3f8a3e59f79f6b0efffaa931"
+      @options[:max_moves]           = hash[:max_moves] || Default_Max_Moves
+      @options[:least_time_per_move] = hash[:least_time_per_move] || Default_Least_Time_Per_Move
       charge if @next_time.nil?
     end
 
@@ -53,12 +55,22 @@ class League
       return @options[:sacrifice]
     end
 
+    def max_moves
+      return @options[:max_moves]
+    end
+
+    def least_time_per_move
+      return @options[:least_time_per_move]
+    end
+
     def charge
       ntg = NextTimeGenerator.factory(@game_name)
       if ntg
         @next_time = ntg.call(Time.now)
-        @options[:pairing_factory] = ntg.pairing_factory
-        @options[:sacrifice]       = ntg.sacrifice
+        @options[:pairing_factory]     = ntg.pairing_factory
+        @options[:sacrifice]           = ntg.sacrifice
+        @options[:max_moves]           = ntg.max_moves
+        @options[:least_time_per_move] = ntg.least_time_per_move
       else
         @next_time = nil
       end
@@ -80,7 +92,7 @@ class League
     def match_game
       log_message("Starting Floodgate games...: %s, %s" % [@game_name, @options])
       logics = Pairing.send(@options[:pairing_factory], @options)
-      Pairing.match(select_players(), logics)
+      Pairing.match(select_players(), logics, @options)
     end
     
     #
@@ -110,12 +122,16 @@ class League
 
       attr_reader :pairing_factory
       attr_reader :sacrifice
+      attr_reader :max_moves
+      attr_reader :least_time_per_move
 
       # Constructor. 
       #
       def initialize
-        @pairing_factory = "default_factory"
-        @sacrifice       = "gps500+e293220e3f8a3e59f79f6b0efffaa931"
+        @pairing_factory     = "default_factory"
+        @sacrifice           = "gps500+e293220e3f8a3e59f79f6b0efffaa931"
+        @max_moves           = Default_Max_Moves
+        @least_time_per_move = Default_Least_Time_Per_Move
       end
     end
 
@@ -146,6 +162,12 @@ class League
     # * sacrifice:
     #   Specifies a sacrificed player.
     #   ex. set sacrifice gps500+e293220e3f8a3e59f79f6b0efffaa931
+    # * max_moves:
+    #   Sepcifies a number of max moves
+    #   ex. set max_moves 256
+    # * least_time_per_move:
+    #   Sepcifies a least time per move
+    #   ex. set least_time_per_move 0
     #
     class NextTimeGeneratorConfig < AbstructNextTimeGenerator
       
@@ -170,6 +192,10 @@ class League
             @pairing_factory = $1.chomp
           when %r!^\s*set\s+sacrifice\s+(.*)!
             @sacrifice = $1.chomp
+          when %r!^\s*set\s+max_moves\s+(\d+)!
+            @max_moves = $1.chomp.to_i
+          when %r!^\s*set\s+least_time_per_move\s+(\d+)!
+            @least_time_per_move = $1.chomp.to_i
           when %r!^\s*(\w+)\s+(\d{1,2}):(\d{1,2})!
             dow, hour, minute = $1, $2.to_i, $3.to_i
             dow_index = ::ShogiServer::parse_dow(dow)

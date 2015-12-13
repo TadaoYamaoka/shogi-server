@@ -71,7 +71,7 @@ class Game
       @total_time = $1.to_i
       @byoyomi = $2.to_i
 
-      @time_clock = TimeClock::factory($options["least-time-per-move"], @game_name)
+      @time_clock = TimeClock::factory(board.least_time_per_move, @game_name)
     end
 
     if (player0.sente)
@@ -325,6 +325,8 @@ class Game
     @fh.puts("V2")
     @fh.puts("N+#{@sente.name}")
     @fh.puts("N-#{@gote.name}")
+    @fh.puts("'Max_Moves:#{@board.max_moves}")
+    @fh.puts("'Least_Time_Per_Move:#{@board.least_time_per_move}")
     @fh.puts("$EVENT:#{@game_id}")
 
     @sente.write_safe(propose_message("+"))
@@ -371,11 +373,12 @@ Name+:#{@sente.name}
 Name-:#{@gote.name}
 Rematch_On_Draw:NO
 To_Move:+
+Max_Moves:#{@board.max_moves}
 BEGIN Time
 Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
-Least_Time_Per_Move:#{$options["least-time-per-move"]}
+Least_Time_Per_Move:#{@board.least_time_per_move}
 Remaining_Time+:#{@sente.mytime}
 Remaining_Time-:#{@gote.mytime}
 Last_Move:#{@last_move}
@@ -405,11 +408,12 @@ Name-:#{@gote.name}
 Your_Turn:#{sg_flag}
 Rematch_On_Draw:NO
 To_Move:#{@board.teban ? "+" : "-"}
+Max_Moves:#{@board.max_moves}
 BEGIN Time
 Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
-Least_Time_Per_Move:#{$options["least-time-per-move"]}
+Least_Time_Per_Move:#{@board.least_time_per_move}
 END Time
 BEGIN Position
 #{@board.initial_string.chomp}

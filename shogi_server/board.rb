@@ -84,18 +84,25 @@ EOF
   end
 
 
-  def initialize(move_count=0)
+  def initialize(options={})
     @sente_hands = Array::new
     @gote_hands  = Array::new
     @history       = Hash::new(0)
     @sente_history = Hash::new(0)
     @gote_history  = Hash::new(0)
     @array = [[], [], [], [], [], [], [], [], [], []]
-    @move_count = move_count
+    @move_count = 0
     @teban = nil # black => true, white => false
     @initial_moves = []
     @move = nil
     @ous = [nil, nil] # keep OU pieces of Sente and Gote
+
+    @max_moves = options[:max_moves] ||
+                 ($options && $options["max-moves"]) ||
+                 Default_Max_Moves
+    @least_time_per_move = options[:least_time_per_move] ||
+                           ($options && $options["least-time-per-move"]) ||
+                           Default_Least_Time_Per_Move
   end
   attr_accessor :array, :sente_hands, :gote_hands, :history, :sente_history, :gote_history, :teban
   attr_reader :move_count
@@ -109,6 +116,12 @@ EOF
   # position may or may not be rolled back.
   #
   attr_reader :move
+
+  # Max_Moves of the CSA protocol
+  attr_reader :max_moves
+
+  # Least_Time_Per_Move of the CSA protocol
+  attr_reader :least_time_per_move
 
   # See if self equals rhs, including a logical board position (i.e.
   # not see object IDs) and sennichite stuff.
@@ -717,8 +730,7 @@ EOF
     # New rule that CSA introduced in November 2014.
     # If a game with 256 plies does not end, make the game a draw.
     # When running test cases $options might be nil.
-    if $options && $options["max-moves"] &&
-       $options["max-moves"] > 0 && @move_count >= $options["max-moves"]
+    if @max_moves > 0 && @move_count >= @max_moves
       return :max_moves
     end
 

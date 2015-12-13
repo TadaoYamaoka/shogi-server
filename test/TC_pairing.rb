@@ -499,6 +499,12 @@ class TestLeastDiff < Test::Unit::TestCase
     assert_pairs([@a,@b,@h], players)
   end
 
+  def test_match_many_players
+    players = [@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h,@a,@b,@h]
+    r = @pairing.match(players)
+    assert true
+  end
+
   def test_calculate_diff_with_penalty
     players = [@a,@b]
     assert_equal(@b.rate-@a.rate, @pairing.calculate_diff_with_penalty(players,nil))
@@ -596,6 +602,13 @@ class TestLeastDiff < Test::Unit::TestCase
     @history.update(dummy)
 
     assert_equal(@b.rate-200, @pairing.get_player_rate(@x, @history))
+  end
+
+  def test_total_posibilities
+    assert_equal 1, @pairing.total_posibilities(2)
+    assert_equal 1, @pairing.total_posibilities(3)
+    assert_equal 3, @pairing.total_posibilities(4)
+    assert_equal 945, @pairing.total_posibilities(10)
   end
 end
 
