@@ -20,7 +20,7 @@
 	  (Closes: #35839)
 	* [shogi-server] shogi_server/pairing.rb:
 	  - LeastDiff attempts more trials, depending of a number of players
-	    to be matched.
+	    to be matched, top achieve more optimized matching combinations.
 
 2015-11-27  Daigo Moriwaki <daigo at debian dot org>
 
