@@ -112,33 +112,24 @@ $states   = State.new
 
 def do_file(file)
   $OPT_REPEAT -= 1 if $OPT_REPEAT > 0
-  csa = CsaFileReader.new(file)
+  csa = CsaFileReader.new(file, "EUC-JP")
 
-  # See games between 2008/03 to 2009/07
-  return if csa.start_time.nil? ||
-            csa.start_time <  Time.parse("2008/03/01") ||
-            csa.start_time >= Time.parse("2009/08/01")
-
-  # Want to see complete games
+  # Want to see completed games only
   $states.add csa.state
   return unless csa.state == "toryo"
 
-  # Process monthly
+  # 1. Process monthly
   $monthly.add(csa)
 
-  # Process gametime
+  # 2. Process gametime
   duration = (csa.end_time - csa.start_time).to_i
-  if duration > 2200
-    $stderr.puts "Too long game: #{file}"
-    return
-  end
   $gametime.add duration.to_i
 
-  # Process movetime
+  # 3. Process movetime
   values = csa.movetimes
   $movetime.add values
 
-  #Process moves
+  # 4. Process moves
   $moves.add values.size
 
 rescue => ex

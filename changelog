@@ -1,3 +1,24 @@
+2015-11-27  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server] shogi_server/time_clock.rb:
+	  - A time consumed could be -1.
+	    * The start time of a move is captured after sending a move to a
+	      player of the next turn at the end of the giant lock
+	    * The end time of the move is captured at the exact time when the
+	      server receives it before the giant lock
+	    Therefore, end_time < start_time is possible when a player returns a
+	    move instantly.
+	    Thanks to Tomoyuki Kaneko for reporting this issue.
+	    (Closes: #35795)
+
+2015-02-14  Daigo Moriwaki <daigo at debian dot org>
+
+	* util/statistics.rb:
+	  - Updated to investigate floodgate-600-10 games.
+	    Consult the result at
+	    http://www.sgtpepper.net/hyspro/diary/20150214.html.
+	  - Added a companion R script: histogram.R 
+
 2015-02-01  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server]
