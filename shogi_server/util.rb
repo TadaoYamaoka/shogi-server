@@ -42,6 +42,25 @@ module ShogiServer
   end
   module_function :shuffle
 
+  def factorial(n)
+    return 1 if n<=1
+    ret = 1
+    while n >= 2
+      ret *= n
+      n -= 1
+    end
+    return ret
+  end
+  module_function :factorial
+
+  def nCk(n, k)
+    return 0 if n < k
+    numerator   = factorial(n)
+    denominator = factorial(k) * factorial(n - k)
+    return numerator / denominator
+  end
+  module_function :nCk
+
   # See if the file is writable. The file will be created if it does not exist
   # yet.
   # Return true if the file is writable, otherwise false.

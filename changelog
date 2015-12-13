@@ -18,6 +18,9 @@
 	    b) Least_Time_Per_Move will be 0 for floodgate-600-10 games;
 	       otherwise 1.
 	  (Closes: #35839)
+	* [shogi-server] shogi_server/pairing.rb:
+	  - LeastDiff attempts more trials, depending of a number of players
+	    to be matched.
 
 2015-11-27  Daigo Moriwaki <daigo at debian dot org>
 
