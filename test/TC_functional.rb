@@ -36,6 +36,8 @@ class TestClientAtmark < BaseClient
 V2
 N+atmark_B@p1
 N-atmark_W@p2
+'Max_Moves:256
+'Least_Time_Per_Move:0
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
@@ -103,6 +105,8 @@ class TestHandicappedGame < BaseClient
 V2
 N+hc2p_hoge_B
 N-hc2p_hoge_W
+'Max_Moves:256
+'Least_Time_Per_Move:0
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU

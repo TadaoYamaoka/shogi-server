@@ -6,12 +6,12 @@ doc: clean
 
 .PHONY: test-run
 test-run: 
-	./shogi-server --floodgate-games floodgate-900-0,floodgate-3600-0 hoge 4000 
+	./shogi-server --floodgate-games floodgate-600-10,floodgate-3600-0 hoge 4000
 
 
 .PHONY: test-run-daemon
 test-run-daemon: 
-	./shogi-server --floodgate-games floodgate-900-0,floodgate-3600-0 --daemon . --pid-file ./shogi-server.pid --player-log-dir ./player-logs hoge 4000
+	./shogi-server --floodgate-games floodgate-600-10,floodgate-3600-0 --daemon . --pid-file ./shogi-server.pid --player-log-dir ./player-logs hoge 4000
 
 .PHONY: stop-daemn
 stop-daemon:

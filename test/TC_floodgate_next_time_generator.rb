@@ -249,4 +249,20 @@ class TestNextTimeGeneratorConfig < Test::Unit::TestCase
     assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
     assert_equal("yowai_gps+95908f6c18338f5340371f71523fc5e3", ntc.sacrifice)
   end
+
+  def test_default_max_moves
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal(256, ntc.max_moves)
+  end
+
+  def test_read_max_moves
+    now = DateTime.new(2010, 6, 10, 21, 59, 59) # Thu
+    lines = %w(set\ max_moves\ 200 Thu\ 22:00)
+    ntc = ShogiServer::League::Floodgate::NextTimeGeneratorConfig.new lines
+    assert_equal Time.parse("10-06-2010 22:00"), ntc.call(now)
+    assert_equal(200, ntc.max_moves)
+  end
 end

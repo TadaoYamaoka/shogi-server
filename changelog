@@ -1,3 +1,24 @@
+2015-12-13  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server] Enhance capability of Floodgate configuration file
+	  - New parameter: Max_Moves, defined in the CSA protocol
+	    ex. set Max_Moves 256
+	  - New parameter: Least_Time_Per_Move, defined in the CSA protocol
+	    ex. set Least_Time_Per_Move 0
+	  - Proposed messages distributed to each player upon starting a new
+	    game will include Max_Moves as well as Least_Time_Per_Move.
+	  - CSA files produced by the server will include settings of
+	    Max_Moves and Least_Time_Per_Move in comment lines as follows:
+	      'Max_Moves:256
+	      'Least_Time_Per_Move:0
+	  - The official Shogi-server on wdoor.c.u-tokyo.ac.jp will
+	    be running with different parameters, depending on game names.
+	    a) Max_Moves will be 256 for floodgate-600-10 games;
+	       otherwise, 0.
+	    b) Least_Time_Per_Move will be 0 for floodgate-600-10 games;
+	       otherwise 1.
+	  (Closes: #35839)
+
 2015-11-27  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server] shogi_server/time_clock.rb:

@@ -7,6 +7,7 @@ require 'shogi_server/player'
 
 $options = {}
 $options["least-time-per-move"] = 0
+$options["max-moves"] = 256
 
 def log_message(str)
   $stderr.puts str
@@ -51,6 +52,7 @@ Name-:p2
 Your_Turn:+
 Rematch_On_Draw:NO
 To_Move:+
+Max_Moves:#{$options["max-moves"]}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -85,6 +87,7 @@ Name-:p2
 Your_Turn:-
 Rematch_On_Draw:NO
 To_Move:+
+Max_Moves:#{$options["max-moves"]}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -113,6 +116,8 @@ EOF
 V2
 N+p1
 N-p2
+'Max_Moves:#{$options["max-moves"]}
+'Least_Time_Per_Move:#{$options["least-time-per-move"]}
 $EVENT:#{game.game_id}
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
@@ -153,6 +158,7 @@ Name-:p2
 Your_Turn:+
 Rematch_On_Draw:NO
 To_Move:-
+Max_Moves:#{$options["max-moves"]}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -188,6 +194,7 @@ Name-:p2
 Your_Turn:-
 Rematch_On_Draw:NO
 To_Move:-
+Max_Moves:#{$options["max-moves"]}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -217,6 +224,8 @@ EOF
 V2
 N+p1
 N-p2
+'Max_Moves:#{$options["max-moves"]}
+'Least_Time_Per_Move:#{$options["least-time-per-move"]}
 $EVENT:#{game.game_id}
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 
@@ -260,6 +269,7 @@ Name-:p2
 Your_Turn:+
 Rematch_On_Draw:NO
 To_Move:+
+Max_Moves:#{$options["max-moves"]}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -296,6 +306,7 @@ Name-:p2
 Your_Turn:-
 Rematch_On_Draw:NO
 To_Move:+
+Max_Moves:#{$options["max-moves"]}
 BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
@@ -326,6 +337,8 @@ EOF
 V2
 N+p1
 N-p2
+'Max_Moves:#{$options["max-moves"]}
+'Least_Time_Per_Move:#{$options["least-time-per-move"]}
 $EVENT:#{game.game_id}
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 

@@ -69,14 +69,22 @@ module ShogiServer
                 StartGameWithoutHumans.new]
       end
 
-      def match(players, logics)
+      def match(players, logics, options)
         logics.inject(players) do |result, item|
+          item.set_options(options)
           item.match(result)
           result
         end
       end
     end # class << self
 
+    def initialize
+      @options = {}
+    end
+
+    def set_options(options)
+      @options.merge!(options)
+    end
 
     # Make matches among players.
     # @param players an array of players, which should be updated destructively
@@ -129,7 +137,7 @@ module ShogiServer
       log_message("Floodgate: Starting a game: BLACK %s vs WHITE %s" % [p1.name, p2.name])
       p1.sente = true
       p2.sente = false
-      board = Board.new
+      board = Board.new(@options)
       board.initial
       Game.new(p1.game_name, p1, p2, board)
     end
