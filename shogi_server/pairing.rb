@@ -514,6 +514,22 @@ module ShogiServer
       ret
     end
 
+    # Total combinations of possible games among n players
+    #   nC2 * (n-2)C2 * ... * 2C2 / (n/2)!
+    def total_posibilities(n)
+      n -= 1 if n.odd?
+      return 1 if n <= 2
+
+      ret = 1
+      i = n
+      while i >= 2 do
+        ret *= ::ShogiServer::nCk(i,2)
+        i -= 2
+      end
+      ret /= ::ShogiServer::factorial(n/2)
+      return ret
+    end
+
     def match(players)
       super
       if players.size < 3
@@ -524,12 +540,16 @@ module ShogiServer
       # Reset estimated rate
       players.each {|p| p.estimated_rate = 0}
 
-      # 10 trials
       matches = []
       scores  = []
       path = ShogiServer::League::Floodgate.history_file_path(players.first.game_name)
       history = ShogiServer::League::Floodgate::History.factory(path)
-      10.times do 
+
+      # Increase trials, depending on a number of players
+      trials = [300, total_posibilities(players.size)/3].min
+      trials = [10, trials].max
+      log_message("Floodgate: %d trials" % [trials])
+      trials.times do
         m = random_match(players)
         matches << m
         scores << calculate_diff_with_penalty(m, history)

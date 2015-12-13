@@ -61,3 +61,22 @@ class TestMkdir < Test::Unit::TestCase
   end
 
 end
+
+class TestFactorial < Test::Unit::TestCase
+  def test_factorial
+    assert_equal 1, ShogiServer::factorial(0)
+    assert_equal 1, ShogiServer::factorial(1)
+    assert_equal 2, ShogiServer::factorial(2)
+    assert_equal 6, ShogiServer::factorial(3)
+  end
+end
+
+class TestnCk < Test::Unit::TestCase
+  def test_nCk
+    assert_equal 0, ShogiServer::nCk(2,5)
+    assert_equal 1, ShogiServer::nCk(2,2)
+    assert_equal 6, ShogiServer::nCk(4,2)
+    assert_equal 11*5*9, ShogiServer::nCk(12,4)
+  end
+end
+
