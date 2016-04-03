@@ -38,7 +38,7 @@ class Login
   end
 
   def Login.good_game_name?(str)
-    if ((str =~ /^(.+)-\d+-\d+$/) && (good_identifier?($1)))
+    if ((str =~ /^(.+)-\d+-\d+F?$/) && (good_identifier?($1)))
       return true
     else
       return false
@@ -149,7 +149,7 @@ class LoginCSA < Login
   # turn character "+" or "-"; false otherwise
   #
   def parse_gamename_turn(str)
-    if str =~ /^(.+)-\d+-\d+-(\w)$/
+    if str =~ /^(.+)-\d+-\d+F?-(\w)$/
       case $2
       when "b","B"
         return [str[0, str.length-2], "+"]

@@ -43,6 +43,16 @@ class TestLogin < Test::Unit::TestCase
     assert_equal("*", login.turn_preference)
   end
 
+  def test_login_factory_csa_fischer
+    player = ShogiServer::BasicPlayer.new
+    player.name = "hoge"
+    login = ShogiServer::Login::factory("LOGIN hoge floodagate-600-10F,xyz", player)
+    assert_instance_of(ShogiServer::LoginCSA, login)
+    assert_equal("xyz", player.password)
+    assert_equal(@p_csa.player_id, player.player_id)
+    assert_equal("*", login.turn_preference)
+  end
+
   def test_login_factory_csa_no_gamename
     player = ShogiServer::BasicPlayer.new
     player.name = "hoge"
@@ -65,6 +75,17 @@ class TestLogin < Test::Unit::TestCase
     assert_equal("floodgate-900-0", login.gamename)
   end
 
+  def test_login_factory_csa_with_black_fischer
+    player = ShogiServer::BasicPlayer.new
+    player.name = "hoge"
+    login = ShogiServer::Login::factory("LOGIN hoge floodgate-900-10F-B,xyz", player)
+    assert_instance_of(ShogiServer::LoginCSA, login)
+    assert_equal("xyz", player.password)
+    assert_equal(@p_csa.player_id, player.player_id)
+    assert_equal("+", login.turn_preference)
+    assert_equal("floodgate-900-10F", login.gamename)
+  end
+
   def test_login_factory_csa_with_white
     player = ShogiServer::BasicPlayer.new
     player.name = "hoge"
@@ -74,6 +95,17 @@ class TestLogin < Test::Unit::TestCase
     assert_equal(@p_csa.player_id, player.player_id)
     assert_equal("-", login.turn_preference)
     assert_equal("floodgate-900-0", login.gamename)
+  end
+
+  def test_login_factory_csa_with_white
+    player = ShogiServer::BasicPlayer.new
+    player.name = "hoge"
+    login = ShogiServer::Login::factory("LOGIN hoge floodgate-900-10F-W,xyz", player)
+    assert_instance_of(ShogiServer::LoginCSA, login)
+    assert_equal("xyz", player.password)
+    assert_equal(@p_csa.player_id, player.player_id)
+    assert_equal("-", login.turn_preference)
+    assert_equal("floodgate-900-10F", login.gamename)
   end
 
   def test_login_factory_csa_without_trip

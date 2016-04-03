@@ -42,7 +42,7 @@ class TestGameWithLeastZero < Test::Unit::TestCase
 
     p1_out = <<EOF
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -77,7 +77,7 @@ EOF
 
     p2_out = <<EOF
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -148,7 +148,7 @@ EOF
 
     p1_out = <<EOF
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -184,7 +184,7 @@ EOF
 
     p2_out = <<EOF
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -259,7 +259,7 @@ EOF
 
     p1_out = <<EOF
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -296,7 +296,7 @@ EOF
 
     p2_out = <<EOF
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1

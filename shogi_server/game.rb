@@ -63,16 +63,42 @@ class Game
     end
   end
 
+  TimeControlParams = Struct.new(:total_time, :byoyomi, :fischer, :stop_watch, :error)
+
+  # Parse time related parts of a game name.
+  #
+  # Return an array of a total allotted time, byoyomi seconds and fischer
+  # seconds; if it fails to parse, return nil.
+  def Game.parse_time(game_name)
+    ret = TimeControlParams.new(0, 0, 0, false, false)
+
+    if (game_name =~ /-(\d+)-(\d+F?)$/)
+      ret[:total_time] = $1.to_i
+      tmp = $2
+      if tmp =~ /^0\d/
+        ret[:stop_watch] = true
+      end
+      if tmp[-1] == "F"
+        ret[:fischer] = tmp.chop.to_i
+      else
+        ret[:byoyomi] = tmp.to_i
+      end
+      return ret
+    end
+
+    ret[:error] = true
+    return ret
+  end
+
 
   def initialize(game_name, player0, player1, board)
     @monitors = Array::new # array of MonitorHandler*
     @game_name = game_name
-    if (@game_name =~ /-(\d+)-(\d+)$/)
-      @total_time = $1.to_i
-      @byoyomi = $2.to_i
-
-      @time_clock = TimeClock::factory(board.least_time_per_move, @game_name)
-    end
+    time_map = Game.parse_time @game_name
+    @total_time = time_map[:total_time]
+    @byoyomi    = time_map[:byoyomi]
+    @fischer    = time_map[:fischer]
+    @time_clock = TimeClock::factory(board.least_time_per_move, @game_name)
 
     if (player0.sente)
       @sente, @gote = player0, player1
@@ -131,7 +157,7 @@ class Game
 
     propose
   end
-  attr_accessor :game_name, :total_time, :byoyomi, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors, :time_clock
+  attr_accessor :game_name, :total_time, :byoyomi, :fischer, :sente, :gote, :game_id, :board, :current_player, :next_player, :fh, :monitors, :time_clock
   attr_accessor :last_move, :current_turn
   attr_reader   :result, :prepared_time
 
@@ -327,6 +353,9 @@ class Game
     @fh.puts("N-#{@gote.name}")
     @fh.puts("'Max_Moves:#{@board.max_moves}")
     @fh.puts("'Least_Time_Per_Move:#{@board.least_time_per_move}")
+    if @fischer > 0
+      @fh.puts("'Increment:#{@fischer}")
+    end
     @fh.puts("$EVENT:#{@game_id}")
 
     @sente.write_safe(propose_message("+"))
@@ -364,7 +393,7 @@ class Game
   def show()
     str0 = <<EOM
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -378,6 +407,7 @@ BEGIN Time
 Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
+Increment:#{@fischer}
 Least_Time_Per_Move:#{@board.least_time_per_move}
 Remaining_Time+:#{@sente.mytime}
 Remaining_Time-:#{@gote.mytime}
@@ -398,7 +428,7 @@ EOM
   def propose_message(sg_flag)
     str = <<EOM
 BEGIN Game_Summary
-Protocol_Version:1.1
+Protocol_Version:1.2
 Protocol_Mode:Server
 Format:Shogi 1.0
 Declaration:Jishogi 1.1
@@ -413,6 +443,7 @@ BEGIN Time
 Time_Unit:#{@time_clock.time_unit}
 Total_Time:#{@total_time}
 Byoyomi:#{@byoyomi}
+Increment:#{@fischer}
 Least_Time_Per_Move:#{@board.least_time_per_move}
 END Time
 BEGIN Position

@@ -40,6 +40,7 @@ class TestBuoy < Test::Unit::TestCase
     assert(ShogiServer::Buoy.game_name?("buoy_hoge-1500-0"))
     assert(ShogiServer::Buoy.game_name?("buoy_hoge-900-0"))
     assert(ShogiServer::Buoy.game_name?("buoy_hoge-0-30"))
+    assert(ShogiServer::Buoy.game_name?("buoy_hoge-600-10F"))
     assert(!ShogiServer::Buoy.game_name?("buoyhoge-1500-0"))
     assert(!ShogiServer::Buoy.game_name?("hoge-1500-0"))
   end 

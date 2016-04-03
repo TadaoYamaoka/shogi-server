@@ -499,7 +499,7 @@ module ShogiServer
     def call
       if (! Login::good_game_name?(@game_name))
         @player.write_safe(sprintf("##[ERROR] bad game name: %s.\n", @game_name))
-        if (/^(.+)-\d+-\d+$/ =~ @game_name)
+        if (/^(.+)-\d+-\d+F?$/ =~ @game_name)
           if Login::good_identifier?($1)
             # do nothing
           else
@@ -857,7 +857,7 @@ module ShogiServer
       byo_time   = nil
 
       if @source_game.split("+").size >= 2 &&
-         /^([^-]+)-(\d+)-(\d+)/ =~ @source_game.split("+")[1]
+         /^([^-]+)-(\d+)-(\d+F?)/ =~ @source_game.split("+")[1]
         name       = $1
         total_time = $2
         byo_time   = $3

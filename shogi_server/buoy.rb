@@ -39,7 +39,7 @@ module ShogiServer
     # "buoy_hoge-900-0"
     #
     def Buoy.game_name?(str)
-      return /^buoy_.*\-\d+\-\d+$/.match(str) ? true : false
+      return /^buoy_.*\-\d+\-\d+F?$/.match(str) ? true : false
     end
 
     def initialize(conf = {})

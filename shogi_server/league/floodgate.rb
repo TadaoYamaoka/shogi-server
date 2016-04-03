@@ -12,7 +12,7 @@ class League
       # ex. "floodgate-900-0"
       #
       def game_name?(str)
-        return /^floodgate\-\d+\-\d+$/.match(str) ? true : false
+        return /^floodgate\-\d+\-\d+F?$/.match(str) ? true : false
       end
 
       def history_file_path(gamename)

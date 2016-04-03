@@ -24,30 +24,32 @@ module ShogiServer # for a namespace
 class TimeClock
 
   def TimeClock.factory(least_time_per_move, game_name)
-    total_time_str = nil
-    byoyomi_str = nil
-    if (game_name =~ /-(\d+)-(\d+)$/)
-      total_time_str = $1
-      byoyomi_str    = $2
-    end
-    total_time = total_time_str.to_i
-    byoyomi    = byoyomi_str.to_i
- 
-    if (byoyomi_str == "060")
-      @time_clock = StopWatchClock.new(least_time_per_move, total_time, byoyomi)
+    time_map = Game.parse_time game_name
+
+    if time_map[:stop_watch]
+      @time_clock = StopWatchClock.new(least_time_per_move, time_map[:total_time], time_map[:byoyomi])
     else
       if least_time_per_move == 0
-        @time_clock = ChessClockWithLeastZero.new(least_time_per_move, total_time, byoyomi)
+        @time_clock = ChessClockWithLeastZero.new(least_time_per_move,
+                                                  time_map[:total_time],
+                                                  time_map[:byoyomi],
+                                                  time_map[:fischer])
       else
-        @time_clock = ChessClock.new(least_time_per_move, total_time, byoyomi)
+        @time_clock = ChessClock.new(least_time_per_move,
+                                     time_map[:total_time],
+                                     time_map[:byoyomi],
+                                     time_map[:fischer])
       end
     end
+
+    @time_clock
   end
 
-  def initialize(least_time_per_move, total_time, byoyomi)
+  def initialize(least_time_per_move, total_time, byoyomi, fischer=0)
     @least_time_per_move = least_time_per_move
     @total_time = total_time
-    @byoyomi     = byoyomi
+    @byoyomi    = byoyomi
+    @fischer    = fischer
   end
 
   # Returns thinking time duration
@@ -74,7 +76,8 @@ class TimeClock
   #
   def process_time(player, start_time, end_time)
     t = time_duration(player.mytime, start_time, end_time)
-    
+
+    player.mytime += @fischer
     player.mytime -= t
     if (player.mytime < 0)
       player.mytime = 0
@@ -87,7 +90,7 @@ end
 # Calculates thinking time with chess clock.
 #
 class ChessClock < TimeClock
-  def initialize(least_time_per_move, total_time, byoyomi)
+  def initialize(least_time_per_move, total_time, byoyomi, fischer=0)
     super
   end
 
@@ -98,8 +101,8 @@ class ChessClock < TimeClock
   def timeout?(player, start_time, end_time)
     t = time_duration(player.mytime, start_time, end_time)
 
-    if ((player.mytime - t <= -@byoyomi) && 
-        ((@total_time > 0) || (@byoyomi > 0)))
+    if ((player.mytime - t + @byoyomi + @fischer <= 0) &&
+        ((@total_time > 0) || (@byoyomi > 0) || (@fischer > 0)))
       return true
     else
       return false
@@ -107,7 +110,8 @@ class ChessClock < TimeClock
   end
 
   def to_s
-    return "ChessClock: LeastTimePerMove %d; TotalTime %d; Byoyomi %d" % [@least_time_per_move, @total_time, @byoyomi]
+    return "ChessClock: LeastTimePerMove %d; TotalTime %d; Byoyomi %d; Fischer" %
+      [@least_time_per_move, @total_time, @byoyomi, @fischer]
   end
 end
 
@@ -118,7 +122,7 @@ end
 # byoyomi should be more than 0.
 #
 class ChessClockWithLeastZero < ChessClock
-  def initialize(least_time_per_move, total_time, byoyomi)
+  def initialize(least_time_per_move, total_time, byoyomi, fischer=0)
     if least_time_per_move != 0
       raise ArgumentError, "least_time_per_move #{least_time_per_move} should be 0."
     end
@@ -126,13 +130,16 @@ class ChessClockWithLeastZero < ChessClock
   end
 
   def to_s
-    return "ChessClockWithLeastZero: LeastTimePerMove %d; TotalTime %d; Byoyomi %d" % [@least_time_per_move, @total_time, @byoyomi]
+    return "ChessClockWithLeastZero: LeastTimePerMove %d; TotalTime %d; Byoyomi %d; Fischer %d" %
+      [@least_time_per_move, @total_time, @byoyomi, @fischer]
   end
 end
 
+# StopWatchClock does not support Fischer time.
+#
 class StopWatchClock < TimeClock
   def initialize(least_time_per_move, total_time, byoyomi)
-    super
+    super least_time_per_move, total_time, byoyomi, 0
   end
 
   def time_unit

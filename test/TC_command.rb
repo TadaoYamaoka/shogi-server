@@ -173,8 +173,18 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::GameChallengeCommand, cmd)
   end
 
+  def test_game_challenge_command_game_fischer
+    cmd = ShogiServer::Command.factory("%%GAME default-600-10F +", @p)
+    assert_instance_of(ShogiServer::GameChallengeCommand, cmd)
+  end
+
   def test_game_challenge_command_challenge
     cmd = ShogiServer::Command.factory("%%CHALLENGE default-1500-0 -", @p)
+    assert_instance_of(ShogiServer::GameChallengeCommand, cmd)
+  end
+
+  def test_game_challenge_command_challenge_fischer
+    cmd = ShogiServer::Command.factory("%%CHALLENGE default-600-10F -", @p)
     assert_instance_of(ShogiServer::GameChallengeCommand, cmd)
   end
 
@@ -213,8 +223,18 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::SetBuoyCommand, cmd)
   end
 
+  def test_setbuoy_command_fischer
+    cmd = ShogiServer::Command.factory("%%SETBUOY buoy_test-600-10F +7776FU", @p)
+    assert_instance_of(ShogiServer::SetBuoyCommand, cmd)
+  end
+
   def test_setbuoy_command_with_counter
     cmd = ShogiServer::Command.factory("%%SETBUOY buoy_test-1500-0 +7776FU 3", @p)
+    assert_instance_of(ShogiServer::SetBuoyCommand, cmd)
+  end
+
+  def test_setbuoy_command_with_counter_fischer
+    cmd = ShogiServer::Command.factory("%%SETBUOY buoy_test-600-10F +7776FU 3", @p)
     assert_instance_of(ShogiServer::SetBuoyCommand, cmd)
   end
 
@@ -223,8 +243,18 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::DeleteBuoyCommand, cmd)
   end
 
+  def test_deletebuoy_command_fischer
+    cmd = ShogiServer::Command.factory("%%DELETEBUOY buoy_test-600-10F", @p)
+    assert_instance_of(ShogiServer::DeleteBuoyCommand, cmd)
+  end
+
   def test_getbuoycount_command
     cmd = ShogiServer::Command.factory("%%GETBUOYCOUNT buoy_test-1500-0", @p)
+    assert_instance_of(ShogiServer::GetBuoyCountCommand, cmd)
+  end
+
+  def test_getbuoycount_command_fischer
+    cmd = ShogiServer::Command.factory("%%GETBUOYCOUNT buoy_test-600-10F", @p)
     assert_instance_of(ShogiServer::GetBuoyCountCommand, cmd)
   end
 
@@ -233,8 +263,18 @@ class TestFactoryMethod < Test::Unit::TestCase
     assert_instance_of(ShogiServer::ForkCommand, cmd)
   end
 
+  def test_fork_command_fischer
+    cmd = ShogiServer::Command.factory("%%FORK server-denou-14400-60F+p1+p2+20130223185013 buoy_denou-14400-60F", @p)
+    assert_instance_of(ShogiServer::ForkCommand, cmd)
+  end
+
   def test_fork_command2
     cmd = ShogiServer::Command.factory("%%FORK server-denou-14400-60+p1+p2+20130223185013", @p)
+    assert_instance_of(ShogiServer::ForkCommand, cmd)
+  end
+
+  def test_fork_command2_fischer
+    cmd = ShogiServer::Command.factory("%%FORK server-denou-14400-60F+p1+p2+20130223185013", @p)
     assert_instance_of(ShogiServer::ForkCommand, cmd)
   end
 

@@ -1,3 +1,26 @@
+2016-04-02  Daigo Moriwaki <daigo at debian dot org>
+
+	* [shogi-server] Support Fischer Time Control
+	  (Closes #36230)
+	  - Fischer time control means that:
+	    Before a player has made their move, a specified time increment is
+	    added to their clock. Time can be accumulated, so if the player
+	    moves within the delay period, their remaining time actually
+	    increases.
+	    (https://en.wikipedia.org/wiki/Chess_clock)
+	  - New syntax of game names:
+	    An 'F' suffix denotes a Fisher time in seconds. For example,
+	    "floodgate-600-10F" specifies
+	      + A floodgate game
+	      + Total allotted time is 600 seconds for each player
+	      + 10-second increment before a player's move in a Fischer way
+	  - The server now proposes game conditions upon a game start with
+	    - "Protocol_Version 1.2"
+	    - "Increment:<n>" for Fischer Time Control
+	  - Kifu files can include the following comment for Fischer Time
+	    Control:
+	    - "'Increment:<n>"
+
 2015-12-13  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server] Enhance capability of Floodgate configuration file
