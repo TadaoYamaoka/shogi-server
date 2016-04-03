@@ -20,6 +20,7 @@
 	  - Kifu files can include the following comment for Fischer Time
 	    Control:
 	    - "'Increment:<n>"
+	* [shogi-server] Fix some lint warnings.
 
 2015-12-13  Daigo Moriwaki <daigo at debian dot org>
 

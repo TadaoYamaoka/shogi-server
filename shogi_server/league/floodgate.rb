@@ -388,12 +388,12 @@ class League
         @@mutex.synchronize do
           records = @records.reverse
         end
-        rc = records.find do |rc|
+        ret = records.find do |rc|
           rc[:winner] && 
           rc[:loser]  && 
           (rc[:black] == player_id || rc[:white] == player_id)
         end
-        return rc
+        return ret
       end
 
       def win_games(player_id)
@@ -401,10 +401,10 @@ class League
         @@mutex.synchronize do
           records = @records.reverse
         end
-        rc = records.find_all do |rc|
+        ret = records.find_all do |rc|
           rc[:winner] == player_id && rc[:loser]
         end
-        return rc
+        return ret
       end
 
       def loss_games(player_id)
@@ -412,10 +412,10 @@ class League
         @@mutex.synchronize do
           records = @records.reverse
         end
-        rc = records.find_all do |rc|
+        ret = records.find_all do |rc|
           rc[:winner] && rc[:loser] == player_id
         end
-        return rc
+        return ret
       end
     end # class History
 

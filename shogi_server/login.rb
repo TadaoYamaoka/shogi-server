@@ -87,7 +87,7 @@ class Login
   end
 
   def Login.factory(str, player)
-    (login, player.name, password, ext) = str.chomp.split
+    (_, player.name, password, ext) = str.chomp.split
     if ext
       return Loginx1.new(player, password)
     else

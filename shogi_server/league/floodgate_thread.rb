@@ -79,6 +79,7 @@ module ShogiServer
                       {:game_name       => prev.game_name,       :next_time => prev.next_time,
                        :pairing_factory => prev.pairing_factory, :sacrifice => prev.sacrifice,
                        :max_moves       => prev.max_moves,       :least_time_per_move => prev.least_time_per_move})
+        floodgate
       end
       floodgate_reload_log(leagues)
       return leagues
@@ -100,12 +101,12 @@ module ShogiServer
             floodgate = next_league(leagues)
             next if wait_next_floodgate(floodgate)
 
-            next_instances = leagues.collect do |floodgate|
-              unless (floodgate.next_time - Time.now) > 0
-                start_games(floodgate)
-                floodgate.charge # updates next_time
+            next_instances = leagues.collect do |fg|
+              unless (fg.next_time - Time.now) > 0
+                start_games(fg)
+                fg.charge # updates next_time
               end
-              floodgate
+              fg
             end
 
             reload_shogi_server

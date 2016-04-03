@@ -267,6 +267,8 @@ class Game
       return false            # time isn't expired. players aren't swapped. continue game
     else
       t = @time_clock.process_time(@current_player, @start_time, @end_time)
+      log_info(sprintf("+++ DEBUG %s consumed %d sec. remain %d sec",
+                @current_player.name, t, @current_player.mytime))
       move_status = @board.handle_one_move(str, @sente == @current_player)
       # log_debug("move_status: %s for %s's %s" % [move_status, @sente == @current_player ? "BLACK" : "WHITE", str])
 

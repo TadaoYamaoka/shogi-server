@@ -552,7 +552,7 @@ module ShogiServer
             board = Board.new
             begin
               board.set_from_moves(moves_array)
-            rescue => err
+            rescue
               # it will never happen since moves have already been checked
               log_error "Failed to set up a buoy game: #{moves}"
               return :continue
@@ -775,7 +775,7 @@ module ShogiServer
       # found two players: p1 and p2
       log_info("Starting a buoy game: %s with %s and %s" % [@game_name, p1.name, p2.name])
       buoy.decrement_count(buoy_game)
-      game = Game::new(@game_name, p1, p2, board)
+      Game::new(@game_name, p1, p2, board)
       return :continue
 
     rescue WrongMoves => e
