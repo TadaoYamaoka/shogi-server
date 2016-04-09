@@ -52,7 +52,7 @@ Default_Max_Moves = 256
 Default_Least_Time_Per_Move = 0
 One_Time = 10
 Login_Time = 300                # time for LOGIN
-Revision = "20151213"
+Revision = "20160409"
 
 RELOAD_FILES = ["shogi_server/league/floodgate.rb",
                 "shogi_server/league/persistent.rb",
