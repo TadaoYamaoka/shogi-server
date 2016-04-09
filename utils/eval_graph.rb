@@ -81,6 +81,7 @@ module EvalGraph
       @regexp_comment = Regexp.new(/^'\*\*(.*)/)
       @flag = false
       @name = nil
+      @increment = 0
     end
 
     def reset
@@ -108,6 +109,8 @@ module EvalGraph
         @name = $1
       when /\$START_TIME:(.*)/
         @start_time = $1
+      when /^'Increment:(.*)/
+        @increment = $1.to_i
       end
     end
 
@@ -119,6 +122,7 @@ module EvalGraph
       values = []
       values << 1.0*y_max/play_time*consume
       @times.each do |t|
+        consume += @increment
         if consume == 0
           break
         end

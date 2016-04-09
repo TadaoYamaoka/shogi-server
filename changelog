@@ -1,3 +1,8 @@
+2016-04-09  Daigo Moriwaki <daigo at debian dot org>
+
+	* utils/eval_graph.rb
+	  - Support Fischer time control.
+
 2016-04-02  Daigo Moriwaki <daigo at debian dot org>
 
 	* [shogi-server] Support Fischer Time Control
