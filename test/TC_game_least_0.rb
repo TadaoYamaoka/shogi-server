@@ -57,6 +57,7 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
 Byoyomi:10
+Increment:0
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -92,6 +93,7 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
 Byoyomi:10
+Increment:0
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -163,6 +165,7 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
 Byoyomi:10
+Increment:0
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -199,6 +202,7 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
 Byoyomi:10
+Increment:0
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -274,6 +278,7 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
 Byoyomi:10
+Increment:0
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
@@ -311,6 +316,7 @@ BEGIN Time
 Time_Unit:1sec
 Total_Time:1500
 Byoyomi:10
+Increment:0
 Least_Time_Per_Move:#{$options["least-time-per-move"]}
 END Time
 BEGIN Position
