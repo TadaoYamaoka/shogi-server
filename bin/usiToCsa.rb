@@ -225,6 +225,7 @@ class BridgeState
     @black_time = nil    # milliseconds
     @white_time = nil    # milliseconds
     @byoyomi    = nil    # milliseconds
+    @increment  = 0      # milliseconds
 
     @depth       = nil
     @cp          = nil
@@ -302,6 +303,8 @@ class BridgeState
         @white_time = $1.to_i * 1000
       when /^Byoyomi:(\d+)/
         @byoyomi = $1.to_i * 1000
+      when /^Increment:(\d+)/
+        @increment = $1.to_i * 1000
       end
     end
 
@@ -338,7 +341,11 @@ class BridgeState
       engine_puts "usinewgame"
       if @side
         engine_puts "position startpos"
-        engine_puts "go btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+        if @increment > 0 then
+          engine_puts "go btime #@black_time wtime #@white_time binc #@increment winc #@increment"
+        else
+          engine_puts "go btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+        end
       end
       transite :GAME_CSA
     when /^REJECT:(.*)/
@@ -384,7 +391,11 @@ class BridgeState
         # Trigger the next turn
         transite :GAME_CSA
         next_turn
-        engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+        if @increment > 0 then
+          engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time binc #@increment winc #@increment"
+        else
+          engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+        end
       else
         case str
         when /^(.*)\s+ponder\s+(.*)/
@@ -396,7 +407,11 @@ class BridgeState
           if $options[:ponder]
             moves = @usiToCsa.usi_moves.clone
             moves << @ponder_move
-            engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+            if @increment > 0 then
+              engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #@black_time wtime #@white_time binc #@increment winc #@increment"
+            else
+              engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+            end
             transite :PONDERING
           end
         else
@@ -449,10 +464,18 @@ class BridgeState
       csa  = $1
       msec = $2.to_i * 1000
 
-      if csa[0..0] == "+"
-        @black_time = [@black_time - msec, 0].max
+      if @increment > 0 then
+        if csa[0..0] == "+"
+          @black_time = [@black_time + @increment - msec, 0].max
+        else
+          @white_time = [@white_time + @increment - msec, 0].max
+        end
       else
-        @white_time = [@white_time - msec, 0].max
+        if csa[0..0] == "+"
+          @black_time = [@black_time - msec, 0].max
+        else
+          @white_time = [@white_time - msec, 0].max
+        end
       end
 
       state1, usi = @csaToUsi.next(csa)
@@ -475,7 +498,11 @@ class BridgeState
         else
           transite :GAME_CSA
           next_turn
-          engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+          if @increment > 0 then
+            engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time binc #@increment winc #@increment"
+          else
+            engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+          end
         end
       end
     end
