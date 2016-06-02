@@ -225,7 +225,7 @@ class BridgeState
     @black_time = nil    # milliseconds
     @white_time = nil    # milliseconds
     @byoyomi    = nil    # milliseconds
-    @increment  = 0      # milliseconds
+    @increment  = 0      # milliseconds (increment非対応のshogi-serverとの互換性のために初期値は0にしておく)
 
     @depth       = nil
     @cp          = nil
@@ -335,6 +335,7 @@ class BridgeState
     case str
     when /^START:(.*)/
       @game_id = $1
+      @time_turn_start = Time.now
       log_info "game crated #@game_id"
       
       next_turn
@@ -407,10 +408,18 @@ class BridgeState
           if $options[:ponder]
             moves = @usiToCsa.usi_moves.clone
             moves << @ponder_move
-            if @increment > 0 then
-              engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #@black_time wtime #@white_time binc #@increment winc #@increment"
+            btime_tmp = @black_time
+            wtime_tmp = @white_time
+            estimated_consumption = (Time.now - @time_turn_start).ceil * 1000 # give a some margin by ceiling the value
+            if @side then
+              btime_tmp = [btime_tmp + @increment - estimated_consumption, 0].max
             else
-              engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+              wtime_tmp = [wtime_tmp + @increment - estimated_consumption, 0].max
+            end
+            if @increment > 0 then
+              engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #{btime_tmp} wtime #{wtime_tmp} binc #@increment winc #@increment"
+            else
+              engine_puts "position startpos moves #{moves.join(" ")}\ngo ponder btime #{btime_tmp} wtime #{wtime_tmp} byoyomi #{byoyomi()}"
             end
             transite :PONDERING
           end
@@ -464,17 +473,15 @@ class BridgeState
       csa  = $1
       msec = $2.to_i * 1000
 
-      if @increment > 0 then
-        if csa[0..0] == "+"
-          @black_time = [@black_time + @increment - msec, 0].max
-        else
-          @white_time = [@white_time + @increment - msec, 0].max
+      if csa[0..0] == "+"
+        @black_time = [@black_time + @increment - msec, 0].max
+        if !@side
+          @time_turn_start = Time.now
         end
       else
-        if csa[0..0] == "+"
-          @black_time = [@black_time - msec, 0].max
-        else
-          @white_time = [@white_time - msec, 0].max
+        @white_time = [@white_time + @increment - msec, 0].max
+        if @side
+          @time_turn_start = Time.now
         end
       end
 
