@@ -124,6 +124,7 @@ def parse_command_line
   options[:hash]        = options[:hash].to_i
   options[:host]        ||= ENV["HOST"] || "wdoor.c.u-tokyo.ac.jp"
   options[:margin_msec] ||= ENV["MARGIN_MSEC"] || 2500
+  options[:margin_msec] = options[:margin_msec].to_i
   options[:id]          ||= ENV["ID"]
   options[:keep_alive]  ||= ENV["KEEP_ALIVE"] || 0
   options[:keep_alive]  = options[:keep_alive].to_i
