@@ -405,17 +405,22 @@ class BridgeState
       end
     when /^info\s+(.*)/
       str = $1
-      if /depth\s(\d+)/ =~ str
-        @depth = $1
+      if /(\s+|^)depth\s(\d+)/ =~ str
+        @depth = $2
       end
-      if /score\s+cp\s+(\d+)/ =~ str
-        @cp = $1.to_i
+      if /(\s+|^)score\s+cp\s+(-?\d+)/ =~ str
+        @cp = $2.to_i
+        if !@side
+          @cp *= -1
+        end
+      elsif /(\s+|^)score\s+mate\s+(-?\d+)/ =~ str
+        @cp = ($2.to_i < 0 ? -100000 : 100000)
         if !@side
           @cp *= -1
         end
       end
-      if /pv\s+(.*)$/ =~str
-        @pv = $1
+      if /(\s+|^)pv\s+(.*)$/ =~str
+        @pv = $2
       end
     end
   end
