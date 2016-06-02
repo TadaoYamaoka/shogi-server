@@ -497,7 +497,7 @@ class BridgeState
           if usi == @ponder_move
             engine_puts "ponderhit"
             transite :GAME_CSA
-            next_turn
+            #next_turn
             # Engine keeps on thinking
           else
             engine_puts "stop"
