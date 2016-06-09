@@ -464,7 +464,7 @@ class BridgeState
     when /^#(\w+)/
       s = $1
       log_info str
-      if %w!WIN LOSE DRAW!.include?(s)
+      if %w!WIN LOSE DRAW CENSORED!.include?(s)
         server_puts "LOGOUT"
         engine_puts "gameover #{s.downcase}"
         transite :GAME_END
@@ -671,10 +671,22 @@ def main_loop
     end
 
     if $bridge_state.GAME_END?
+      engine_puts "quit"
       log_info "game finished."
       break
     end
   end
+
+  if $engine.nil?
+    $engine.close
+    $engile = nil
+  end
+
+  if $server.nil?
+    $server.close
+    $server = nil
+  end
+
 rescue Exception => ex
   log_error "main: #{ex.class}: #{ex.message}\n\t#{ex.backtrace.join("\n\t")}"
 end
