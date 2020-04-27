@@ -49,8 +49,6 @@ DESCRIPTION
         Bridge program for a USI engine to connect to a CSA shogi server
 
 OPTIONS
-        gamename
-                a gamename
         hash
                 hash size in MB
         host
@@ -95,7 +93,6 @@ end
 def parse_command_line
   options = Hash::new
   parser = GetoptLong.new(
-    ["--gamename",    GetoptLong::REQUIRED_ARGUMENT],
     ["--hash",        GetoptLong::REQUIRED_ARGUMENT],
     ["--host",        GetoptLong::REQUIRED_ARGUMENT],
     ["--id",          GetoptLong::REQUIRED_ARGUMENT],
@@ -119,7 +116,6 @@ def parse_command_line
   end
 
   # Set default values
-  options[:gamename]    ||= ENV["GAMENAME"] || "floodgate-900-0"
   options[:hash]        ||= ENV["HASH"] || 256
   options[:hash]        = options[:hash].to_i
   options[:host]        ||= ENV["HOST"] || "wdoor.c.u-tokyo.ac.jp"
@@ -381,7 +377,19 @@ class BridgeState
 
     case str.strip
     when /^bestmove\s+resign/
-      server_puts "%TORYO"
+      if PONDERING?
+        log_info "Ignore bestmove after 'stop'", false
+        # Trigger the next turn
+        transite :GAME_CSA
+        next_turn
+        if @increment > 0 then
+          engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time binc #@increment winc #@increment"
+        else
+          engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}\ngo btime #@black_time wtime #@white_time byoyomi #{byoyomi()}"
+        end
+      else
+        server_puts "%TORYO"
+      end
     when /^bestmove\swin/
       server_puts "%KACHI"
     when /^bestmove\s+(.*)/
@@ -516,7 +524,7 @@ class BridgeState
   end
 
   def comment
-    if [@depth, @cp, @pv].include?(nil)
+    if [@cp, @pv].include?(nil)
       return ""
     end
 
@@ -537,7 +545,7 @@ class BridgeState
     end
     
     if moves.empty?
-      return ""
+      return "'* #@cp"
     else
       return "'* #@cp #{moves.join(" ")}"
     end
@@ -614,9 +622,9 @@ def login
   end
 
   begin
-    log_info("Login...  #{$options[:gamename]} #{$options[:id]},xxxxxxxx")
+    log_info("Login...  #{$options[:id]},xxxxxxxx")
     if select(nil, [$server], nil, 15)
-      $server.puts "LOGIN #{$options[:id]} #{$options[:gamename]},#{$options[:password]}"
+      $server.puts "LOGIN #{$options[:id]} #{$options[:password]}"
     else
       log_error("Failed to send login message to the server")
       $server.close
