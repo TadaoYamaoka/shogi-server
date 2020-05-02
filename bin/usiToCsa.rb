@@ -102,7 +102,8 @@ def parse_command_line
     ["--options",     GetoptLong::REQUIRED_ARGUMENT],
     ["--password",    GetoptLong::REQUIRED_ARGUMENT],
     ["--ponder",      GetoptLong::NO_ARGUMENT],
-    ["--port",        GetoptLong::REQUIRED_ARGUMENT])
+    ["--port",        GetoptLong::REQUIRED_ARGUMENT],
+    ["--floodgate",   GetoptLong::NO_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -129,6 +130,7 @@ def parse_command_line
   options[:ponder]      ||= ENV["PONDER"] || false
   options[:port]        ||= ENV["PORT"] || 4081
   options[:port]        = options[:port].to_i
+  options[:floodgate]   ||= ENV["FLOODGATE"] || false
 
   return options
 end
@@ -304,7 +306,7 @@ class BridgeState
       end
     end
 
-    if [@side, @black_time, @white_time, @byoyomi].include?(nil)
+    if [@side, @black_time, @white_time].include?(nil)
       throw "Bad game summary: str"
     end
   end
@@ -359,9 +361,11 @@ class BridgeState
     if state != :normal
       log_error "Found bad move #{usi} (#{csa}): #{state}"
     end
-    c = comment()
-    unless c.empty?
-      csa += ",#{c}"
+    if $options[:floodgate]
+      c = comment()
+      unless c.empty?
+        csa += ",#{c}"
+      end
     end
     server_puts csa
   end
