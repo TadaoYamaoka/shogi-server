@@ -1,5 +1,6 @@
 import shogi
 from shogi import CSA
+import os
 import math
 import re
 import datetime
@@ -7,7 +8,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('log')
-parser.add_argument('kifu')
+parser.add_argument('--out_dir', default='.')
 args = parser.parse_args()
 
 KIFU_TO_SQUARE_NAMES = [
@@ -177,8 +178,6 @@ ptn_info = re.compile(r'^ +(info .*score .*)$')
 ptn_move = re.compile(r'^ +([+-]\d{4}..),T(\d+)$')
 ptn_resign = re.compile(r'^ +%TORYO,T(\d+)$')
 
-kifu = open(args.kifu, 'w')
-
 with open(args.log) as f:
     for line in f.readlines():
         # 時刻
@@ -186,6 +185,8 @@ with open(args.log) as f:
         if m:
             starttime = datetime.datetime.strptime(m.groups()[0], '%Y-%m-%dT%H:%M:%S')
             continue
+        # JST
+        starttime += datetime.timedelta(hours=9)
 
         # Name
         m = ptn_name1.search(line)
@@ -199,7 +200,11 @@ with open(args.log) as f:
 
         # 開始
         if ptn_newgame.search(line):
-            kifu_header(kifu, starttime + datetime.timedelta(hours=9), (name1, name2))
+            # kif open
+            filename = starttime.strftime('%Y%m%d_%H%M%S') + '_' + name1 + '_vs_' + name2 + '.kif'
+            kifu = open(os.path.join(args.out_dir, filename), 'w')
+
+            kifu_header(kifu, starttime, (name1, name2))
             board = shogi.Board()
             sec_sum = 0
             info = None
@@ -229,4 +234,5 @@ with open(args.log) as f:
             sec = int(m.groups()[0])
             sec_sum += sec
             kifu_line(kifu, board, 'resign', sec, sec_sum, info)
+            kifu.close()
             continue
