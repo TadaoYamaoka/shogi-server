@@ -1,0 +1,11 @@
+#!/bin/sh
+
+while true
+do
+  ./usiToCsa.rb --host wdoor.c.u-tokyo.ac.jp --floodgate --ponder --keep-alive=60 --options USI_Ponder=true,PV_Interval=0,OwnBook=false,Resign_Threshold=0,Draw_Ply=256,DNN_Model=/workspace/selfplay/model_rl_val_wideresnet10_selfplay_418.onnx,UCT_NodeLimit=50000000,UCT_Threads=3,UCT_Threads2=3,UCT_Threads3=3,UCT_Threads4=3,UCT_Threads5=3,UCT_Threads6=3,UCT_Threads7=3,UCT_Threads8=3 /workspace/DeepLearningShogi/usi/bin/usi
+
+  if [ $? -ne 0 ] ; then
+    logger -s "$ID: Sleeping..."
+    sleep 900
+  fi
+done
