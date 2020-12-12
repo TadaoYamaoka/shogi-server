@@ -308,6 +308,7 @@ class BridgeState
         state1, usi = @csaToUsi.next(csa)
         @usiToCsa.next(usi)
       end
+    end
 
     if [@side, @black_time, @white_time].include?(nil)
       throw "Bad game summary: str"
