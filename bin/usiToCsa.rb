@@ -303,6 +303,9 @@ class BridgeState
         @byoyomi = $1.to_i * 1000
       when /^Increment:(\d+)/
         @increment = $1.to_i * 1000
+      when /^([\+\-]\d{4}\w{2}),T(\d+)/
+        csa  = $1
+        @csaToUsi.next(csa)
       end
     end
 
