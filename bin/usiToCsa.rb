@@ -342,7 +342,7 @@ class BridgeState
       
       next_turn
       engine_puts "usinewgame"
-      if @side
+      if (@csaToUsi.usi_moves.length % 2 == 0) == @side
         engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}"
         if @increment > 0 then
           engine_puts "go btime #@black_time wtime #@white_time binc #@increment winc #@increment"
