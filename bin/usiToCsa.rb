@@ -305,9 +305,9 @@ class BridgeState
         @increment = $1.to_i * 1000
       when /^([\+\-]\d{4}\w{2}),T(\d+)/
         csa  = $1
-        @csaToUsi.next(csa)
+        state1, usi = @csaToUsi.next(csa)
+        @usiToCsa.next(usi)
       end
-    end
 
     if [@side, @black_time, @white_time].include?(nil)
       throw "Bad game summary: str"
@@ -342,7 +342,7 @@ class BridgeState
       next_turn
       engine_puts "usinewgame"
       if @side
-        engine_puts "position startpos"
+        engine_puts "position startpos moves #{@csaToUsi.usi_moves.join(" ")}"
         if @increment > 0 then
           engine_puts "go btime #@black_time wtime #@white_time binc #@increment winc #@increment"
         else
