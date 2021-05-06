@@ -180,6 +180,10 @@ ptn_resign = re.compile(r'^ +%TORYO,T(\d+)$')
 
 with open(args.log) as f:
     for line in f.readlines():
+        # comment
+        if line[:1] == '#':
+            continue
+
         # 時刻
         m = ptn_datetime.search(line)
         if m:
