@@ -103,7 +103,8 @@ def parse_command_line
     ["--password",    GetoptLong::REQUIRED_ARGUMENT],
     ["--ponder",      GetoptLong::NO_ARGUMENT],
     ["--port",        GetoptLong::REQUIRED_ARGUMENT],
-    ["--floodgate",   GetoptLong::NO_ARGUMENT])
+    ["--floodgate",   GetoptLong::NO_ARGUMENT],
+    ["--handicap-msec", GetoptLong::REQUIRED_ARGUMENT])
   parser.quiet = true
   begin
     parser.each_option do |name, arg|
@@ -131,6 +132,8 @@ def parse_command_line
   options[:port]        ||= ENV["PORT"] || 4081
   options[:port]        = options[:port].to_i
   options[:floodgate]   ||= ENV["FLOODGATE"] || false
+  options[:handicap_msec] ||= ENV["HANDICAP_MSEC"] || 0
+  options[:handicap_msec] = options[:handicap_msec].to_i
 
   return options
 end
@@ -297,7 +300,7 @@ class BridgeState
           @side = false
         end
       when /^Total_Time:(\d+)/
-        @black_time = $1.to_i * 1000
+        @black_time = $1.to_i * 1000 - $options[:handicap_msec]
         @white_time = $1.to_i * 1000
       when /^Byoyomi:(\d+)/
         @byoyomi = $1.to_i * 1000
